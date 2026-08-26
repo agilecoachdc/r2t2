@@ -23,7 +23,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ATTRIBUTES, type AttributeScores, type CharacterSummary, type ReferenceData } from "@shared/types";
+import { ATTRIBUTES, type Attribute, type AttributeScores, type CharacterSummary, type ReferenceData } from "@shared/types";
 import { getHpMax, getPspMax } from "@shared/calc-engine";
 import { useAuth } from "../lib/auth-context";
 import { api } from "../lib/api";
@@ -41,6 +41,33 @@ const RING_SIZE = 96;
 const PHOTO_SIZE = 96;
 const SIL_SIZE = 80;
 const EMPTY_NPC_ATTRIBUTES: AttributeScores = Object.fromEntries(ATTRIBUTES.map((a) => [a, 0])) as AttributeScores;
+// Une icône par attribut pour signaler un boost temporaire (pouvoir psy actif,
+// cf. CharacterSummary.boostedAttributes / calc-engine.getBoostedAttributes) —
+// affichée sur la tuile de l'écran "Suivi des constantes", à la place de
+// l'ancien badge "⚡" générique unique.
+const ATTRIBUTE_BOOST_ICONS: Record<Attribute, string> = {
+  FO: "💪",
+  VIT: "🧘🏻‍♀️",
+  DEX: "🎯",
+  REF: "⚡",
+  PER: "👁️",
+  COM: "🗣️",
+  INT: "🧠",
+  VOL: "🙏",
+};
+// Libellés pour l'infobulle de chaque icône — même contenu que
+// CharacterSheetPanels.ATTRIBUTE_LABELS (non exporté, dupliqué ici plutôt
+// que de créer un import croisé pour une simple table d'affichage).
+const ATTRIBUTE_LABELS: Record<Attribute, string> = {
+  FO: "Force",
+  VIT: "Vitalité",
+  DEX: "Dextérité",
+  REF: "Réflexe",
+  PER: "Perception",
+  COM: "Communication",
+  INT: "Intelligence",
+  VOL: "Volonté",
+};
 // Catalogue par défaut le temps que GET /characters (scopé au groupe du MJ)
 // réponde — cf. lib/reference.ts côté worker, plus d'import statique ADD40K.
 const EMPTY_REFERENCE_DATA: ReferenceData = {
@@ -253,17 +280,27 @@ function CharacterTile({
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-sm font-medium text-slate-100">{c.name}</p>
           {/*
-            Icône "boost" — au moins un pouvoir psy actif modifie une
-            caractéristique/compétence de ce personnage (cf.
-            ActivePsyPower.boostAttribute/boostSkillName,
-            calc-engine.hasActivePsyPowerBoost, CharacterSummary.hasActiveBoost).
+            Une icône par attribut actuellement boosté par un pouvoir psy actif
+            (cf. CharacterSummary.boostedAttributes, calc-engine.
+            getBoostedAttributes, ATTRIBUTE_BOOST_ICONS ci-dessus), plus un
+            indicateur générique si une compétence (pas un attribut) est
+            boostée (boostedSkillNames — aucune des 8 icônes ne s'applique).
           */}
-          {c.hasActiveBoost && (
+          {c.boostedAttributes.map((attr) => (
+            <span
+              key={attr}
+              className="shrink-0 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300"
+              title={t(ATTRIBUTE_LABELS[attr])}
+            >
+              {ATTRIBUTE_BOOST_ICONS[attr]}
+            </span>
+          ))}
+          {c.boostedSkillNames.length > 0 && (
             <span
               className="shrink-0 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300"
-              title={t("Pouvoir actif : caractéristique ou compétence boostée")}
+              title={`${t("Compétence boostée")} : ${c.boostedSkillNames.join(", ")}`}
             >
-              ⚡
+              ✨
             </span>
           )}
           {/*

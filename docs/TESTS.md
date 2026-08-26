@@ -56,14 +56,22 @@ navigateur intégré, cf. session de build).
 - [ ] Activer un pouvoir psy (bouton dédié, hors mode édition) à un palier payant (ex. 20, 2 PSP)
       → PSP courant diminue de 2 immédiatement, badge "Actif · niveau 20 (2 PSP)" affiché,
       bouton "Désactiver" disponible. Désactiver → PSP remboursé (clampé au max), badge disparaît.
-- [ ] Sur un pouvoir autre que "Concentration psy", renseigner l'effet optionnel (caractéristique
-      ou compétence + valeur du bonus) avant d'activer → le bonus apparaît en évidence (badge
-      ambre) sur l'attribut concerné (`AttributesPanel`) ou la compétence concernée
-      (`SkillsPanel`), et une icône "⚡" apparaît sur la tuile du personnage à l'écran "Suivi des
-      constantes".
+- [ ] Sur un pouvoir autre que "Concentration psy", renseigner l'effet optionnel en ciblant une
+      **caractéristique** (ex. FO) + valeur du bonus avant d'activer → le bonus apparaît en
+      évidence (badge ambre) sur l'attribut concerné (`AttributesPanel`), et l'icône dédiée à cet
+      attribut (💪 FO, 🧘🏻‍♀️ VIT, 🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM, 🧠 INT, 🙏 VOL) apparaît sur
+      la tuile du personnage à l'écran "Suivi des constantes" (infobulle = nom de l'attribut).
+      Cibler une **compétence** à la place → badge ambre sur la compétence concernée
+      (`SkillsPanel`), et c'est l'indicateur générique "✨" (pas une icône d'attribut) qui apparaît
+      sur la tuile, infobulle listant le(s) nom(s) de compétence(s) boostée(s).
+- [ ] Sur "Concentration psy" (cas réel Karun), activer à un palier ≥15 avec un attribut choisi (ou
+      ≥25, toutes caractéristiques physiques) → l'icône REF (⚡) et/ou DEX (🎯) et/ou VIT (🧘🏻‍♀️)
+      apparaissent sur sa tuile selon l'attribut(s) réellement boosté(s), en plus de toute icône due
+      à un autre pouvoir actif (plusieurs icônes peuvent coexister sur une même tuile).
 - [ ] Sur l'écran "Suivi des constantes" (MJ), avec au moins un pouvoir actif sur un personnage en
       jeu : cliquer "Fin de combat" → tous les pouvoirs actifs des personnages en jeu sont
-      désactivés, leur PSP remboursé, l'icône "⚡" disparaît de leurs tuiles.
+      désactivés, leur PSP remboursé, toutes les icônes de boost (attribut ou "✨") disparaissent de
+      leurs tuiles.
 - [ ] Sur l'écran "Suivi des constantes" (MJ), avec au moins 2 personnages joueurs en jeu (et,
       idéalement, 1 PNJ en jeu) : cliquer "Donner de l'XP à tous", saisir un montant (ex. 5),
       valider → "XP gagnée" et "dispo" augmentent de 5 sur chaque tuile **joueur** en jeu, mais

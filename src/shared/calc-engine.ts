@@ -583,6 +583,38 @@ export function hasActivePsyPowerBoost(character: Pick<Character, "activePsyPowe
 }
 
 /**
+ * Liste des attributs (parmi les 8, cf. ATTRIBUTES) actuellement boostés
+ * (bonus non nul) par un pouvoir actif — générique (boostAttribute) ou
+ * "Concentration psy" (getConcentrationPsyAttributeBonus). Pour l'affichage
+ * d'une icône par attribut sur la tuile de l'écran "Suivi des constantes"
+ * (CharacterSummary.boostedAttributes), à la place de l'ancien badge
+ * générique unique (hasActivePsyPowerBoost).
+ */
+export function getBoostedAttributes(
+  character: Pick<Character, "psyPowers" | "activePsyPowers" | "skills">,
+  attributeTotals: AttributeScores,
+): Attribute[] {
+  return ATTRIBUTES.filter((a) => getActivePsyPowerAttributeBoost(character, attributeTotals, a) !== 0);
+}
+
+/**
+ * Noms (dédupliqués) des compétences actuellement boostées par un pouvoir
+ * actif (ActivePsyPower.boostSkillName, bonus non nul) — ne correspond à
+ * aucune des 8 icônes d'attribut de getBoostedAttributes ci-dessus ;
+ * affiché via un indicateur générique séparé (CharacterSummary.
+ * boostedSkillNames).
+ */
+export function getBoostedSkillNames(character: Pick<Character, "activePsyPowers">): string[] {
+  return Array.from(
+    new Set(
+      (character.activePsyPowers ?? [])
+        .filter((p) => p.boostSkillName != null && (p.boostAmount ?? 0) !== 0)
+        .map((p) => p.boostSkillName as string),
+    ),
+  );
+}
+
+/**
  * Rang d'Action courant du personnage, tous éléments combinés — cf. les
  * commentaires ci-dessus pour le détail de chaque terme. Plus la valeur est
  * basse, plus le personnage agit tôt (confirmé par le MJ le 18/08).

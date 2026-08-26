@@ -150,8 +150,12 @@ d'activation courte quand ce pouvoir n'a rien à configurer : caractéristique e
 indicative "un tour" (immédiat) ou "le combat" (`duration`). Ce bonus est ajouté et mis en évidence
 (badge ambre) à l'endroit concerné —
 `AttributesPanel` pour une caractéristique (et pris en compte dans le RA si REF), `SkillsPanel` pour
-une compétence — et signalé par une icône "⚡" sur la tuile du personnage à l'écran "Suivi des
-constantes" (`CharacterSummary.hasActiveBoost`).
+une compétence — et signalé sur la tuile du personnage à l'écran "Suivi des constantes" par une
+icône dédiée par attribut boosté (`CharacterSummary.boostedAttributes`, cf.
+`calc-engine.getBoostedAttributes`) : 💪 Force, 🧘🏻‍♀️ Vitalité, 🎯 Dextérité, ⚡ Réflexe,
+👁️ Perception, 🗣️ Communication, 🧠 Intelligence, 🙏 Volonté. Une compétence boostée (pas un
+attribut) affiche à la place un indicateur générique "✨" (`boostedSkillNames`, cf.
+`calc-engine.getBoostedSkillNames`).
 
 Le bouton "Fin de combat" (MJ, écran "Suivi des constantes", `POST /api/characters/end-combat`)
 désactive d'un coup tous les pouvoirs actifs des personnages en jeu du groupe et rembourse leur PSP

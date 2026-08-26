@@ -45,10 +45,12 @@ chaque réponse.
   de lien ADD40K en dur). `actionRank` (cf. `calc-engine.getActionRank`) est le Rang d'Action
   courant du personnage — plus bas = agit plus tôt ; l'écran "Suivi des constantes" affiche un
   rang courant (boutons Précédent/Suivant) et surligne les tuiles dont `actionRank` correspond
-  exactement (plusieurs personnages peuvent agir au même rang). `hasActiveBoost` (cf.
-  `calc-engine.hasActivePsyPowerBoost`) indique qu'au moins un pouvoir psy actif
-  (`Character.activePsyPowers`) booste une caractéristique ou une compétence de ce personnage —
-  affiche une icône "⚡" sur sa tuile. Voir `src/shared/types.ts`.
+  exactement (plusieurs personnages peuvent agir au même rang). `boostedAttributes` (cf.
+  `calc-engine.getBoostedAttributes`) liste les attributs actuellement boostés par un pouvoir psy
+  actif (`Character.activePsyPowers`) — une icône par attribut sur sa tuile (💪 FO, 🧘🏻‍♀️ VIT,
+  🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM, 🧠 INT, 🙏 VOL). `boostedSkillNames` (cf.
+  `calc-engine.getBoostedSkillNames`) liste les compétences boostées (pas d'icône dédiée, un
+  indicateur "✨" générique s'affiche à la place). Voir `src/shared/types.ts`.
 
 ### `GET /api/characters/:id`
 - Auth : session ; lecture ouverte à tout membre du groupe du personnage.

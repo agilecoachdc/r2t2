@@ -22,10 +22,11 @@ import { ATTRIBUTES } from "../../shared/types";
 import {
   computeCharacter,
   getAdvantagesNet,
+  getBoostedAttributes,
+  getBoostedSkillNames,
   getPsyPowerActivationCost,
   getPsyPowersCostTotal,
   getSkillsCostTotal,
-  hasActivePsyPowerBoost,
 } from "../../shared/calc-engine";
 
 type HonoEnv = { Bindings: Env; Variables: { user: PublicUser } };
@@ -60,7 +61,7 @@ characterRoutes.get("/", async (c) => {
   // hpMax/pspMax comme pour la fiche détaillée, même source de vérité.
   const characters: CharacterSummary[] = (results ?? []).map((row) => {
     const parsed: Character = JSON.parse(row.data);
-    const { hpMax, pspMax, armorTotals, actionRank } = computeCharacter(parsed, referenceData);
+    const { hpMax, pspMax, armorTotals, actionRank, attributeTotals } = computeCharacter(parsed, referenceData);
     return {
       id: row.id,
       name: row.name,
@@ -78,7 +79,8 @@ characterRoutes.get("/", async (c) => {
       xp: parsed.xp ?? 0,
       xpAvailable: parsed.xpAvailable ?? 0,
       actionRank,
-      hasActiveBoost: hasActivePsyPowerBoost(parsed),
+      boostedAttributes: getBoostedAttributes(parsed, attributeTotals),
+      boostedSkillNames: getBoostedSkillNames(parsed),
     };
   });
 

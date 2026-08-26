@@ -564,11 +564,19 @@ export interface CharacterSummary {
    */
   actionRank: number;
   /**
-   * Au moins un pouvoir psy actif (Character.activePsyPowers) booste
-   * actuellement une caractéristique ou une compétence de ce personnage
-   * (ActivePsyPower.boostAttribute/boostSkillName, cf.
-   * calc-engine.hasActivePsyPowerBoost) — affiche une icône "boost" sur la
-   * tuile de l'écran "Suivi des constantes".
+   * Attributs actuellement boostés par un pouvoir psy actif (Character.
+   * activePsyPowers), bonus non nul — cf. calc-engine.getBoostedAttributes.
+   * Affiché sur la tuile de l'écran "Suivi des constantes" sous forme d'une
+   * icône par attribut (💪 FO, 🧘🏻‍♀️ VIT, 🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM,
+   * 🧠 INT, 🙏 VOL).
    */
-  hasActiveBoost: boolean;
+  boostedAttributes: Attribute[];
+  /**
+   * Noms des compétences actuellement boostées par un pouvoir actif
+   * (ActivePsyPower.boostSkillName, bonus non nul) — cf.
+   * calc-engine.getBoostedSkillNames. Ne correspond à aucune des 8 icônes
+   * d'attribut ci-dessus ; affiché via un indicateur générique séparé sur la
+   * tuile.
+   */
+  boostedSkillNames: string[];
 }

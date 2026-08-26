@@ -211,7 +211,7 @@ const EN: Record<string, string> = {
   "un tour": "one turn",
   "le combat": "whole combat",
   "Bonus de pouvoir psy actif": "Active psychic power bonus",
-  "Pouvoir actif : caractéristique ou compétence boostée": "Active power: boosted attribute or skill",
+  "Compétence boostée": "Boosted skill",
   "Fin de combat": "End combat",
   "Désactive tous les pouvoirs psy actifs des personnages en jeu et rembourse leur PSP":
     "Deactivates all active psychic powers of characters in play and refunds their PSP",

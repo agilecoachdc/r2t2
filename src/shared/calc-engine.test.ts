@@ -13,6 +13,8 @@ import {
   getAllAttributeTotals,
   getArmorTotals,
   getAttributeTotal,
+  getBoostedAttributes,
+  getBoostedSkillNames,
   getDualWieldPenalty,
   getHpMax,
   getPowerAffinityBonus,
@@ -493,6 +495,56 @@ describe("boost générique d'un pouvoir actif (attribut/compétence choisis à 
         activePsyPowers: [{ name: "Illusion", level: 15, boostSkillName: "Discretion (DEX)", boostAmount: 2 }],
       }),
     ).toBe(true);
+  });
+});
+
+describe("getBoostedAttributes — icônes par attribut sur la tuile Suivi des constantes", () => {
+  it("liste les attributs dont le boost générique (boostAttribute) est non nul, ignore les autres", () => {
+    const character = {
+      skills: [],
+      psyPowers: [],
+      activePsyPowers: [
+        { name: "Illusion", level: 20, boostAttribute: "FO" as const, boostAmount: 3 },
+        { name: "Acuité", level: 15, boostAttribute: "PER" as const, boostAmount: 0 },
+      ],
+    };
+    const attributeTotals: AttributeScores = { FO: 0, VIT: 0, DEX: 0, REF: 0, PER: 0, COM: 0, INT: 0, VOL: 0 };
+    expect(getBoostedAttributes(character, attributeTotals)).toEqual(["FO"]);
+  });
+
+  it("inclut REF/DEX/VIT boostés par Concentration psy niveau 25+ (toutes caractéristiques physiques)", () => {
+    const character = {
+      skills: [],
+      psyPowers: [{ name: "Concentration psy", score: 10, discipline: "Maîtrise de soi" }],
+      activePsyPowers: [{ name: "Concentration psy", level: 25 }],
+    };
+    const attributeTotals: AttributeScores = { FO: 0, VIT: 0, DEX: 0, REF: 0, PER: 0, COM: 0, INT: 0, VOL: 0 };
+    expect(getBoostedAttributes(character, attributeTotals)).toEqual(["VIT", "DEX", "REF"]);
+  });
+
+  it("liste vide si aucun pouvoir actif ne booste un attribut", () => {
+    const character = { skills: [], psyPowers: [], activePsyPowers: [] };
+    const attributeTotals: AttributeScores = { FO: 0, VIT: 0, DEX: 0, REF: 0, PER: 0, COM: 0, INT: 0, VOL: 0 };
+    expect(getBoostedAttributes(character, attributeTotals)).toEqual([]);
+  });
+});
+
+describe("getBoostedSkillNames — indicateur générique (aucune icône d'attribut ne s'applique)", () => {
+  it("liste les noms de compétences boostées (boostSkillName, bonus non nul), dédupliqués", () => {
+    const character = {
+      activePsyPowers: [
+        { name: "Illusion", level: 20, boostSkillName: "Discretion (DEX)", boostAmount: 4 },
+        { name: "Ruse", level: 15, boostSkillName: "Discretion (DEX)", boostAmount: 2 },
+      ],
+    };
+    expect(getBoostedSkillNames(character)).toEqual(["Discretion (DEX)"]);
+  });
+
+  it("ignore un boostSkillName avec boostAmount à 0 ou absent", () => {
+    const character = {
+      activePsyPowers: [{ name: "Illusion", level: 20, boostSkillName: "Discretion (DEX)", boostAmount: 0 }],
+    };
+    expect(getBoostedSkillNames(character)).toEqual([]);
   });
 });
 
