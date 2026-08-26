@@ -325,6 +325,49 @@ characterRoutes.post("/:id/xp", async (c) => {
   return c.json({ character: updated, computed, canEdit: true, referenceData });
 });
 
+// Ajustement individuel de crédits par le MJ — bouton "+Cr" par tuile sur
+// l'écran "Suivi des constantes" (même esprit que le "+XP" par tuile
+// ci-dessus, cf. GrantXpControl/GrantCreditsControl dans GmTracker.tsx), pour
+// un ajustement ponctuel hors du revenu mensuel automatique (POST
+// /group-income) — ex. récompense/pénalité ad hoc, correction d'un achat.
+// Aucun plancher : un retrait peut faire descendre le solde sous 0 (même
+// convention que xp/xpAvailable ci-dessus).
+characterRoutes.post("/:id/credits", async (c) => {
+  const id = c.req.param("id");
+  const user = c.get("user");
+
+  const existing = await c.env.DB.prepare(
+    "SELECT id, data, owner_username, player_group_id FROM characters WHERE id = ?1",
+  )
+    .bind(id)
+    .first<CharacterRow>();
+  if (!existing) return c.json({ error: "Personnage introuvable" }, 404);
+  if (user.role !== "gm" || !existing.player_group_id || !user.memberships.includes(existing.player_group_id)) {
+    return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  }
+
+  const body = await c.req.json<{ amount?: number }>().catch(() => null);
+  const amount = body?.amount;
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount === 0) {
+    return c.json({ error: "Montant requis (non nul)" }, 400);
+  }
+
+  const current: Character = JSON.parse(existing.data);
+  const updated: Character = {
+    ...current,
+    credits: (current.credits ?? 0) + amount,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
+    .bind(JSON.stringify(updated), updated.updatedAt, id)
+    .run();
+
+  const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
+  const computed = computeCharacter(updated, referenceData);
+  return c.json({ character: updated, computed, canEdit: true, referenceData });
+});
+
 // "Fin de combat" — bouton MJ sur l'écran "Suivi des constantes" : désactive
 // d'un coup tous les pouvoirs psy actifs (Character.activePsyPowers) des
 // personnages EN JEU (inGame) de ce groupe, et rembourse le PSP décompté à

@@ -120,6 +120,10 @@ navigateur intégré, cf. session de build).
       tuile augmente du montant affiché dans "Revenu mensuel" sur sa fiche, pas un montant uniforme
       pour tous) ; les tuiles PNJ et les personnages joueurs non "en jeu" restent inchangés. Saisir 2
       → chaque personnage reçoit le double de son propre revenu mensuel.
+- [ ] Sur l'écran "Suivi des constantes" (MJ), sur une tuile joueur ou PNJ : cliquer le bouton "+Cr"
+      juste à côté du solde 💵, saisir un montant (ex. 300), valider → le solde de CE personnage
+      uniquement augmente de 300, les autres tuiles restent inchangées. Saisir un montant négatif →
+      le solde diminue d'autant (peut devenir négatif, aucun plancher — même comportement que "+XP").
 - [ ] Sur une fiche en édition, avec un solde de quelques centaines de Cr : dans "Armes", cliquer
       "+ Ajouter une arme" puis choisir dans le catalogue une arme au prix connu et inférieur au
       solde → le solde affiché en haut de la section ("💵 Solde : …") diminue du prix de l'arme.

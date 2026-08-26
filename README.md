@@ -100,6 +100,11 @@ constantes" (icône 💵).
   **joueur** en jeu reçoit SON PROPRE revenu mensuel (selon ses avantages) multiplié par le nombre
   de mois saisi. Les PNJ sont exclus (même portée que la distribution d'XP groupée). Voir
   `POST /api/characters/group-income` dans `docs/API_REFERENCE.md`.
+- **Ajustement individuel** : bouton "+Cr" sur chaque tuile de l'écran "Suivi des constantes", juste
+  à côté du solde — même mini-formulaire inline (montant + Valider) que le "+XP" par tuile,
+  réutilisé via le composant générique `GrantAmountControl`. Positif ou négatif, sans plancher (même
+  convention que `xpAvailable`) ; pour un ajustement ponctuel (récompense/pénalité, correction),
+  distinct du revenu mensuel automatique ci-dessus. Voir `POST /api/characters/:id/credits`.
 - **Achats** : ajouter une NOUVELLE arme ou armure depuis le catalogue (`WeaponsArmorPanel`), ou un
   nouvel objet via le mini-formulaire d'achat (`EquipmentPanel`), déduit automatiquement le prix du
   solde du personnage. Un prix catalogue inconnu (fourchette texte type "10-100", absent) n'est

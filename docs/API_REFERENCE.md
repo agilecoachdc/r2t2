@@ -108,6 +108,17 @@ chaque réponse.
 - Erreurs : `403` (pas MJ ou pas membre du groupe), `404` (personnage introuvable), `400` (montant
   manquant, non numérique, ou nul).
 
+### `POST /api/characters/:id/credits`
+- Auth : session + rôle `gm` membre du groupe du personnage — même garde que `POST /:id/xp`.
+- Ajustement individuel de crédits (bouton "+Cr" par tuile, écran "Suivi des constantes") — ponctuel,
+  hors du revenu mensuel automatique (cf. `POST /group-income` plus bas). Ajoute `amount` (positif
+  ou négatif) à `character.credits`, sans plancher (même convention que `xpAvailable` ci-dessus).
+- Entrée : `{ amount: number }` (non nul).
+- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData }`
+  (même enveloppe que `PUT /:id` et `POST /:id/xp`).
+- Erreurs : `403` (pas MJ ou pas membre du groupe), `404` (personnage introuvable), `400` (montant
+  manquant, non numérique, ou nul).
+
 ### `POST /api/characters/end-combat?groupId=`
 - Auth : session + rôle `gm` membre du groupe ciblé.
 - "Fin de combat" (bouton MJ, écran "Suivi des constantes") : désactive d'un coup

@@ -167,13 +167,14 @@ function StepButton({ label, onClick }: { label: string; onClick: () => void }) 
 }
 
 /**
- * Bouton "+XP" compact — révèle un mini-formulaire inline (montant + Valider)
- * plutôt qu'un prompt() natif, pour rester cohérent avec le reste de l'UI et
- * ne pas bloquer le polling pendant la saisie. Géré en état local à la
- * tuile : chaque tuile est indépendante, pas besoin de le remonter au
- * parent.
+ * Bouton compact ("+XP", "+Cr"...) — révèle un mini-formulaire inline
+ * (montant + Valider) plutôt qu'un prompt() natif, pour rester cohérent avec
+ * le reste de l'UI et ne pas bloquer le polling pendant la saisie. Géré en
+ * état local à la tuile : chaque tuile est indépendante, pas besoin de le
+ * remonter au parent. Générique (label paramétrable) — réutilisé pour l'XP
+ * et les crédits, mêmes routes MJ symétriques (POST /:id/xp, /:id/credits).
  */
-function GrantXpControl({ onGrant }: { onGrant: (amount: number) => void | Promise<void> }) {
+function GrantAmountControl({ label, onGrant }: { label: string; onGrant: (amount: number) => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
@@ -204,7 +205,7 @@ function GrantXpControl({ onGrant }: { onGrant: (amount: number) => void | Promi
         }}
         className="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-300 hover:bg-slate-700"
       >
-        +XP
+        {label}
       </button>
     );
   }
@@ -253,6 +254,7 @@ function CharacterTile({
   onAdjust,
   onRemove,
   onGrantXp,
+  onGrantCredits,
 }: {
   c: CharacterSummary;
   isNpc: boolean;
@@ -262,6 +264,8 @@ function CharacterTile({
   onAdjust?: (field: "hpCurrent" | "pspCurrent", delta: number) => void;
   onRemove?: () => void;
   onGrantXp?: (amount: number) => void | Promise<void>;
+  /** Ajustement individuel de crédits (bouton "+Cr") — cf. characters.ts POST /:id/credits. */
+  onGrantCredits?: (amount: number) => void | Promise<void>;
 }) {
   const { t } = useTranslation();
   return (
@@ -362,19 +366,22 @@ function CharacterTile({
             {t("XP gagnée")} <span className="font-semibold text-amber-300">{c.xp}</span>
             <span className="text-slate-600"> · {t("dispo")} {c.xpAvailable}</span>
           </span>
-          {onGrantXp && <GrantXpControl onGrant={onGrantXp} />}
+          {onGrantXp && <GrantAmountControl label="+XP" onGrant={onGrantXp} />}
         </div>
         {/*
           Solde en crédits (Character.credits) — même principe d'affichage
           que XP ci-dessus, alimenté par le bouton MJ "+(X) mois 💵" (revenu
           mensuel individuel, cf. handleGrantGroupIncome plus bas) et diminué
           automatiquement à l'achat d'une nouvelle arme/armure/ligne
-          d'équipement sur la fiche (cf. WeaponsArmorPanel/EquipmentPanel).
+          d'équipement sur la fiche (cf. WeaponsArmorPanel/EquipmentPanel), ou
+          ajusté ponctuellement par le MJ via le bouton "+Cr" ici (cf.
+          characters.ts POST /:id/credits — même mécanisme que "+XP").
         */}
-        <div className="mt-1 flex items-center text-xs text-slate-400">
+        <div className="mt-1 flex items-center justify-between gap-2 text-xs text-slate-400">
           <span>
             💵 <span className="font-semibold text-emerald-300">{c.credits}</span> Cr
           </span>
+          {onGrantCredits && <GrantAmountControl label="+Cr" onGrant={onGrantCredits} />}
         </div>
         {isNpc && onAdjust && (
           <div className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-400">
@@ -514,6 +521,19 @@ export default function GmTracker() {
       await loadCharacters();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de la distribution d'XP");
+    }
+  }
+
+  // Ajustement individuel de crédits en direct depuis la tuile — même
+  // principe que grantXp ci-dessus (POST /characters/:id/credits), pour un
+  // ajustement ponctuel hors du revenu mensuel automatique (bouton
+  // "+(X) mois", handleGrantGroupIncome plus bas).
+  async function grantCredits(character: CharacterSummary, amount: number) {
+    try {
+      await api.grantCredits(character.id, amount);
+      await loadCharacters();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec de l'ajustement de crédits");
     }
   }
 
@@ -706,7 +726,7 @@ export default function GmTracker() {
             "Donner de l'XP à tous" — même montant pour tous les personnages
             joueurs en jeu (PNJ exclus), cf. handleGrantGroupXp ci-dessus,
             characters.ts POST /group-xp. Même esprit de mini-formulaire
-            inline que GrantXpControl (par tuile) plutôt qu'un prompt().
+            inline que GrantAmountControl (par tuile) plutôt qu'un prompt().
           */}
           {!groupXpOpen ? (
             <button
@@ -821,6 +841,7 @@ export default function GmTracker() {
                     groupId={groupId!}
                     highlighted={c.actionRank === currentRank}
                     onGrantXp={(amount) => grantXp(c, amount)}
+                    onGrantCredits={(amount) => grantCredits(c, amount)}
                   />
                 </li>
               ))}
@@ -935,6 +956,7 @@ export default function GmTracker() {
                     onAdjust={(field, delta) => adjustNpc(c, field, delta)}
                     onRemove={() => removeNpc(c)}
                     onGrantXp={(amount) => grantXp(c, amount)}
+                    onGrantCredits={(amount) => grantCredits(c, amount)}
                   />
                 </li>
               ))}
