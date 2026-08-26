@@ -1669,12 +1669,23 @@ export function BudgetPanel({
   computed,
   isGm,
   onGrantXp,
+  onGrantCredits,
   onAcceptDeficit,
 }: {
   character: Pick<Character, "pointsDepart" | "xp" | "xpAvailable" | "credits" | "advantages">;
   computed: CharacterComputed;
   isGm?: boolean;
   onGrantXp?: (amount: number) => void | Promise<void>;
+  /**
+   * Ajustement de crédits (Cr) réservé au MJ — cf. POST
+   * /api/characters/:id/credits. Un montant en Cr directement, PAS un
+   * nombre de mois (ça, c'est le bouton groupé "+(X) mois" du Suivi des
+   * constantes, sans équivalent ici) : cf. corrigé en session suite au
+   * signalement que le bouton "+Cr" par tuile ne permettait pas de saisir
+   * le montant voulu (redirection accidentelle vers la fiche) — ce
+   * contrôle sur la fiche elle-même en est le repli fiable.
+   */
+  onGrantCredits?: (amount: number) => void | Promise<void>;
   /** Absorbe le solde négatif dans les points de départ — réservé au MJ, cf. CharacterSheet.tsx handleAcceptDeficit. */
   onAcceptDeficit?: () => void | Promise<void>;
 }) {
@@ -1682,6 +1693,8 @@ export function BudgetPanel({
   const { budget } = computed;
   const [xpAmount, setXpAmount] = useState("");
   const [xpBusy, setXpBusy] = useState(false);
+  const [creditsAmount, setCreditsAmount] = useState("");
+  const [creditsBusy, setCreditsBusy] = useState(false);
   const [deficitBusy, setDeficitBusy] = useState(false);
 
   async function handleAcceptDeficit() {
@@ -1707,6 +1720,18 @@ export function BudgetPanel({
       setXpAmount("");
     } finally {
       setXpBusy(false);
+    }
+  }
+
+  async function handleGrantCredits() {
+    const amount = Number(creditsAmount);
+    if (!onGrantCredits || !amount || !Number.isFinite(amount)) return;
+    setCreditsBusy(true);
+    try {
+      await onGrantCredits(amount);
+      setCreditsAmount("");
+    } finally {
+      setCreditsBusy(false);
     }
   }
 
@@ -1771,6 +1796,27 @@ export function BudgetPanel({
           <Metric label={t("Solde")} value={character.credits ?? 0} emphasis />
           <Metric label={t("Revenu mensuel")} value={getMonthlyIncome(character)} />
         </dl>
+        {isGm && onGrantCredits && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-sm text-slate-400">{t("Donner des crédits")}</label>
+            <input
+              type="number"
+              value={creditsAmount}
+              onChange={(e) => setCreditsAmount(e.target.value)}
+              placeholder="ex. 500 ou -200"
+              className="w-28 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm"
+            />
+            <span className="text-xs text-slate-500">Cr</span>
+            <button
+              type="button"
+              onClick={handleGrantCredits}
+              disabled={creditsBusy || !creditsAmount}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            >
+              {creditsBusy ? "…" : t("Valider")}
+            </button>
+          </div>
+        )}
       </div>
       {isGm && onGrantXp && (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">

@@ -174,10 +174,32 @@ function StepButton({ label, onClick }: { label: string; onClick: () => void }) 
  * remonter au parent. Générique (label paramétrable) — réutilisé pour l'XP
  * et les crédits, mêmes routes MJ symétriques (POST /:id/xp, /:id/credits).
  */
-function GrantAmountControl({ label, onGrant }: { label: string; onGrant: (amount: number) => void | Promise<void> }) {
-  const [open, setOpen] = useState(false);
+function GrantAmountControl({
+  label,
+  onGrant,
+  onOpenChange,
+}: {
+  label: string;
+  onGrant: (amount: number) => void | Promise<void>;
+  /**
+   * Prévient CharacterTile qu'un formulaire est ouvert/fermé, pour qu'il
+   * bloque la navigation du <Link> englobant tant que la saisie est en
+   * cours (cf. CharacterTile.formOpen) — un clic fantôme retardé (courant
+   * sur mobile juste après un changement de layout bouton -> formulaire)
+   * peut sinon atterrir sur le <Link> même après un stopPropagation
+   * classique sur le clic d'origine, provoquant une redirection en plein
+   * milieu de la saisie (cas réel signalé sur le bouton "+Cr" par tuile).
+   */
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [open, setOpenState] = useState(false);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+
+  function setOpen(next: boolean) {
+    setOpenState(next);
+    onOpenChange?.(next);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -268,10 +290,20 @@ function CharacterTile({
   onGrantCredits?: (amount: number) => void | Promise<void>;
 }) {
   const { t } = useTranslation();
+  // Bloque la navigation de la tuile tant qu'un formulaire "+XP"/"+Cr" est
+  // ouvert dessus — cf. GrantAmountControl.onOpenChange. Deux booléens
+  // (pas un seul partagé) : les contrôles XP et Cr sont deux instances
+  // indépendantes, potentiellement ouvertes/fermées à des moments différents.
+  const [xpFormOpen, setXpFormOpen] = useState(false);
+  const [creditsFormOpen, setCreditsFormOpen] = useState(false);
+  const formOpen = xpFormOpen || creditsFormOpen;
   return (
     <Link
       to={`/personnages/${c.id}`}
       state={{ from: "suivi", groupId }}
+      onClick={(e) => {
+        if (formOpen) e.preventDefault();
+      }}
       className={`flex items-stretch overflow-hidden rounded-xl bg-slate-900 shadow transition hover:bg-slate-800 ${
         highlighted ? "ring-2 ring-amber-400" : ""
       }`}
@@ -366,7 +398,7 @@ function CharacterTile({
             {t("XP gagnée")} <span className="font-semibold text-amber-300">{c.xp}</span>
             <span className="text-slate-600"> · {t("dispo")} {c.xpAvailable}</span>
           </span>
-          {onGrantXp && <GrantAmountControl label="+XP" onGrant={onGrantXp} />}
+          {onGrantXp && <GrantAmountControl label="+XP" onGrant={onGrantXp} onOpenChange={setXpFormOpen} />}
         </div>
         {/*
           Solde en crédits (Character.credits) — même principe d'affichage
@@ -381,7 +413,7 @@ function CharacterTile({
           <span>
             💵 <span className="font-semibold text-emerald-300">{c.credits}</span> Cr
           </span>
-          {onGrantCredits && <GrantAmountControl label="+Cr" onGrant={onGrantCredits} />}
+          {onGrantCredits && <GrantAmountControl label="+Cr" onGrant={onGrantCredits} onOpenChange={setCreditsFormOpen} />}
         </div>
         {isNpc && onAdjust && (
           <div className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-400">

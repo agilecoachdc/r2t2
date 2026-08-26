@@ -184,6 +184,23 @@ export default function CharacterSheet() {
     }
   }
 
+  // "Donner des crédits" (panneau Budget de points, section Crédits) — repli
+  // fiable sur la fiche elle-même pour l'ajustement individuel de crédits
+  // (cf. characters.ts POST /:id/credits), le bouton "+Cr" par tuile de
+  // l'écran Suivi des constantes ayant été signalé comme redirigeant parfois
+  // vers cette même fiche avant que le montant ne soit validé.
+  async function handleGrantCredits(amount: number) {
+    if (!id) return;
+    setError(null);
+    try {
+      const { character: saved, referenceData: savedReferenceData } = await api.grantCredits(id, amount);
+      setCharacter(saved);
+      setReferenceData(savedReferenceData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec de l'ajustement de crédits");
+    }
+  }
+
   // Le MJ "accepte" un solde négatif (avertissement rouge de BudgetPanel) en
   // absorbant le déficit dans les points de départ — plutôt que de laisser
   // le personnage hors budget indéfiniment ou de forcer une réduction de
@@ -304,7 +321,14 @@ export default function CharacterSheet() {
       />
       <AdvantagesPanel character={character} editing={editing} update={update} referenceData={referenceData} />
       <EquipmentPanel character={character} editing={editing} update={update} />
-      <BudgetPanel character={character} computed={computed} isGm={isGm} onGrantXp={handleGrantXp} onAcceptDeficit={handleAcceptDeficit} />
+      <BudgetPanel
+        character={character}
+        computed={computed}
+        isGm={isGm}
+        onGrantXp={handleGrantXp}
+        onGrantCredits={handleGrantCredits}
+        onAcceptDeficit={handleAcceptDeficit}
+      />
       </div>
     </div>
   );

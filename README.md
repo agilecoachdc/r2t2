@@ -104,7 +104,13 @@ constantes" (icône 💵).
   à côté du solde — même mini-formulaire inline (montant + Valider) que le "+XP" par tuile,
   réutilisé via le composant générique `GrantAmountControl`. Positif ou négatif, sans plancher (même
   convention que `xpAvailable`) ; pour un ajustement ponctuel (récompense/pénalité, correction),
-  distinct du revenu mensuel automatique ci-dessus. Voir `POST /api/characters/:id/credits`.
+  distinct du revenu mensuel automatique ci-dessus (toujours un montant direct en Cr, jamais un
+  nombre de mois — ça, c'est le bouton groupé). Voir `POST /api/characters/:id/credits`. Même
+  contrôle également disponible directement sur la fiche détaillée (panneau "Budget de points",
+  section "Crédits", "Donner des crédits" — réservé MJ) : repli fiable si le bouton par tuile est
+  interrompu par une redirection (cf. `CharacterTile.formOpen` dans `GmTracker.tsx`, qui bloque la
+  navigation de la tuile tant qu'un formulaire "+XP"/"+Cr" y est ouvert, contre un clic fantôme
+  différé qui atterrirait sinon sur le lien de la tuile en cours de saisie — cas réel signalé).
 - **Achats** : ajouter une NOUVELLE arme ou armure depuis le catalogue (`WeaponsArmorPanel`), ou un
   nouvel objet via le mini-formulaire d'achat (`EquipmentPanel`), déduit automatiquement le prix du
   solde du personnage. Un prix catalogue inconnu (fourchette texte type "10-100", absent) n'est

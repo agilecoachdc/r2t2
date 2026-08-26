@@ -124,6 +124,16 @@ navigateur intégré, cf. session de build).
       juste à côté du solde 💵, saisir un montant (ex. 300), valider → le solde de CE personnage
       uniquement augmente de 300, les autres tuiles restent inchangées. Saisir un montant négatif →
       le solde diminue d'autant (peut devenir négatif, aucun plancher — même comportement que "+XP").
+      Le montant saisi est bien un nombre de Cr (pas un nombre de mois — ça, c'est réservé au bouton
+      groupé "+(X) mois"). Vérifier en particulier sur mobile (cas réel signalé) : ouvrir "+Cr",
+      taper un montant → la tuile ne doit JAMAIS naviguer vers la fiche pendant que le formulaire est
+      ouvert, même après un léger délai (clic fantôme post-changement de mise en page) ; seul un clic
+      explicite hors formulaire (ou "×") doit fermer le mini-formulaire sans naviguer, et un clic sur
+      le reste de la tuile une fois le formulaire refermé doit naviguer normalement.
+- [ ] Sur la fiche détaillée d'un personnage (MJ), panneau "Budget de points", section "Crédits" :
+      champ "Donner des crédits" + "Valider" → même effet que le "+Cr" par tuile (solde mis à jour
+      immédiatement, positif ou négatif) ; sert de repli si le bouton par tuile est interrompu par
+      une navigation avant validation.
 - [ ] Sur une fiche en édition, avec un solde de quelques centaines de Cr : dans "Armes", cliquer
       "+ Ajouter une arme" puis choisir dans le catalogue une arme au prix connu et inférieur au
       solde → le solde affiché en haut de la section ("💵 Solde : …") diminue du prix de l'arme.

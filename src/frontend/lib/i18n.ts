@@ -234,6 +234,7 @@ const EN: Record<string, string> = {
   "Solde": "Balance",
   "Accepter": "Accept",
   "Donner de l'XP": "Give XP",
+  "Donner des crédits": "Give credits",
   "Valider": "Confirm",
   "XP gagnée": "XP earned",
   "gagnée": "earned",
