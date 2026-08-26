@@ -239,6 +239,8 @@ const EN: Record<string, string> = {
   "gagnée": "earned",
   "Solde négatif : ce personnage dépasse son budget de points de": "Negative balance: this character exceeds its point budget by",
   "dispo": "avail.",
+  "Donner de l'XP à tous": "Give XP to all",
+  "Donne le même montant d'XP à tous les personnages joueurs en jeu": "Gives the same amount of XP to all in-game player characters",
 };
 
 const DICTIONARIES: Partial<Record<Language, Record<string, string>>> = { en: EN };

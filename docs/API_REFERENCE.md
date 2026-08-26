@@ -118,6 +118,17 @@ chaque réponse.
   été désactivé).
 - Erreurs : `403` (pas MJ ou pas membre du groupe).
 
+### `POST /api/characters/group-xp?groupId=`
+- Auth : session + rôle `gm` membre du groupe ciblé.
+- "Donner de l'XP à tous" (bouton MJ, écran "Suivi des constantes") : applique le même montant
+  d'XP, en une seule requête, à tous les personnages **joueurs** (pas les PNJ) actuellement
+  `inGame` et non archivés de ce groupe — même effet par personnage que `POST /:id/xp` (positif ou
+  négatif, alimente `xp` et `xpAvailable` symétriquement, cf. ci-dessus), simplement appliqué en
+  boucle côté serveur plutôt que par des appels individuels depuis le client.
+- Entrée : `{ amount: number }` (non nul).
+- Sortie : `{ ok: true, granted: number }` (nombre de personnages ayant reçu l'XP).
+- Erreurs : `403` (pas MJ ou pas membre du groupe), `400` (montant manquant, non numérique, ou nul).
+
 ## Profil (`src/worker/routes/profile.ts`)
 
 ### `GET /api/profile`

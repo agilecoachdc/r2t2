@@ -364,3 +364,50 @@ characterRoutes.post("/end-combat", async (c) => {
 
   return c.json({ ok: true, deactivated });
 });
+
+// Distribution d'XP groupée par le MJ — écran "Suivi des constantes" :
+// même montant pour tous les personnages JOUEURS actuellement en jeu de ce
+// groupe (inGame && !isNpc && !archived — les PNJ sont exclus, l'XP est un
+// mécanisme de progression des joueurs, tranché via AskUserQuestion en
+// session). Même effet par personnage que POST /:id/xp (positif ou négatif,
+// alimente xp ET xpAvailable symétriquement), appliqué en boucle plutôt que
+// personnage par personnage depuis le frontend pour rester atomique côté
+// MJ (un seul clic, un seul message d'erreur global en cas d'échec partiel).
+characterRoutes.post("/group-xp", async (c) => {
+  const user = c.get("user");
+  const groupId = c.req.query("groupId");
+  if (user.role !== "gm" || !groupId || !user.memberships.includes(groupId)) {
+    return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  }
+
+  const body = await c.req.json<{ amount?: number }>().catch(() => null);
+  const amount = body?.amount;
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount === 0) {
+    return c.json({ error: "Montant requis (non nul)" }, 400);
+  }
+
+  const { results } = await c.env.DB.prepare(
+    "SELECT id, data FROM characters WHERE player_group_id = ?1",
+  )
+    .bind(groupId)
+    .all<{ id: string; data: string }>();
+
+  const now = new Date().toISOString();
+  let granted = 0;
+  for (const row of results ?? []) {
+    const character: Character = JSON.parse(row.data);
+    if (!character.inGame || character.isNpc || character.archived) continue;
+    const updated: Character = {
+      ...character,
+      xp: character.xp + amount,
+      xpAvailable: (character.xpAvailable ?? 0) + amount,
+      updatedAt: now,
+    };
+    await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
+      .bind(JSON.stringify(updated), now, row.id)
+      .run();
+    granted++;
+  }
+
+  return c.json({ ok: true, granted });
+});

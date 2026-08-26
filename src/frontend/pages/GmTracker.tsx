@@ -368,6 +368,10 @@ export default function GmTracker() {
   const rankInitialized = useRef(false);
   const [endCombatBusy, setEndCombatBusy] = useState(false);
 
+  const [groupXpOpen, setGroupXpOpen] = useState(false);
+  const [groupXpAmount, setGroupXpAmount] = useState("");
+  const [groupXpBusy, setGroupXpBusy] = useState(false);
+
   const [showNpcForm, setShowNpcForm] = useState(false);
   const [npcName, setNpcName] = useState("");
   const [npcRace, setNpcRace] = useState("");
@@ -475,6 +479,31 @@ export default function GmTracker() {
       setError(err instanceof Error ? err.message : "Échec de la fin de combat");
     } finally {
       setEndCombatBusy(false);
+    }
+  }
+
+  // Distribution d'XP groupée — même montant pour tous les personnages
+  // JOUEURS en jeu du groupe (les PNJ ne sont pas concernés, l'XP est un
+  // mécanisme de progression des joueurs) en un seul appel côté serveur
+  // (cf. characters.ts POST /group-xp), plutôt qu'une boucle de grantXp
+  // individuels depuis le client. Recharge la liste pour refléter xp/
+  // xpAvailable à jour sur chaque tuile.
+  async function handleGrantGroupXp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!groupId) return;
+    const value = Number(groupXpAmount);
+    if (!value || !Number.isFinite(value)) return;
+    setError(null);
+    setGroupXpBusy(true);
+    try {
+      await api.grantGroupXp(groupId, value);
+      await loadCharacters();
+      setGroupXpAmount("");
+      setGroupXpOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec de la distribution d'XP groupée");
+    } finally {
+      setGroupXpBusy(false);
     }
   }
 
@@ -586,7 +615,7 @@ export default function GmTracker() {
           codée, seul ce bouton groupé ou une désactivation manuelle par
           fiche y met fin.
         */}
-        <div className="mb-6 flex justify-center">
+        <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
             onClick={handleEndCombat}
@@ -596,6 +625,51 @@ export default function GmTracker() {
           >
             {endCombatBusy ? "…" : `⚡ ${t("Fin de combat")}`}
           </button>
+
+          {/*
+            "Donner de l'XP à tous" — même montant pour tous les personnages
+            joueurs en jeu (PNJ exclus), cf. handleGrantGroupXp ci-dessus,
+            characters.ts POST /group-xp. Même esprit de mini-formulaire
+            inline que GrantXpControl (par tuile) plutôt qu'un prompt().
+          */}
+          {!groupXpOpen ? (
+            <button
+              type="button"
+              onClick={() => setGroupXpOpen(true)}
+              title={t("Donne le même montant d'XP à tous les personnages joueurs en jeu")}
+              className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700"
+            >
+              {`✦ ${t("Donner de l'XP à tous")}`}
+            </button>
+          ) : (
+            <form onSubmit={handleGrantGroupXp} className="flex items-center gap-1.5">
+              <input
+                type="number"
+                autoFocus
+                value={groupXpAmount}
+                onChange={(e) => setGroupXpAmount(e.target.value)}
+                placeholder="ex. 5"
+                className="w-16 rounded border border-slate-700 bg-slate-800 px-1.5 py-1 text-xs"
+              />
+              <button
+                type="submit"
+                disabled={groupXpBusy || !groupXpAmount}
+                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+              >
+                {groupXpBusy ? "…" : t("Valider")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setGroupXpOpen(false);
+                  setGroupXpAmount("");
+                }}
+                className="text-xs text-slate-500 hover:text-slate-300"
+              >
+                ×
+              </button>
+            </form>
+          )}
         </div>
 
         {error && <p className="mb-3 text-red-400">{error}</p>}

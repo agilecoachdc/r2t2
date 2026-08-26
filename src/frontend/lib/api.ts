@@ -83,6 +83,14 @@ export const api = {
     request<{ ok: true; deactivated: number }>(`/characters/end-combat?groupId=${encodeURIComponent(groupId)}`, {
       method: "POST",
     }),
+  // Distribution d'XP groupée (MJ, écran Suivi des constantes) : même
+  // montant pour tous les personnages joueurs en jeu du groupe — cf.
+  // characters.ts POST /group-xp.
+  grantGroupXp: (groupId: string, amount: number) =>
+    request<{ ok: true; granted: number }>(`/characters/group-xp?groupId=${encodeURIComponent(groupId)}`, {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    }),
 
   // ---------------------------------------------------------------------
   // Administration (jeux / règles / groupes / comptes) — réservé au rôle admin.

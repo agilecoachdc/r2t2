@@ -158,6 +158,12 @@ désactive d'un coup tous les pouvoirs actifs des personnages en jeu du groupe e
 — aucune expiration automatique par tour n'est codée (portée hors périmètre de cette itération),
 seule cette action groupée ou une désactivation manuelle par fiche met fin à un pouvoir actif.
 
+Le bouton "Donner de l'XP à tous" (MJ, écran "Suivi des constantes",
+`POST /api/characters/group-xp`) applique le même montant d'XP, choisi par le MJ, à tous les
+personnages **joueurs** actuellement en jeu du groupe en une seule action — même mécanisme que le
+bouton "+XP" par tuile (`POST /:id/xp`, alimente `xp` et `xpAvailable` symétriquement), mais groupé.
+Les PNJ ne sont pas concernés : l'XP est un mécanisme de progression des joueurs.
+
 ## Descriptions du catalogue et infobulles
 
 Compétences, avantages/inconvénients et pouvoirs psy portent chacun une `description` extraite des

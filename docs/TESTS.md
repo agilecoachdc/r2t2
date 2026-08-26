@@ -64,6 +64,12 @@ navigateur intégré, cf. session de build).
 - [ ] Sur l'écran "Suivi des constantes" (MJ), avec au moins un pouvoir actif sur un personnage en
       jeu : cliquer "Fin de combat" → tous les pouvoirs actifs des personnages en jeu sont
       désactivés, leur PSP remboursé, l'icône "⚡" disparaît de leurs tuiles.
+- [ ] Sur l'écran "Suivi des constantes" (MJ), avec au moins 2 personnages joueurs en jeu (et,
+      idéalement, 1 PNJ en jeu) : cliquer "Donner de l'XP à tous", saisir un montant (ex. 5),
+      valider → "XP gagnée" et "dispo" augmentent de 5 sur chaque tuile **joueur** en jeu, mais
+      restent inchangés sur les tuiles PNJ et sur tout personnage joueur non "en jeu". Saisir un
+      montant négatif → mêmes tuiles concernées, "XP gagnée" et "dispo" diminuent d'autant (peuvent
+      devenir négatifs, aucun plancher côté MJ — même comportement que le "+XP" par tuile).
 - [ ] Sur "Concentration psy" (ex. cas réel Karun : score de base 3, mais total 15 une fois Volonté
       + Affinité ajoutés), activer à un palier avec REF choisi → le bonus REF (`AttributesPanel`,
       pris en compte dans le RA) doit se calculer sur le score TOTAL (15), pas le score de base
