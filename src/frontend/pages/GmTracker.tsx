@@ -364,6 +364,18 @@ function CharacterTile({
           </span>
           {onGrantXp && <GrantXpControl onGrant={onGrantXp} />}
         </div>
+        {/*
+          Solde en crédits (Character.credits) — même principe d'affichage
+          que XP ci-dessus, alimenté par le bouton MJ "+(X) mois 💵" (revenu
+          mensuel individuel, cf. handleGrantGroupIncome plus bas) et diminué
+          automatiquement à l'achat d'une nouvelle arme/armure/ligne
+          d'équipement sur la fiche (cf. WeaponsArmorPanel/EquipmentPanel).
+        */}
+        <div className="mt-1 flex items-center text-xs text-slate-400">
+          <span>
+            💵 <span className="font-semibold text-emerald-300">{c.credits}</span> Cr
+          </span>
+        </div>
         {isNpc && onAdjust && (
           <div className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-400">
             <div className="flex items-center gap-1.5">
@@ -408,6 +420,10 @@ export default function GmTracker() {
   const [groupXpOpen, setGroupXpOpen] = useState(false);
   const [groupXpAmount, setGroupXpAmount] = useState("");
   const [groupXpBusy, setGroupXpBusy] = useState(false);
+
+  const [groupIncomeOpen, setGroupIncomeOpen] = useState(false);
+  const [groupIncomeMonths, setGroupIncomeMonths] = useState("1");
+  const [groupIncomeBusy, setGroupIncomeBusy] = useState(false);
 
   const [showNpcForm, setShowNpcForm] = useState(false);
   const [npcName, setNpcName] = useState("");
@@ -541,6 +557,29 @@ export default function GmTracker() {
       setError(err instanceof Error ? err.message : "Échec de la distribution d'XP groupée");
     } finally {
       setGroupXpBusy(false);
+    }
+  }
+
+  // Distribution du revenu mensuel groupée — chaque personnage JOUEUR en jeu
+  // reçoit SON PROPRE revenu (500 Cr de base + bonus "Revenus" éventuel, cf.
+  // calc-engine.getMonthlyIncome) fois le nombre de mois saisi, calculé côté
+  // serveur (POST /group-income) plutôt qu'un montant uniforme comme l'XP.
+  async function handleGrantGroupIncome(e: React.FormEvent) {
+    e.preventDefault();
+    if (!groupId) return;
+    const months = Number(groupIncomeMonths);
+    if (!months || !Number.isFinite(months)) return;
+    setError(null);
+    setGroupIncomeBusy(true);
+    try {
+      await api.grantGroupIncome(groupId, months);
+      await loadCharacters();
+      setGroupIncomeMonths("1");
+      setGroupIncomeOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec de la distribution du revenu mensuel");
+    } finally {
+      setGroupIncomeBusy(false);
     }
   }
 
@@ -700,6 +739,51 @@ export default function GmTracker() {
                 onClick={() => {
                   setGroupXpOpen(false);
                   setGroupXpAmount("");
+                }}
+                className="text-xs text-slate-500 hover:text-slate-300"
+              >
+                ×
+              </button>
+            </form>
+          )}
+
+          {/*
+            "+(X) mois 💵" — verse à chaque personnage joueur en jeu SON
+            PROPRE revenu mensuel (pas un montant uniforme, contrairement à
+            l'XP ci-dessus), cf. handleGrantGroupIncome, characters.ts POST
+            /group-income, calc-engine.getMonthlyIncome.
+          */}
+          {!groupIncomeOpen ? (
+            <button
+              type="button"
+              onClick={() => setGroupIncomeOpen(true)}
+              title={t("Verse à chaque personnage joueur en jeu son revenu mensuel (500 Cr + bonus \"Revenus\" éventuel) fois le nombre de mois saisi")}
+              className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700"
+            >
+              {`💵 ${t("+(X) mois")}`}
+            </button>
+          ) : (
+            <form onSubmit={handleGrantGroupIncome} className="flex items-center gap-1.5">
+              <input
+                type="number"
+                autoFocus
+                value={groupIncomeMonths}
+                onChange={(e) => setGroupIncomeMonths(e.target.value)}
+                placeholder="ex. 1"
+                className="w-16 rounded border border-slate-700 bg-slate-800 px-1.5 py-1 text-xs"
+              />
+              <button
+                type="submit"
+                disabled={groupIncomeBusy || !groupIncomeMonths}
+                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+              >
+                {groupIncomeBusy ? "…" : t("Valider")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setGroupIncomeOpen(false);
+                  setGroupIncomeMonths("1");
                 }}
                 className="text-xs text-slate-500 hover:text-slate-300"
               >

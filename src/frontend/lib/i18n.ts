@@ -241,6 +241,13 @@ const EN: Record<string, string> = {
   "dispo": "avail.",
   "Donner de l'XP à tous": "Give XP to all",
   "Donne le même montant d'XP à tous les personnages joueurs en jeu": "Gives the same amount of XP to all in-game player characters",
+  "+(X) mois": "+(X) months",
+  "Verse à chaque personnage joueur en jeu son revenu mensuel (500 Cr + bonus \"Revenus\" éventuel) fois le nombre de mois saisi": "Pays each in-game player character their own monthly income (500 Cr + any \"Revenus\" bonus) times the number of months entered",
+  "Crédits": "Credits",
+  "Revenu mensuel": "Monthly income",
+  "Solde insuffisant pour": "Insufficient balance for",
+  "solde": "balance",
+  "Nom de l'objet": "Item name",
 };
 
 const DICTIONARIES: Partial<Record<Language, Record<string, string>>> = { en: EN };

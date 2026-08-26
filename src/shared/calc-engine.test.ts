@@ -17,6 +17,7 @@ import {
   getBoostedSkillNames,
   getDualWieldPenalty,
   getHpMax,
+  getMonthlyIncome,
   getPowerAffinityBonus,
   getPspMax,
   getPsyPowerActivationCost,
@@ -34,6 +35,7 @@ import {
   hasActivePsyPowerBoost,
   hasAmbidextrousAdvantage,
   MAX_EQUIPPED_WEAPONS,
+  parseCatalogPrice,
   parseSkillAttribute,
 } from "./calc-engine";
 import { referenceData } from "./reference-data";
@@ -545,6 +547,49 @@ describe("getBoostedSkillNames — indicateur générique (aucune icône d'attri
       activePsyPowers: [{ name: "Illusion", level: 20, boostSkillName: "Discretion (DEX)", boostAmount: 0 }],
     };
     expect(getBoostedSkillNames(character)).toEqual([]);
+  });
+});
+
+describe("getMonthlyIncome — revenu mensuel (500 Cr de base + avantage \"Revenus\")", () => {
+  it("500 Cr de base sans avantage \"Revenus\"", () => {
+    expect(getMonthlyIncome({ advantages: [] })).toBe(500);
+    expect(getMonthlyIncome({ advantages: [{ label: "Ambidextre", value: 10 }] })).toBe(500);
+  });
+
+  it("avantage \"Revenus : +20\" ajoute 20 x 100 = 2000 Cr au revenu de base (multiplicateur corrigé en session : x100, pas x1000)", () => {
+    expect(getMonthlyIncome({ advantages: [{ label: "Revenus : +20", value: 20 }] })).toBe(2500);
+  });
+
+  it("variantes d'espacement/ponctuation du libellé (\"Revenus: +10\" vs \"Revenus : +10\") comptent pareil", () => {
+    expect(getMonthlyIncome({ advantages: [{ label: "Revenus: +10", value: 10 }] })).toBe(1500);
+  });
+
+  it("plusieurs avantages \"Revenus\" se cumulent", () => {
+    expect(
+      getMonthlyIncome({
+        advantages: [
+          { label: "Revenus : +10", value: 10 },
+          { label: "Revenus : +20", value: 20 },
+        ],
+      }),
+    ).toBe(500 + 10 * 100 + 20 * 100);
+  });
+});
+
+describe("parseCatalogPrice — prix catalogue (WeaponDefinition/ArmorDefinition.price)", () => {
+  it("nombre déjà propre : retourné tel quel", () => {
+    expect(parseCatalogPrice(500)).toBe(500);
+  });
+
+  it("texte numérique (saisie via l'éditeur de catalogue admin, toujours une string) : converti", () => {
+    expect(parseCatalogPrice("500")).toBe(500);
+  });
+
+  it("fourchette texte (ex. \"10-100\"), texte vide, absent ou null : non exploitable, retourne null (jamais bloquant)", () => {
+    expect(parseCatalogPrice("10-100")).toBeNull();
+    expect(parseCatalogPrice("")).toBeNull();
+    expect(parseCatalogPrice(null)).toBeNull();
+    expect(parseCatalogPrice(undefined)).toBeNull();
   });
 });
 

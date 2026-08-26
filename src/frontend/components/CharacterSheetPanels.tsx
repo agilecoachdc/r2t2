@@ -22,6 +22,7 @@ import {
   getActivePsyPowerAttributeBoost,
   getActivePsyPowerSkillBoost,
   getDualWieldPenalty,
+  getMonthlyIncome,
   getPowerAffinityBonus,
   getPsyPowerActivationCost,
   getPsyPowerTotal,
@@ -31,6 +32,7 @@ import {
   getSkillTotal,
   getWeaponSuggestedScore,
   getWeaponTotals,
+  parseCatalogPrice,
   PSY_POWER_LEVELS,
 } from "@shared/calc-engine";
 import { LocalisationSilhouette, RaceArmorSilhouette } from "./RaceArmorSilhouette";
@@ -724,6 +726,23 @@ export function SkillsPanel({
   );
 }
 
+/**
+ * Tente de débiter `rawPrice` (prix catalogue, cf. parseCatalogPrice) du
+ * solde courant — retourne le nouveau solde si l'achat passe, ou `null` si
+ * le solde ne suffit pas (achat BLOQUÉ, tranché via AskUserQuestion en
+ * session). Un prix inconnu (fourchette, texte non numérique, absent du
+ * catalogue) n'est jamais bloquant : retourne le solde inchangé, rien n'est
+ * déduit. Utilisé uniquement à l'ajout d'une NOUVELLE ligne (arme, armure,
+ * objet d'équipement) — modifier une ligne déjà existante n'a aucun effet
+ * sur le solde.
+ */
+function tryPurchase(credits: number, rawPrice: number | string | null | undefined): number | null {
+  const price = parseCatalogPrice(rawPrice);
+  if (price == null) return credits;
+  if (price > credits) return null;
+  return credits - price;
+}
+
 export function WeaponsArmorPanel({
   character,
   computed,
@@ -748,6 +767,11 @@ export function WeaponsArmorPanel({
   const armor = character.armor;
   const activeArmor = armor.filter((a) => a.active);
   const [expandedWeapon, setExpandedWeapon] = useState<number | null>(null);
+  // Message d'achat bloqué (solde insuffisant) — cf. tryPurchase, onPick des
+  // armes/armures ci-dessous. Partagé entre les deux colonnes (une seule
+  // erreur affichée à la fois suffit, l'achat qui échoue est toujours le
+  // dernier tenté).
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
   function setWeaponModifiers(i: number, modifiers: WeaponModifier[]) {
     update({ weapons: weapons.map((x, idx) => (idx === i ? { ...x, modifiers } : x)) });
@@ -756,7 +780,22 @@ export function WeaponsArmorPanel({
   const dualWieldPenalty = getDualWieldPenalty(character);
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div>
+      {/*
+        Solde en crédits, visible au moment où le joueur/MJ va justement
+        acheter arme/armure (cf. Character.credits, BudgetPanel pour le
+        revenu mensuel détaillé) — et message d'achat bloqué le cas échéant
+        (cf. tryPurchase).
+      */}
+      {editing && (
+        <p className="mb-3 text-sm text-slate-300">
+          💵 {t("Solde")} : <span className="font-semibold text-emerald-300">{character.credits ?? 0}</span> Cr
+        </p>
+      )}
+      {purchaseError && (
+        <p className="mb-3 rounded-lg bg-red-950 px-3 py-2 text-xs text-red-300">⚠️ {purchaseError}</p>
+      )}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <Section title={t("Armes")}>
         {dualWieldPenalty !== 0 && (
           <p className="mb-2 text-xs text-red-400">
@@ -814,6 +853,24 @@ export function WeaponsArmorPanel({
                         const def = referenceData.weapons.find((wd) => wd.name === name);
                         const type = (def?.type as WeaponType) ?? w.type;
                         const suggestedScore = getWeaponSuggestedScore(character, computed.attributeTotals, name, type);
+                        // Achat : uniquement quand cette ligne n'avait pas encore de nom (arme
+                        // vraiment NOUVELLE, cf. "+ Ajouter une arme" plus bas) — changer le
+                        // choix d'une arme déjà nommée est une correction, pas un achat. Prix
+                        // inconnu au catalogue (fourchette, absent) = pas de déduction. Solde
+                        // insuffisant = achat bloqué, la sélection n'est pas appliquée.
+                        const isNewPurchase = w.name === "";
+                        let nextCredits = character.credits ?? 0;
+                        if (isNewPurchase) {
+                          const result = tryPurchase(character.credits ?? 0, def?.price);
+                          if (result == null) {
+                            setPurchaseError(
+                              `${t("Solde insuffisant pour")} "${name}" (${parseCatalogPrice(def?.price)} Cr, ${t("solde")} ${character.credits ?? 0} Cr).`,
+                            );
+                            return;
+                          }
+                          nextCredits = result;
+                          setPurchaseError(null);
+                        }
                         update({
                           weapons: weapons.map((x, idx) =>
                             idx === i
@@ -827,6 +884,7 @@ export function WeaponsArmorPanel({
                                 }
                               : x,
                           ),
+                          ...(isNewPurchase ? { credits: nextCredits } : {}),
                         });
                       }}
                       placeholder={t("— choisir une arme —")}
@@ -1060,6 +1118,23 @@ export function WeaponsArmorPanel({
                       // catalogue (listes!T:AD) — restent éditables si le
                       // joueur veut surcharger (ex. armure améliorée).
                       const def = referenceData.armor.find((ad) => ad.name === name);
+                      // Achat : même logique que pour les armes (cf. onPick
+                      // ci-dessus) — uniquement pour une armure vraiment
+                      // NOUVELLE (nom encore vide), prix inconnu = pas de
+                      // déduction, solde insuffisant = achat bloqué.
+                      const isNewPurchase = a.name === "";
+                      let nextCredits = character.credits ?? 0;
+                      if (isNewPurchase) {
+                        const result = tryPurchase(character.credits ?? 0, def?.price);
+                        if (result == null) {
+                          setPurchaseError(
+                            `${t("Solde insuffisant pour")} "${name}" (${parseCatalogPrice(def?.price)} Cr, ${t("solde")} ${character.credits ?? 0} Cr).`,
+                          );
+                          return;
+                        }
+                        nextCredits = result;
+                        setPurchaseError(null);
+                      }
                       update({
                         armor: armor.map((x, idx) =>
                           idx === i
@@ -1073,6 +1148,7 @@ export function WeaponsArmorPanel({
                               }
                             : x,
                         ),
+                        ...(isNewPurchase ? { credits: nextCredits } : {}),
                       });
                     }}
                     placeholder={t("— choisir une armure —")}
@@ -1110,6 +1186,7 @@ export function WeaponsArmorPanel({
           </ul>
         )}
       </Section>
+      </div>
     </div>
   );
 }
@@ -1492,30 +1569,90 @@ export function EquipmentPanel({
 }) {
   const { t } = useTranslation();
   const equipment = character.equipment;
+  // Mini-formulaire d'achat (nom + prix) plutôt que l'ancien ajout instantané
+  // d'une ligne vide : l'AJOUT d'un objet est le seul moment où le prix est
+  // déduit du solde (cf. WeaponsArmorPanel.tryPurchase, même principe) —
+  // modifier le libellé/prix d'une ligne déjà existante n'a jamais d'effet
+  // sur le solde. Un prix laissé vide/à 0 ajoute l'objet sans rien déduire
+  // (comportement identique à avant l'ajout de ce champ).
+  const [newLabel, setNewLabel] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const label = newLabel.trim();
+    if (!label) return;
+    const credits = character.credits ?? 0;
+    const price = newPrice.trim() === "" ? undefined : Number(newPrice);
+    if (price != null && Number.isFinite(price) && price > 0) {
+      if (price > credits) {
+        setPurchaseError(`${t("Solde insuffisant pour")} "${label}" (${price} Cr, ${t("solde")} ${credits} Cr).`);
+        return;
+      }
+      update({ equipment: [...equipment, { label, price }], credits: credits - price });
+    } else {
+      update({ equipment: [...equipment, { label }] });
+    }
+    setPurchaseError(null);
+    setNewLabel("");
+    setNewPrice("");
+  }
+
   return (
     <Section title={t("Équipement")}>
       <ul className="list-inside list-disc space-y-1 text-sm text-slate-200">
         {equipment.map((e, i) => (
           <li key={i} className="flex items-center gap-2">
             {editing ? (
-              <TextInput
-                value={e.label}
-                onChange={(v) => update({ equipment: equipment.map((x, idx) => (idx === i ? { label: v } : x)) })}
-                className="flex-1"
-              />
+              <>
+                <TextInput
+                  value={e.label}
+                  onChange={(v) => update({ equipment: equipment.map((x, idx) => (idx === i ? { ...x, label: v } : x)) })}
+                  className="flex-1"
+                />
+                <NumberInput
+                  value={e.price ?? 0}
+                  onChange={(n) =>
+                    update({ equipment: equipment.map((x, idx) => (idx === i ? { ...x, price: n || undefined } : x)) })
+                  }
+                  className="w-20"
+                />
+                <span className="text-xs text-slate-500">Cr</span>
+                <button
+                  onClick={() => update({ equipment: equipment.filter((_, idx) => idx !== i) })}
+                  className="text-slate-500 hover:text-red-400"
+                >
+                  ×
+                </button>
+              </>
             ) : (
-              e.label
+              <span>
+                {e.label}
+                {e.price != null && <span className="text-slate-500"> ({e.price} Cr)</span>}
+              </span>
             )}
           </li>
         ))}
       </ul>
       {editing && (
-        <button
-          onClick={() => update({ equipment: [...equipment, { label: "" }] })}
-          className="mt-2 text-sm text-indigo-400 hover:underline"
-        >
-          {t("+ Ajouter un objet")}
-        </button>
+        <>
+          {purchaseError && (
+            <p className="mt-2 rounded-lg bg-red-950 px-3 py-2 text-xs text-red-300">⚠️ {purchaseError}</p>
+          )}
+          <form onSubmit={handleAdd} className="mt-2 flex flex-wrap items-center gap-2">
+            <TextInput value={newLabel} onChange={setNewLabel} placeholder={t("Nom de l'objet")} className="flex-1" />
+            <NumberInput value={newPrice === "" ? 0 : Number(newPrice)} onChange={(n) => setNewPrice(n ? String(n) : "")} className="w-20" />
+            <span className="text-xs text-slate-500">Cr</span>
+            <button
+              type="submit"
+              disabled={!newLabel.trim()}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            >
+              {t("+ Ajouter un objet")}
+            </button>
+          </form>
+        </>
       )}
     </Section>
   );
@@ -1534,7 +1671,7 @@ export function BudgetPanel({
   onGrantXp,
   onAcceptDeficit,
 }: {
-  character: Pick<Character, "pointsDepart" | "xp" | "xpAvailable">;
+  character: Pick<Character, "pointsDepart" | "xp" | "xpAvailable" | "credits" | "advantages">;
   computed: CharacterComputed;
   isGm?: boolean;
   onGrantXp?: (amount: number) => void | Promise<void>;
@@ -1620,6 +1757,21 @@ export function BudgetPanel({
           )}
         </div>
       )}
+      {/*
+        Crédits (Cr, monnaie du jeu) — distinct du budget de points ci-dessus.
+        Solde alimenté par le bouton MJ "+(X) mois 💵" (écran "Suivi des
+        constantes", pas ici : cf. GmTracker.tsx) et diminué automatiquement
+        à l'achat d'une nouvelle arme/armure/ligne d'équipement (cf.
+        WeaponsArmorPanel/EquipmentPanel). Revenu mensuel affiché en info
+        seule, pour transparence sur "ce que ce personnage devrait recevoir".
+      */}
+      <div className="mt-3 border-t border-slate-800 pt-3">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("Crédits")}</p>
+        <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+          <Metric label={t("Solde")} value={character.credits ?? 0} emphasis />
+          <Metric label={t("Revenu mensuel")} value={getMonthlyIncome(character)} />
+        </dl>
+      </div>
       {isGm && onGrantXp && (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
           <label className="text-sm text-slate-400">{t("Donner de l'XP")}</label>

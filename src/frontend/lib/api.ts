@@ -91,6 +91,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ amount }),
     }),
+  // Distribution du revenu mensuel groupée (MJ, écran Suivi des constantes,
+  // bouton "+(X) mois 💵") : chaque personnage joueur en jeu reçoit SON
+  // PROPRE revenu (500 Cr + bonus "Revenus" éventuel) x months — cf.
+  // characters.ts POST /group-income, calc-engine.getMonthlyIncome.
+  grantGroupIncome: (groupId: string, months: number) =>
+    request<{ ok: true; granted: number }>(`/characters/group-income?groupId=${encodeURIComponent(groupId)}`, {
+      method: "POST",
+      body: JSON.stringify({ months }),
+    }),
 
   // ---------------------------------------------------------------------
   // Administration (jeux / règles / groupes / comptes) — réservé au rôle admin.

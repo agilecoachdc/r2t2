@@ -38,7 +38,8 @@ chaque réponse.
 - Auth : session ; `groupId` doit être dans `user.memberships` (403 sinon).
 - Sortie : `{ characters: CharacterSummary[], referenceData: ReferenceData, groupImageUrl: string | null, groupDriveUrl: string | null }`
   — résumé enrichi (portrait, statut `inGame`, `isNpc`, `archived`, PV/PSP courant + max calculé,
-  `xp`/`xpAvailable`, `actionRank`) utilisé par l'écran "Personnages" et l'écran "Suivi des
+  `xp`/`xpAvailable`, `credits` (solde en Cr, cf. section "Monnaie" du README), `actionRank`)
+  utilisé par l'écran "Personnages" et l'écran "Suivi des
   constantes" (MJ), tous deux scopés `/groupe/:groupId` et `/suivi/:groupId`. `groupImageUrl` est
   l'image du groupe (`player_groups.image_url`, fond d'écran) ; `groupDriveUrl` est le lien Drive
   personnalisable du groupe (`player_groups.drive_url`, affiché en bouton "Dossier Drive" — plus
@@ -130,6 +131,20 @@ chaque réponse.
 - Entrée : `{ amount: number }` (non nul).
 - Sortie : `{ ok: true, granted: number }` (nombre de personnages ayant reçu l'XP).
 - Erreurs : `403` (pas MJ ou pas membre du groupe), `400` (montant manquant, non numérique, ou nul).
+
+### `POST /api/characters/group-income?groupId=`
+- Auth : session + rôle `gm` membre du groupe ciblé.
+- "+(X) mois 💵" (bouton MJ, écran "Suivi des constantes", à côté de "Donner de l'XP à tous") :
+  contrairement à `group-xp` ci-dessus (même montant pour tous), chaque personnage **joueur** (pas
+  les PNJ) actuellement `inGame` et non archivé du groupe reçoit SON PROPRE revenu mensuel (cf.
+  `calc-engine.getMonthlyIncome` : 500 Cr de base + 100 Cr par point de chaque avantage
+  "Revenus : +X" possédé), multiplié par le nombre de mois passé en entrée, et ajouté à
+  `character.credits`.
+- Entrée : `{ months: number }` (non nul — un nombre négatif retire X mois de revenu, utile pour
+  corriger un clic en trop, même logique que `amount` sur `group-xp`).
+- Sortie : `{ ok: true, granted: number }` (nombre de personnages ayant reçu leur revenu).
+- Erreurs : `403` (pas MJ ou pas membre du groupe), `400` (nombre de mois manquant, non numérique,
+  ou nul).
 
 ## Profil (`src/worker/routes/profile.ts`)
 

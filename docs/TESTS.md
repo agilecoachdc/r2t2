@@ -111,6 +111,30 @@ navigateur intégré, cf. session de build).
       des deux armes équipées diminue de 3 (pas les dégâts ni le RA). Cocher une 3ᵉ arme →
       déséquipe automatiquement la plus ancienne des deux (toujours 2 maximum). Ajouter l'avantage
       "Ambidextre: +10" → le message rouge disparaît, les deux armes retrouvent leur score plein.
+- [ ] Sur la fiche d'un personnage sans avantage "Revenus", panneau "Budget de points" → section
+      "Crédits" affiche "Revenu mensuel" = 500. Ajouter l'avantage "Revenus : +20" → "Revenu
+      mensuel" passe à 2500 (500 + 20 x 100 — multiplicateur x100, pas x1000, corrigé en session).
+- [ ] Sur l'écran "Suivi des constantes" (MJ), avec au moins 2 personnages joueurs en jeu (et,
+      idéalement, 1 avec l'avantage "Revenus", 1 PNJ en jeu) : cliquer "💵 +(X) mois", saisir 1,
+      valider → chaque personnage **joueur** en jeu reçoit SON PROPRE revenu mensuel (💵 sur sa
+      tuile augmente du montant affiché dans "Revenu mensuel" sur sa fiche, pas un montant uniforme
+      pour tous) ; les tuiles PNJ et les personnages joueurs non "en jeu" restent inchangés. Saisir 2
+      → chaque personnage reçoit le double de son propre revenu mensuel.
+- [ ] Sur une fiche en édition, avec un solde de quelques centaines de Cr : dans "Armes", cliquer
+      "+ Ajouter une arme" puis choisir dans le catalogue une arme au prix connu et inférieur au
+      solde → le solde affiché en haut de la section ("💵 Solde : …") diminue du prix de l'arme.
+      Choisir ensuite une arme au prix SUPÉRIEUR au solde restant → message rouge "Solde insuffisant
+      pour…", la sélection n'est PAS appliquée (le nom de l'arme reste vide), le solde ne bouge pas.
+      Rouvrir le sélecteur sur une ligne d'arme DÉJÀ nommée et changer son choix → aucune déduction
+      (ce n'est pas un nouvel achat). Même comportement à vérifier sur "Armures" (nécessite qu'un
+      admin ait renseigné un prix sur au moins une armure du catalogue, cf. éditeur admin, onglet
+      "Armures", colonne "Prix").
+- [ ] Sur "Équipement" en édition : saisir un nom et un prix supérieur au solde dans le
+      mini-formulaire d'ajout → message rouge "Solde insuffisant pour…", rien n'est ajouté. Saisir un
+      prix inférieur ou égal au solde → l'objet est ajouté à la liste (avec son prix affiché entre
+      parenthèses en lecture seule) et le solde diminue d'autant. Laisser le prix vide → l'objet est
+      ajouté sans rien déduire (comportement identique à avant l'ajout du prix). Modifier ensuite le
+      prix affiché sur une ligne déjà ajoutée → aucun effet sur le solde (seul l'ajout déduit).
 
 ## §4 — Permissions
 

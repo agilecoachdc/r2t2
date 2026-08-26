@@ -24,6 +24,7 @@ import {
   getAdvantagesNet,
   getBoostedAttributes,
   getBoostedSkillNames,
+  getMonthlyIncome,
   getPsyPowerActivationCost,
   getPsyPowersCostTotal,
   getSkillsCostTotal,
@@ -78,6 +79,7 @@ characterRoutes.get("/", async (c) => {
       armorTotals,
       xp: parsed.xp ?? 0,
       xpAvailable: parsed.xpAvailable ?? 0,
+      credits: parsed.credits ?? 0,
       actionRank,
       boostedAttributes: getBoostedAttributes(parsed, attributeTotals),
       boostedSkillNames: getBoostedSkillNames(parsed),
@@ -196,6 +198,7 @@ characterRoutes.post("/", async (c) => {
     pointsDepart: 0,
     xp: 0,
     xpAvailable: 0,
+    credits: 0,
     reputations: "",
     notes: "",
     updatedAt: now,
@@ -403,6 +406,53 @@ characterRoutes.post("/group-xp", async (c) => {
       ...character,
       xp: character.xp + amount,
       xpAvailable: (character.xpAvailable ?? 0) + amount,
+      updatedAt: now,
+    };
+    await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
+      .bind(JSON.stringify(updated), now, row.id)
+      .run();
+    granted++;
+  }
+
+  return c.json({ ok: true, granted });
+});
+
+// Distribution du revenu mensuel groupée par le MJ — écran "Suivi des
+// constantes", bouton "+(X) mois 💵" à côté de "Donner de l'XP à tous".
+// Contrairement à l'XP groupée (même montant pour tous), chaque personnage
+// JOUEUR en jeu du groupe reçoit SON PROPRE revenu mensuel (cf.
+// calc-engine.getMonthlyIncome : 500 Cr de base + 100 Cr par point de
+// l'avantage "Revenus" éventuel), multiplié par le nombre de mois choisi par
+// le MJ — pas un montant uniforme. Les PNJ sont exclus (même portée que
+// group-xp).
+characterRoutes.post("/group-income", async (c) => {
+  const user = c.get("user");
+  const groupId = c.req.query("groupId");
+  if (user.role !== "gm" || !groupId || !user.memberships.includes(groupId)) {
+    return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  }
+
+  const body = await c.req.json<{ months?: number }>().catch(() => null);
+  const months = body?.months;
+  if (typeof months !== "number" || !Number.isFinite(months) || months === 0) {
+    return c.json({ error: "Nombre de mois requis (non nul)" }, 400);
+  }
+
+  const { results } = await c.env.DB.prepare(
+    "SELECT id, data FROM characters WHERE player_group_id = ?1",
+  )
+    .bind(groupId)
+    .all<{ id: string; data: string }>();
+
+  const now = new Date().toISOString();
+  let granted = 0;
+  for (const row of results ?? []) {
+    const character: Character = JSON.parse(row.data);
+    if (!character.inGame || character.isNpc || character.archived) continue;
+    const income = getMonthlyIncome(character) * months;
+    const updated: Character = {
+      ...character,
+      credits: (character.credits ?? 0) + income,
       updatedAt: now,
     };
     await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")

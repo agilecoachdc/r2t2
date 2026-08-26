@@ -223,6 +223,15 @@ export interface AdvantageEntry {
 
 export interface EquipmentEntry {
   label: string;
+  /**
+   * Prix payé à l'achat (Cr), déduit de `Character.credits` au moment de
+   * l'ajout d'une NOUVELLE ligne via le mini-formulaire d'achat
+   * (EquipmentPanel) — cf. calc-engine.getMonthlyIncome pour le revenu.
+   * Absent/undefined = objet gratuit ou ajouté avant l'introduction de ce
+   * champ (pas de déduction rétroactive) ; modifier ce prix sur une ligne
+   * déjà existante n'a aucun effet sur le solde (seul l'AJOUT déduit).
+   */
+  price?: number;
 }
 
 export interface Character {
@@ -332,6 +341,23 @@ export interface Character {
    */
   xpAvailable: number;
 
+  // Argent — voir BudgetPanel (section "Crédits") et calc-engine.getMonthlyIncome.
+  /**
+   * Solde actuel en crédits (Cr, monnaie du jeu) — distinct du budget de
+   * points ci-dessus. Alimenté par le bouton MJ "+(X) mois 💵" (écran "Suivi
+   * des constantes", POST /api/characters/group-income), qui verse à chaque
+   * personnage joueur en jeu son revenu mensuel (cf. getMonthlyIncome : 500
+   * Cr de base + 100 Cr par point de l'avantage "Revenus" éventuel) fois le
+   * nombre de mois choisi. Diminué automatiquement à l'achat d'une NOUVELLE
+   * arme/armure/ligne d'équipement dont le prix catalogue est connu (cf.
+   * WeaponsArmorPanel/EquipmentPanel) — l'achat est bloqué côté client si le
+   * solde ne suffit pas (même logique de validation client que le solde de
+   * points négatif, cf. docs/API_REFERENCE.md). Absent des fiches créées
+   * avant l'ajout de ce champ — traité comme `0` partout où il est lu (même
+   * convention que `xpAvailable`).
+   */
+  credits: number;
+
   // Texte libre
   reputations: string;
   notes: string;
@@ -386,6 +412,8 @@ export interface ArmorDefinition {
   vpBras: number;
   vpTorse: number;
   vpJambes: number;
+  /** Prix catalogue (Cr) — même forme que WeaponDefinition.price (nombre, texte libre pour une fourchette type "10-100", ou absent/null si non renseigné). Ajouté après coup : absent des armures existantes tant qu'un admin ne l'a pas saisi via l'éditeur de catalogue. */
+  price?: number | string | null;
 }
 
 export interface PsyPowerDefinition {
@@ -555,6 +583,8 @@ export interface CharacterSummary {
   /** XP gagnée (cumulatif) et XP disponible (pool géré par le MJ) — cf. Character.xp/xpAvailable. Affichés sur la tuile de l'écran "Suivi des constantes". */
   xp: number;
   xpAvailable: number;
+  /** Solde en crédits (Cr) — cf. Character.credits. Affiché sur la tuile de l'écran "Suivi des constantes" avec l'icône 💵. */
+  credits: number;
   /**
    * Rang d'Action courant — cf. calc-engine.getActionRank (Réflexe total,
    * arme équipée, avantages/pouvoir psy "Concentration" actifs). Plus bas =

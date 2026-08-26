@@ -425,13 +425,14 @@ export default function GamesRulesets() {
                 rows={draft.referenceData.armor}
                 onChange={(armor) => updateReferenceData({ armor })}
                 addLabel="+ Ajouter une armure"
-                emptyRow={() => ({ name: "", vpTete: 0, vpBras: 0, vpTorse: 0, vpJambes: 0 })}
+                emptyRow={() => ({ name: "", vpTete: 0, vpBras: 0, vpTorse: 0, vpJambes: 0, price: null })}
                 columns={[
                   { key: "name", label: "Nom", kind: "text", get: (r) => r.name, set: (r, v) => ({ ...r, name: v }) },
                   { key: "vpTete", label: "VP tête", kind: "number", get: (r) => r.vpTete, set: (r, v) => ({ ...r, vpTete: Number(v) || 0 }) },
                   { key: "vpBras", label: "VP bras", kind: "number", get: (r) => r.vpBras, set: (r, v) => ({ ...r, vpBras: Number(v) || 0 }) },
                   { key: "vpTorse", label: "VP torse", kind: "number", get: (r) => r.vpTorse, set: (r, v) => ({ ...r, vpTorse: Number(v) || 0 }) },
                   { key: "vpJambes", label: "VP jambes", kind: "number", get: (r) => r.vpJambes, set: (r, v) => ({ ...r, vpJambes: Number(v) || 0 }) },
+                  { key: "price", label: "Prix", kind: "text", get: (r) => r.price ?? "", set: (r, v) => ({ ...r, price: v || null }) },
                 ]}
               />
             )}

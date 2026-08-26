@@ -708,6 +708,59 @@ export function getAdvantagesNet(character: Pick<Character, "advantages">): numb
   return character.advantages.reduce((sum, adv) => sum + adv.value, 0);
 }
 
+// ---------------------------------------------------------------------------
+// Argent (crédits, Cr) — revenu mensuel distribué par le MJ (bouton "+(X)
+// mois 💵", écran "Suivi des constantes") et prix catalogue consommé à
+// l'achat d'une nouvelle arme/armure/ligne d'équipement (cf. WeaponsArmorPanel
+// / EquipmentPanel). Indépendant du budget de points ci-dessus.
+// ---------------------------------------------------------------------------
+
+/** Revenu mensuel de base (Cr) pour tout personnage joueur, avant tout avantage. */
+export const BASE_MONTHLY_INCOME = 500;
+
+/** Préfixe des labels d'avantage "Revenus : +X" du catalogue (toutes variantes de ponctuation/espacement partagent ce préfixe). */
+const REVENU_ADVANTAGE_LABEL = "Revenus";
+
+/**
+ * Multiplicateur du revenu mensuel additionnel par point de l'avantage
+ * "Revenus" — la description du catalogue dit "x1000" mais la table de jeu
+ * réelle utilise x100 (corrigé en session, coquille de règle). Ex. "Revenus :
+ * +20" ajoute 20 x 100 = 2000 Cr/mois au revenu de base.
+ */
+const REVENU_ADVANTAGE_MULTIPLIER = 100;
+
+/**
+ * Revenu mensuel total (Cr) d'un personnage : 500 Cr de base (BASE_MONTHLY_
+ * INCOME), plus 100 Cr par point de chaque avantage "Revenus : +X" possédé
+ * (sommés si plusieurs, cf. getAdvantagesNet pour la même convention de somme
+ * sur les avantages). Utilisé par POST /api/characters/group-income (bouton
+ * MJ "+(X) mois") pour distribuer à chaque personnage joueur en jeu ce qu'il
+ * doit réellement recevoir, pas un montant uniforme.
+ */
+export function getMonthlyIncome(character: Pick<Character, "advantages">): number {
+  const revenuBonus = character.advantages
+    .filter((a) => a.label.startsWith(REVENU_ADVANTAGE_LABEL))
+    .reduce((sum, a) => sum + a.value * REVENU_ADVANTAGE_MULTIPLIER, 0);
+  return BASE_MONTHLY_INCOME + revenuBonus;
+}
+
+/**
+ * Convertit un prix catalogue (WeaponDefinition.price / ArmorDefinition.price
+ * — nombre, texte libre, ou absent/null) en nombre exploitable pour déduire
+ * un achat, ou `null` si le prix n'est pas un nombre exploitable (fourchette
+ * type "10-100", texte non numérique, absent). Un prix inconnu n'est jamais
+ * bloquant : l'achat correspondant n'est simplement pas déduit du solde (cf.
+ * WeaponsArmorPanel).
+ */
+export function parseCatalogPrice(price: number | string | null | undefined): number | null {
+  if (price == null) return null;
+  if (typeof price === "number") return Number.isFinite(price) ? price : null;
+  const trimmed = price.trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function getRaceSkillPoints(character: Pick<Character, "race">, reference: ReferenceData): number {
   return reference.races.find((r) => r.race === character.race)?.skillPoints ?? 0;
 }

@@ -84,6 +84,33 @@ confondre :
 
 Voir `POST /api/characters/:id/xp` dans `docs/API_REFERENCE.md`.
 
+## Monnaie (crédits, Cr)
+
+Système d'argent indépendant du budget de points ci-dessus — `Character.credits`, affiché en
+"Crédits" sur la fiche (panneau "Budget de points") et sur chaque tuile de l'écran "Suivi des
+constantes" (icône 💵).
+
+- **Revenu mensuel** (`calc-engine.getMonthlyIncome`) : 500 Cr de base pour tout personnage joueur,
+  plus 100 Cr par point de chaque avantage "Revenus : +X" possédé (ex. "Revenus : +20" ajoute
+  20 x 100 = 2000 Cr/mois, pour un total de 2500 Cr/mois) — la description du catalogue dit "x1000"
+  mais la table de jeu réelle utilise x100 (coquille de règle corrigée en session). Affiché en
+  lecture seule sur la fiche pour transparence ; distribué par le MJ, jamais auto-attribué.
+- **Distribution groupée** : bouton MJ "💵 +(X) mois" sur l'écran "Suivi des constantes", à côté de
+  "Donner de l'XP à tous" — contrairement à l'XP (même montant pour tous), chaque personnage
+  **joueur** en jeu reçoit SON PROPRE revenu mensuel (selon ses avantages) multiplié par le nombre
+  de mois saisi. Les PNJ sont exclus (même portée que la distribution d'XP groupée). Voir
+  `POST /api/characters/group-income` dans `docs/API_REFERENCE.md`.
+- **Achats** : ajouter une NOUVELLE arme ou armure depuis le catalogue (`WeaponsArmorPanel`), ou un
+  nouvel objet via le mini-formulaire d'achat (`EquipmentPanel`), déduit automatiquement le prix du
+  solde du personnage. Un prix catalogue inconnu (fourchette texte type "10-100", absent) n'est
+  jamais bloquant — rien n'est déduit. Un solde insuffisant BLOQUE l'achat (validation côté client,
+  même logique que le blocage de "Enregistrer" en cas de solde de points négatif) : la sélection
+  n'est pas appliquée, un message rouge explique pourquoi. Modifier une ligne déjà existante
+  (renommer, changer le prix affiché) n'a jamais d'effet sur le solde — seul l'AJOUT d'une ligne
+  déduit. Le prix catalogue des armes existait déjà (`WeaponDefinition.price`) ; celui des armures
+  est nouveau (`ArmorDefinition.price`, colonne "Prix" ajoutée à l'éditeur de catalogue admin,
+  onglet "Armures") — absent (`null`) tant qu'un admin ne l'a pas saisi.
+
 ## Rang d'Action (RA)
 
 Le Rang d'Action détermine l'ordre de jeu en combat : plus le RA final est bas, plus le personnage
