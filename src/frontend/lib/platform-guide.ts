@@ -81,6 +81,7 @@ const FR: GuideContent = {
       title: "Avantages, inconvénients et équipement",
       paragraphs: [
         "Un avantage coûte des points de budget, un inconvénient en rend — le libellé et la valeur d'un avantage/inconvénient viennent toujours du catalogue de la règle, jamais d'une saisie manuelle. L'équipement est une simple liste de texte libre, sans effet chiffré automatique en dehors de servir de justification pour des modificateurs d'arme ou des compétences gratuites.",
+        "Le mini-formulaire d'ajout d'équipement propose un sélecteur « depuis le catalogue Équipement & cyber » (cybernétique, bio-améliorations, accessoires de mode, munitions, exosquelettes), groupé par rubrique : choisir une ligne pré-remplit son nom et son prix, et l'ajout déduit ce prix du solde en crédits comme pour une arme ou une armure. Le coût en Essence affiché dans le catalogue (Documentation) est purement indicatif — il n'entre dans aucun calcul. Les cyberarmes gardent leurs dégâts et leur Rang d'Action dans la liste des armes.",
       ],
     },
     {
@@ -209,6 +210,7 @@ const EN: GuideContent = {
       title: "Advantages, disadvantages and equipment",
       paragraphs: [
         "An advantage costs budget points, a disadvantage gives some back — an advantage/disadvantage's label and value always come from the ruleset's catalog, never from manual entry. Equipment is a simple free-text list, with no automatic numeric effect beyond serving as a justification for weapon modifiers or free skills.",
+        "The add-equipment mini-form offers a \"from the Equipment & cyber catalogue\" picker (cyberware, bio-upgrades, fashion accessories, ammunition, exoskeletons), grouped by category: picking an entry pre-fills its name and price, and adding it deducts that price from the credit balance just like a weapon or armor. The Essence cost shown in the catalogue (Documentation) is purely informational — it feeds no calculation. Cyber weapons keep their damage and Action Rank in the weapons list.",
       ],
     },
     {

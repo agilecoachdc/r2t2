@@ -32,6 +32,25 @@ export type Race = (typeof RACES)[number];
 export const WEAPON_TYPES = ["Mêl", "Jet", "Fire"] as const;
 export type WeaponType = (typeof WEAPON_TYPES)[number];
 
+/**
+ * Rubriques du catalogue "Équipement & cyber" (ReferenceData.equipment) —
+ * reprises telles quelles des tableaux du livre des prix
+ * (Mon Drive/ADD40K/ADD40K_prix_completes.docx). Sert au regroupement
+ * d'affichage (Documentation, éditeur de catalogue) ; purement documentaire,
+ * aucune n'est câblée dans le moteur de calcul (l'Essence non plus).
+ */
+export const EQUIPMENT_CATEGORIES = [
+  "Accessoires de mode",
+  "Cyberarme",
+  "Cybernétique fonctionnelle",
+  "Cyberoptique",
+  "Améliorations cyber",
+  "Améliorations biologiques",
+  "Munitions",
+  "Exosquelettes & armures mobiles",
+] as const;
+export type EquipmentCategory = (typeof EQUIPMENT_CATEGORIES)[number];
+
 /** Score de base saisi par attribut, avant bonus racial/tech. */
 export type AttributeScores = Record<Attribute, number>;
 
@@ -428,6 +447,27 @@ export interface AdvantageDefinition {
   description?: string;
 }
 
+/**
+ * Ligne du catalogue "Équipement & cyber" — cybernétique, bio-améliorations,
+ * accessoires de mode, munitions, exosquelettes. Alimenté depuis le livre
+ * des prix (ADD40K_prix_completes.docx) ; consultable dans la Documentation,
+ * éditable via l'éditeur de catalogue admin, et proposé à l'achat sur la
+ * fiche (EquipmentPanel, déduction du solde comme pour les armes/armures).
+ * Aucun champ n'entre dans le moteur de calcul : les cyberarmes gardent
+ * leurs stats de combat (dégâts/RA) dans `weapons`, cette liste-ci ne sert
+ * qu'au prix, à l'Essence et à la description.
+ */
+export interface EquipmentDefinition {
+  /** Rubrique de regroupement — une valeur de EQUIPMENT_CATEGORIES en principe, mais texte libre toléré pour un catalogue d'une autre règle. */
+  category: EquipmentCategory | (string & {});
+  name: string;
+  /** Coût en Essence (humanité, style cyberpunk) — informatif. Null/absent pour le matériel non-cyber (munitions, exosquelettes) ou quand le livre ne le précise pas. */
+  essence?: number | null;
+  /** Prix catalogue (Cr) — même forme que WeaponDefinition.price (nombre, texte libre pour une fourchette, ou null si non chiffré dans le livre). */
+  price?: number | string | null;
+  description?: string;
+}
+
 export interface ReferenceData {
   races: RaceDefinition[];
   skillCostTable: SkillCostTable;
@@ -436,6 +476,8 @@ export interface ReferenceData {
   armor: ArmorDefinition[];
   psyPowers: PsyPowerDefinition[];
   advantages: AdvantageDefinition[];
+  /** Catalogue "Équipement & cyber" — cf. EquipmentDefinition. Peut être vide (règle sans matériel catalogué). */
+  equipment: EquipmentDefinition[];
 }
 
 // ---------------------------------------------------------------------------

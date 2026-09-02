@@ -249,6 +249,10 @@ const EN: Record<string, string> = {
   "Solde insuffisant pour": "Insufficient balance for",
   "solde": "balance",
   "Nom de l'objet": "Item name",
+  "Équipement & cyber": "Equipment & cyber",
+  "Catégorie": "Category",
+  "Essence": "Essence",
+  "— depuis le catalogue Équipement & cyber —": "— from the Equipment & cyber catalogue —",
 };
 
 const DICTIONARIES: Partial<Record<Language, Record<string, string>>> = { en: EN };

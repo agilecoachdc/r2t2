@@ -7,9 +7,11 @@
 import { useEffect, useState } from "react";
 import {
   ATTRIBUTES,
+  EQUIPMENT_CATEGORIES,
   WEAPON_TYPES,
   type AdvantageDefinition,
   type ArmorDefinition,
+  type EquipmentDefinition,
   type Game,
   type PsyPowerDefinition,
   type RaceDefinition,
@@ -29,6 +31,7 @@ const CATALOG_TABS = [
   "Compétences",
   "Armes",
   "Armures",
+  "Équipement & cyber",
   "Pouvoirs psy",
   "Avantages",
   "Table de coût",
@@ -461,6 +464,41 @@ export default function GamesRulesets() {
                   { key: "label", label: "Libellé", kind: "text", get: (r) => r.label, set: (r, v) => ({ ...r, label: v }) },
                   { key: "value", label: "Valeur", kind: "number", get: (r) => r.value, set: (r, v) => ({ ...r, value: Number(v) || 0 }) },
                   { key: "description", label: "Description", kind: "text", get: (r) => r.description ?? "", set: (r, v) => ({ ...r, description: v || undefined }) },
+                ]}
+              />
+            )}
+
+            {tab === "Équipement & cyber" && (
+              <CatalogTable<EquipmentDefinition>
+                rows={draft.referenceData.equipment}
+                onChange={(equipment) => updateReferenceData({ equipment })}
+                addLabel="+ Ajouter une ligne d'équipement"
+                emptyRow={() => ({ category: EQUIPMENT_CATEGORIES[0], name: "", essence: null, price: null })}
+                columns={[
+                  {
+                    key: "category",
+                    label: "Catégorie",
+                    kind: "select",
+                    options: [...EQUIPMENT_CATEGORIES],
+                    get: (r) => r.category,
+                    set: (r, v) => ({ ...r, category: v || EQUIPMENT_CATEGORIES[0] }),
+                  },
+                  { key: "name", label: "Nom", kind: "text", get: (r) => r.name, set: (r, v) => ({ ...r, name: v }) },
+                  {
+                    key: "essence",
+                    label: "Essence",
+                    kind: "number",
+                    get: (r) => r.essence ?? "",
+                    set: (r, v) => ({ ...r, essence: v === "" ? null : Number(v) }),
+                  },
+                  { key: "price", label: "Prix", kind: "text", get: (r) => r.price ?? "", set: (r, v) => ({ ...r, price: v || null }) },
+                  {
+                    key: "description",
+                    label: "Description",
+                    kind: "text",
+                    get: (r) => r.description ?? "",
+                    set: (r, v) => ({ ...r, description: v || undefined }),
+                  },
                 ]}
               />
             )}

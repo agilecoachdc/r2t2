@@ -2,7 +2,7 @@
 
 Plateforme web (laptop / tablette / téléphone) de fiches de personnage pour plusieurs jeux de
 rôle et groupes de joueurs, chacun avec sa propre règle (catalogue races/compétences/armes/
-armures/pouvoirs/avantages). Née du jeu ADD40K, dont les données historiques forment aujourd'hui
+armures/équipement & cyber/pouvoirs/avantages). Née du jeu ADD40K, dont les données historiques forment aujourd'hui
 le premier jeu/règle/groupe hébergé (remplace les classeurs Excel d'origine). Déployée sur un
 Worker Cloudflare unique (Hono + D1 + SPA React).
 
@@ -121,6 +121,19 @@ constantes" (icône 💵).
   déduit. Le prix catalogue des armes existait déjà (`WeaponDefinition.price`) ; celui des armures
   est nouveau (`ArmorDefinition.price`, colonne "Prix" ajoutée à l'éditeur de catalogue admin,
   onglet "Armures") — absent (`null`) tant qu'un admin ne l'a pas saisi.
+- **Catalogue "Équipement & cyber"** (`ReferenceData.equipment`, `EquipmentDefinition`) : rubriques
+  du livre des prix (`Mon Drive/ADD40K/ADD40K_prix_completes.docx`) — accessoires de mode,
+  cyberarmes, cybernétique fonctionnelle, cyberoptique, améliorations cyber et biologiques,
+  munitions, exosquelettes. Chaque ligne porte une `category`, un `name`, une `essence` optionnelle
+  (coût d'humanité, purement informatif — non câblé dans le moteur) et un `price` de même forme que
+  les armes/armures. Éditable via l'éditeur de catalogue admin (onglet "Équipement & cyber"),
+  consultable dans la Documentation (section "Équipement & cyber", groupée par rubrique), et proposé
+  à l'achat sur la fiche : le `EquipmentPanel` affiche un sélecteur groupé par rubrique qui
+  pré-remplit nom + prix du mini-formulaire (l'achat lui-même reste identique). Les cyberarmes
+  gardent leurs stats de combat (dégâts/RA) dans `weapons` — cette liste ne sert qu'au prix, à
+  l'Essence et à la description. Les prix/dégâts d'armes et les prix d'armures ont par ailleurs été
+  réalignés sur le même livre des prix (cf. en-tête de `src/shared/reference-data.ts`) ; la
+  migration `0008_book_prices.sql` propage le tout à la règle `add40k` déjà en base.
 
 ## Rang d'Action (RA)
 
@@ -342,9 +355,9 @@ contourne ce circuit.
 Les données existantes (import Excel initial) forment le jeu/règle/groupe "ADD40K"
 (`migrations/0003_platform.sql`, généré par `scripts/generate_platform_seed_sql.mjs`) — un admin
 peut créer d'autres jeux/règles/groupes pour d'autres tables via l'interface, sans toucher au
-groupe ADD40K existant. Le catalogue d'une règle (races/compétences/armes/armures/pouvoirs
-psy/avantages/table de coût) est éditable depuis `/admin/jeux` ; une nouvelle règle démarre avec
-un catalogue vide.
+groupe ADD40K existant. Le catalogue d'une règle (races/compétences/armes/armures/équipement &
+cyber/pouvoirs psy/avantages/table de coût) est éditable depuis `/admin/jeux` ; une nouvelle règle
+démarre avec un catalogue vide.
 
 ## Tests et déploiement
 

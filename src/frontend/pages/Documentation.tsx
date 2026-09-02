@@ -109,10 +109,21 @@ function RulesetReference({ referenceData, t }: { referenceData: ReferenceData; 
 
       <DocSection title={t("Armures")} defaultOpen={false}>
         <Table
-          headers={["Armure", t("Tête"), t("Bras"), t("Torse"), t("Jambes")]}
-          rows={referenceData.armor.map((a) => [a.name, a.vpTete, a.vpBras, a.vpTorse, a.vpJambes])}
+          headers={["Armure", t("Tête"), t("Bras"), t("Torse"), t("Jambes"), "Prix"]}
+          rows={referenceData.armor.map((a) => [a.name, a.vpTete, a.vpBras, a.vpTorse, a.vpJambes, a.price ?? "—"])}
         />
       </DocSection>
+
+      {referenceData.equipment.length > 0 && (
+        <DocSection title={t("Équipement & cyber")} defaultOpen={false}>
+          <Table
+            headers={[t("Catégorie"), t("Nom de l'objet"), t("Essence"), "Prix", t("Description")]}
+            rows={[...referenceData.equipment]
+              .sort((a, b) => a.category.localeCompare(b.category, "fr"))
+              .map((e) => [e.category, e.name, e.essence ?? "—", e.price ?? "—", e.description ?? "—"])}
+          />
+        </DocSection>
+      )}
 
       <DocSection title={t("Pouvoirs Psy")} defaultOpen={false}>
         <Table

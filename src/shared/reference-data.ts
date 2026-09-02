@@ -1,7 +1,20 @@
-// Fichier généré par scripts/import_xlsx.py — NE PAS ÉDITER À LA MAIN.
-// Source : listes de "Stern Tack.xlsx" (identiques dans les 8 fiches
-// de Mon Drive/ADD40K/Fiches persos), croisées avec Règles ADD40K - V0.2.docx.
-// Pour mettre à jour : relancer `npm run import:xlsx`.
+// Base générée par scripts/import_xlsx.py depuis les listes de
+// "Stern Tack.xlsx" (identiques dans les 8 fiches de Mon Drive/ADD40K/
+// Fiches persos), croisées avec Règles ADD40K - V0.2.docx.
+//
+// ÉDITÉ À LA MAIN ENSUITE pour :
+//  - les prix et dégâts corrigés d'après le livre des prix
+//    (Mon Drive/ADD40K/ADD40K_prix_completes.docx), qui fait autorité sur
+//    l'économie du jeu depuis sa mise à jour ;
+//  - le catalogue `equipment` (Équipement & cyber), absent du classeur Excel,
+//    repris intégralement des tableaux du même livre des prix.
+// Une réexécution de `npm run import:xlsx` écraserait ces ajouts : reporter
+// les changements de prix/dégâts et le bloc `equipment` après import.
+//
+// Rappel : en production, le catalogue effectif d'un groupe vient de D1
+// (rulesets.reference_data) — ce fichier n'alimente que les tests et la
+// génération de migrations/0003_platform.sql. La migration 0008 propage les
+// mêmes valeurs à la règle "add40k" déjà en base.
 
 import type { ReferenceData } from "./types";
 
@@ -316,302 +329,323 @@ export const referenceData: ReferenceData = {
     },
     {
       "name": "Poing américain",
-      "damage": 1.0,
-      "price": 10.0,
+      "damage": 2.0,
+      "price": 40.0,
       "ra": 0.0,
       "type": "Mêl"
     },
     {
       "name": "couteaux",
       "damage": 3.0,
-      "price": "10-100",
+      "price": 25.0,
       "ra": 1.0,
       "type": "Mêl"
     },
     {
       "name": "Épées, haches 1 main",
-      "damage": 4.0,
-      "price": 400.0,
+      "damage": 5.0,
+      "price": 500.0,
       "ra": 2.0,
       "type": "Mêl"
     },
     {
       "name": "Epées haches 2 mains",
-      "damage": 5.0,
-      "price": 500.0,
+      "damage": 6.0,
+      "price": 700.0,
       "ra": 2.0,
       "type": "Mêl"
     },
     {
       "name": "Armes d’hast",
       "damage": 5.0,
-      "price": 800.0,
+      "price": 900.0,
       "ra": 3.0,
       "type": "Mêl"
     },
     {
       "name": "Katana",
-      "damage": 4.0,
-      "price": 3000.0,
+      "damage": 6.0,
+      "price": 1000.0,
       "ra": 2.0,
       "type": "Mêl"
     },
     {
       "name": "Rippers",
-      "damage": 4.0,
-      "price": 2000.0,
+      "damage": 5.0,
+      "price": 1000.0,
       "ra": 2.0,
       "type": "Mêl"
     },
     {
       "name": "Power Knife",
-      "damage": 5.0,
-      "price": 5000.0,
+      "damage": 6.0,
+      "price": 1500.0,
       "ra": 2.0,
       "type": "Mêl"
     },
     {
       "name": "Tronçonneuse",
-      "damage": 5.0,
-      "price": 500.0,
+      "damage": 7.0,
+      "price": 450.0,
       "ra": 3.0,
       "type": "Mêl"
     },
     {
       "name": "Sharpness",
-      "damage": 6.0,
-      "price": 10000.0,
+      "damage": 7.0,
+      "price": 7000.0,
       "ra": 2.0,
+      "type": "Mêl"
+    },
+    {
+      "name": "Bigripp",
+      "damage": 8.0,
+      "price": 3200.0,
+      "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Boneripp",
       "damage": 7.0,
-      "price": null,
+      "price": 3000.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Griffes rétractables",
       "damage": 7.0,
-      "price": null,
+      "price": 4500.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Rippers",
       "damage": 8.0,
-      "price": null,
+      "price": 1200.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Wolfers",
       "damage": 9.0,
-      "price": null,
+      "price": 3000.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Cyclope",
       "damage": 5.0,
-      "price": null,
+      "price": 4500.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Queue de combat",
       "damage": 6.0,
-      "price": null,
+      "price": 7500.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Sourire du requin",
       "damage": 6.0,
-      "price": null,
+      "price": 4400.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Slice N Dice",
       "damage": 7.0,
-      "price": null,
+      "price": 2100.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Snake fangs",
       "damage": 5.0,
-      "price": null,
+      "price": 1200.0,
       "ra": null,
       "type": "Mêl"
     },
     {
       "name": "Arc court / arbalète légère",
-      "damage": 3.0,
-      "price": 500.0,
+      "damage": 5.0,
+      "price": 300.0,
       "ra": 2.0,
       "type": "Jet"
     },
     {
       "name": "Arc long /arbalète lourde",
-      "damage": 4.0,
-      "price": 1000.0,
+      "damage": 5.0,
+      "price": 800.0,
       "ra": 3.0,
       "type": "Jet"
     },
     {
       "name": "Arbalète à répétition",
-      "damage": 4.0,
-      "price": 2500.0,
+      "damage": 5.0,
+      "price": 1200.0,
       "ra": 3.0,
       "type": "Jet"
     },
     {
       "name": "Couteau de lancer",
-      "damage": 2.0,
+      "damage": 3.0,
       "price": 20.0,
       "ra": 1.0,
       "type": "Jet"
     },
     {
       "name": "caillou",
-      "damage": 0.0,
+      "damage": 2.0,
       "price": 0.0,
       "ra": 1.0,
       "type": "Jet"
     },
     {
       "name": "Shuriken",
-      "damage": 1.0,
-      "price": 25.0,
+      "damage": 3.0,
+      "price": 30.0,
       "ra": 1.0,
       "type": "Jet"
     },
     {
       "name": "Grenades incapacitantes",
-      "damage": 1.0,
-      "price": 300.0,
+      "damage": 5.0,
+      "price": 150.0,
       "ra": 2.0,
       "type": "Jet"
     },
     {
       "name": "Grenades à plasma",
-      "damage": 8.0,
-      "price": 1500.0,
+      "damage": 5.0,
+      "price": 150.0,
       "ra": 2.0,
       "type": "Jet"
     },
     {
       "name": "Grenade à fragmentation",
-      "damage": 6.0,
-      "price": 300.0,
+      "damage": 5.0,
+      "price": 100.0,
       "ra": 2.0,
       "type": "Jet"
     },
     {
       "name": "Street line palm pistol",
-      "damage": 4.0,
-      "price": 500.0,
+      "damage": 5.0,
+      "price": 100.0,
       "ra": 1.0,
       "type": "Fire"
     },
     {
-      "name": "Cybertech secutity",
-      "damage": 4.0,
-      "price": 800.0,
+      "name": "Cybertech security",
+      "damage": 5.0,
+      "price": 450.0,
       "ra": 1.0,
       "type": "Fire"
     },
     {
       "name": "Colt Python",
       "damage": 5.0,
-      "price": 2000.0,
+      "price": 450.0,
       "ra": 2.0,
       "type": "Fire"
     },
     {
       "name": "Wild Predator",
       "damage": 6.0,
-      "price": 6000.0,
+      "price": 750.0,
       "ra": 2.0,
       "type": "Fire"
     },
     {
       "name": "Cybertech Silverhawk",
-      "damage": 7.0,
-      "price": 7000.0,
+      "damage": 5.0,
+      "price": 300.0,
       "ra": 3.0,
       "type": "Fire"
     },
     {
       "name": "Pistolet Gauss",
       "damage": 7.0,
-      "price": 15000.0,
+      "price": 1000.0,
       "ra": 3.0,
       "type": "Fire"
     },
     {
+      "name": "Peacemaker",
+      "damage": 5.0,
+      "price": 600.0,
+      "ra": 2.0,
+      "type": "Fire"
+    },
+    {
       "name": "INDRA",
-      "damage": 7.0,
-      "price": 3000.0,
+      "damage": 5.0,
+      "price": 900.0,
       "ra": 3.0,
       "type": "Fire"
     },
     {
       "name": "Leader AF4",
-      "damage": 8.0,
-      "price": 4000.0,
+      "damage": 5.0,
+      "price": 1300.0,
       "ra": 4.0,
       "type": "Fire"
     },
     {
       "name": "Redfield 540",
-      "damage": 9.0,
-      "price": 6000.0,
+      "damage": 5.0,
+      "price": 1400.0,
       "ra": 4.0,
       "type": "Fire"
     },
     {
       "name": "Widowmaker",
-      "damage": 11.0,
-      "price": 20000.0,
+      "damage": 10.0,
+      "price": 4000.0,
       "ra": 5.0,
       "type": "Fire"
     },
     {
       "name": "Devastator",
       "damage": 9.0,
-      "price": 12000.0,
+      "price": 2500.0,
+      "ra": 5.0,
+      "type": "Fire"
+    },
+    {
+      "name": "Dominion",
+      "damage": 9.0,
+      "price": 4000.0,
       "ra": 5.0,
       "type": "Fire"
     },
     {
       "name": "Railgun",
       "damage": 10.0,
-      "price": 15000.0,
+      "price": 8000.0,
       "ra": 5.0,
       "type": "Fire"
     },
     {
       "name": "Inferno",
       "damage": 8.0,
-      "price": 4000.0,
+      "price": 5000.0,
       "ra": 5.0,
       "type": "Fire"
     },
     {
       "name": "C-Tech Tsunami",
       "damage": 15.0,
-      "price": 30000.0,
+      "price": 2000.0,
       "ra": 6.0,
       "type": "Fire"
     },
     {
       "name": "Wild RPG",
       "damage": 13.0,
-      "price": 9000.0,
+      "price": 6500.0,
       "ra": 5.0,
       "type": "Fire"
     },
@@ -643,77 +677,552 @@ export const referenceData: ReferenceData = {
       "vpTete": 5.0,
       "vpBras": 5.0,
       "vpTorse": 5.0,
-      "vpJambes": 5.0
+      "vpJambes": 5.0,
+      "price": null
     },
     {
       "name": "Cuir souple (torse, bras)",
       "vpTete": 0,
       "vpBras": 4.0,
       "vpTorse": 4.0,
-      "vpJambes": 0
+      "vpJambes": 0,
+      "price": "Varie"
     },
     {
       "name": "Jambières souples (jambes)",
       "vpTete": 0,
       "vpBras": 0,
       "vpTorse": 0,
-      "vpJambes": 4.0
+      "vpJambes": 4.0,
+      "price": "Varie"
     },
     {
       "name": "Cuir épais (torse, bras)",
       "vpTete": 0,
       "vpBras": 5.0,
       "vpTorse": 5.0,
-      "vpJambes": 0
+      "vpJambes": 0,
+      "price": 300.0
     },
     {
       "name": "Jambières en cuir épais (jambes)",
       "vpTete": 0,
       "vpBras": 0,
       "vpTorse": 0,
-      "vpJambes": 5.0
+      "vpJambes": 5.0,
+      "price": null
     },
     {
       "name": "Peau tissée (tout) cyber ou bio",
       "vpTete": 5.0,
       "vpBras": 5.0,
       "vpTorse": 5.0,
-      "vpJambes": 5.0
+      "vpJambes": 5.0,
+      "price": null
     },
     {
       "name": "Kevlar (torse)",
       "vpTete": 0,
       "vpBras": 0,
       "vpTorse": 6.0,
-      "vpJambes": 0
+      "vpJambes": 0,
+      "price": 540.0
     },
     {
       "name": "Casque (fibres de nylon)",
       "vpTete": 6.0,
       "vpBras": 0,
       "vpTorse": 0,
-      "vpJambes": 0
+      "vpJambes": 0,
+      "price": null
     },
     {
       "name": "Veste blindée légère (10 KG)",
       "vpTete": 0,
       "vpBras": 7.0,
       "vpTorse": 7.0,
-      "vpJambes": 0
+      "vpJambes": 0,
+      "price": 900.0
     },
     {
       "name": "Veste blindée (20KG)",
       "vpTete": 0,
       "vpBras": 8.0,
       "vpTorse": 8.0,
-      "vpJambes": 0
+      "vpJambes": 0,
+      "price": 1200.0
     },
     {
       "name": "Dragoon",
       "vpTete": 10.0,
       "vpBras": 10.0,
       "vpTorse": 10.0,
-      "vpJambes": 10.0
+      "vpJambes": 10.0,
+      "price": 5000.0
+    }
+  ],
+  "equipment": [
+    {
+      "category": "Accessoires de mode",
+      "name": "Contrôleur glandulaire",
+      "essence": 1.0,
+      "price": 750.0,
+      "description": "Permet de changer la couleur des yeux à volonté."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Dermteinte permanente",
+      "essence": 1.0,
+      "price": 1500.0,
+      "description": "Motifs cutanés au choix, définitifs."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Dermteinte bioréactive",
+      "essence": 1.0,
+      "price": 3000.0,
+      "description": "La peau change de couleur en fonction de l'humeur."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Écran sous-dermique",
+      "essence": 1.0,
+      "price": 750.0,
+      "description": "Affiche n'importe quel type de données sous la peau."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Nano-groomers",
+      "essence": 1.0,
+      "price": 1200.0,
+      "description": "Nanotech d'entretien : toujours impeccable."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Tableau de chasse",
+      "essence": 1.0,
+      "price": 900.0,
+      "description": "Affichage du compteur de kills sur une partie du corps."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Fourrures",
+      "essence": 1.0,
+      "price": 1500.0,
+      "description": "Différentes fourrures au choix, greffées."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Piquants",
+      "essence": 1.0,
+      "price": 1500.0,
+      "description": "Oursin ou porc-épic ?"
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Cat'eyes",
+      "essence": 1.0,
+      "price": 2500.0,
+      "description": "Yeux de félin (fentes verticales)."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Écailles",
+      "essence": 3.0,
+      "price": 1500.0,
+      "description": "Peau tissée décorative de valeur 3."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Queue décorative",
+      "essence": 1.0,
+      "price": 1500.0,
+      "description": "Queue d'animal au choix."
+    },
+    {
+      "category": "Accessoires de mode",
+      "name": "Mr Studd / Midnight lady",
+      "essence": 1.0,
+      "price": 900.0,
+      "description": "Toute la nuit, encore et encore."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Bigripp",
+      "essence": 3.0,
+      "price": 3200.0,
+      "description": "Lame rétractable dans l'avant-bras. Dégâts +8 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Boneripp",
+      "essence": 3.0,
+      "price": 3000.0,
+      "description": "Lame en os rétractable dans l'avant-bras. Dégâts +7 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Griffes rétractables",
+      "essence": 3.0,
+      "price": 4500.0,
+      "description": "Griffes rétractables dans les avant-bras. Dégâts +7 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Rippers",
+      "essence": 3.0,
+      "price": 1200.0,
+      "description": "Griffes de 30 cm. Dégâts +8 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Wolfers",
+      "essence": 4.0,
+      "price": 3000.0,
+      "description": "Griffes de 50 cm. Dégâts +9 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Cyclope",
+      "essence": 2.0,
+      "price": 4500.0,
+      "description": "Cyberoptique générant un rayon laser. Dégâts +5 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Queue de combat",
+      "essence": 3.0,
+      "price": 7500.0,
+      "description": "Queue à pointe ou autre. Dégâts +6 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Sourire du requin",
+      "essence": 3.0,
+      "price": 4400.0,
+      "description": "Dents rétractables et mâchoire agrandie. Dégâts +6 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Slice N Dice",
+      "essence": 2.0,
+      "price": 2100.0,
+      "description": "Monofilament extrêmement difficile à manier. Dégâts +7 (cf. Armes)."
+    },
+    {
+      "category": "Cyberarme",
+      "name": "Snake fangs",
+      "essence": 2.0,
+      "price": 1200.0,
+      "description": "Crochets à charges de liquide. Dégâts +5 (cf. Armes)."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Neuromat",
+      "essence": 1.0,
+      "price": 3000.0,
+      "description": "Interface de base permettant l'implant de cybernétique."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Audiovox",
+      "essence": 1.0,
+      "price": 2100.0,
+      "description": "Synthétiseur vocal permettant d'imiter des sons."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Branchies",
+      "essence": 1.0,
+      "price": 1200.0,
+      "description": "Permet de respirer 6 h sous l'eau."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Camouflage sonore",
+      "essence": 1.0,
+      "price": 9000.0,
+      "description": "+3 en Discrétion."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Commo implanté",
+      "essence": 1.0,
+      "price": 600.0,
+      "description": "Émetteur-récepteur permettant de communiquer discrètement."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Cyber foie",
+      "essence": 1.0,
+      "price": 1350.0,
+      "description": "+4 résistance aux drogues, neutralise 90 % de l'alcool."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Filtres nasaux",
+      "essence": 1.0,
+      "price": 160.0,
+      "description": "Neutralise gaz et fumées, +4 de résistance contre les gaz."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Life scan body monitor",
+      "essence": 1.0,
+      "price": 12000.0,
+      "description": "Donne en tout temps toutes vos données biologiques."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Magnétoscope digital",
+      "essence": 1.0,
+      "price": 900.0,
+      "description": "Dans le doigt : enregistre jusqu'à 6 h de vidéo."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Poche sous-dermique",
+      "essence": 3.0,
+      "price": 4500.0,
+      "description": "Cache des objets ne dépassant pas 50 cm."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Brouilleur d'écoute",
+      "essence": 1.0,
+      "price": 300.0,
+      "description": "Désactive tous les micros dans un rayon de 10 m."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Détecteur de micros",
+      "essence": 1.0,
+      "price": 600.0,
+      "description": "Détecte tous les micros dans un rayon de 10 m."
+    },
+    {
+      "category": "Cybernétique fonctionnelle",
+      "name": "Ordinateur implanté",
+      "essence": null,
+      "price": 5250.0,
+      "description": "Ordinateur dans l'avant-bras avec écran amovible."
+    },
+    {
+      "category": "Cyberoptique",
+      "name": "Vision thermique",
+      "essence": 1.0,
+      "price": 750.0,
+      "description": "Vision de la signature thermique."
+    },
+    {
+      "category": "Cyberoptique",
+      "name": "Vision infrarouge",
+      "essence": 1.0,
+      "price": 600.0,
+      "description": "Vision dans le spectre infrarouge."
+    },
+    {
+      "category": "Cyberoptique",
+      "name": "Amplificateur de lumière",
+      "essence": 1.0,
+      "price": 600.0,
+      "description": "Amplification de la lumière ambiante (vision nocturne)."
+    },
+    {
+      "category": "Cyberoptique",
+      "name": "Monture pour 2 options de cyberoptique",
+      "essence": 1.0,
+      "price": 1500.0,
+      "description": "Monture accueillant 2 options de cyberoptique."
+    },
+    {
+      "category": "Cyberoptique",
+      "name": "Caméra oculaire",
+      "essence": 1.0,
+      "price": 990.0,
+      "description": "Caméra intégrée à l'œil."
+    },
+    {
+      "category": "Améliorations cyber",
+      "name": "Booster REF",
+      "essence": 4.0,
+      "price": 10000.0,
+      "description": "Réflexes câblés : meilleure réactivité et traitement de l'information."
+    },
+    {
+      "category": "Améliorations cyber",
+      "name": "Booster INT",
+      "essence": 4.0,
+      "price": 10000.0,
+      "description": "Cybersynapses : amélioration cognitive."
+    },
+    {
+      "category": "Améliorations cyber",
+      "name": "Booster DEX",
+      "essence": 4.0,
+      "price": 10000.0,
+      "description": "Cyberglande régulant la pression cardiaque dans les tâches minutieuses."
+    },
+    {
+      "category": "Améliorations cyber",
+      "name": "Booster FO",
+      "essence": 4.0,
+      "price": 10000.0,
+      "description": "Cyberglande médullaire mobilisant plus de fibres musculaires."
+    },
+    {
+      "category": "Améliorations cyber",
+      "name": "Booster VIT",
+      "essence": 4.0,
+      "price": 10000.0,
+      "description": "Cyberglande améliorant l'efficacité du débit sanguin."
+    },
+    {
+      "category": "Améliorations cyber",
+      "name": "Peau Tissée",
+      "essence": 4.0,
+      "price": 20000.0,
+      "description": "Peau synthétique greffée (VP 5). Assez voyante (COM -2)."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Booster REF",
+      "essence": 1.0,
+      "price": 20000.0,
+      "description": "Implants neuronaux : meilleure réactivité et traitement de l'information."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Booster INT",
+      "essence": 1.0,
+      "price": 20000.0,
+      "description": "Neurones synthétiques : amélioration cognitive."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Booster DEX",
+      "essence": 1.0,
+      "price": 20000.0,
+      "description": "Glande de synthèse régulant la pression cardiaque dans les tâches minutieuses."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Booster FO",
+      "essence": 1.0,
+      "price": 20000.0,
+      "description": "Treillissage des muscles : plus d'efficacité."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Booster VIT",
+      "essence": 1.0,
+      "price": 20000.0,
+      "description": "Cœur amélioré : meilleurs efforts physiques, meilleure résistance aux maladies et infections."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Peau Tissée",
+      "essence": 1.0,
+      "price": 40000.0,
+      "description": "Peau synthétique greffée (VP 5). Indécelable."
+    },
+    {
+      "category": "Améliorations biologiques",
+      "name": "Nano Chirurgiens",
+      "essence": null,
+      "price": 20000.0,
+      "description": "Micro-organismes doublant le rythme de guérison."
+    },
+    {
+      "category": "Munitions",
+      "name": "Pistolets",
+      "essence": null,
+      "price": 5.0,
+      "description": "Chargeur standard de pistolet."
+    },
+    {
+      "category": "Munitions",
+      "name": "Fusils",
+      "essence": null,
+      "price": 5.0,
+      "description": "Chargeur standard de fusil."
+    },
+    {
+      "category": "Munitions",
+      "name": "Wild Predator",
+      "essence": null,
+      "price": 6.0,
+      "description": "Munitions Wild Predator."
+    },
+    {
+      "category": "Munitions",
+      "name": "Silverhawk",
+      "essence": null,
+      "price": 10.0,
+      "description": "Munitions Cybertech Silverhawk."
+    },
+    {
+      "category": "Munitions",
+      "name": "Pistolet Gauss / Railgun",
+      "essence": null,
+      "price": 20.0,
+      "description": "Munitions Gauss / Railgun."
+    },
+    {
+      "category": "Munitions",
+      "name": "Dominion",
+      "essence": null,
+      "price": null,
+      "description": "Munitions Dominion (prix non fixé)."
+    },
+    {
+      "category": "Munitions",
+      "name": "Inferno",
+      "essence": null,
+      "price": null,
+      "description": "Recharge Inferno (prix non fixé)."
+    },
+    {
+      "category": "Munitions",
+      "name": "RPG",
+      "essence": null,
+      "price": null,
+      "description": "Roquette Wild RPG (prix non fixé)."
+    },
+    {
+      "category": "Munitions",
+      "name": "Munition spéciale",
+      "essence": null,
+      "price": null,
+      "description": "Anti-personnel, perforant, incendiaire ou poison : prix de la munition de base ×2."
+    },
+    {
+      "category": "Exosquelettes & armures mobiles",
+      "name": "Diamond",
+      "essence": null,
+      "price": 25000.0,
+      "description": "Exosquelette / armure mobile."
+    },
+    {
+      "category": "Exosquelettes & armures mobiles",
+      "name": "Mithril",
+      "essence": null,
+      "price": 35000.0,
+      "description": "Exosquelette / armure mobile."
+    },
+    {
+      "category": "Exosquelettes & armures mobiles",
+      "name": "Adamantium",
+      "essence": null,
+      "price": 45000.0,
+      "description": "Exosquelette / armure mobile."
+    },
+    {
+      "category": "Exosquelettes & armures mobiles",
+      "name": "Silver Warlord",
+      "essence": null,
+      "price": 150000.0,
+      "description": "Armure mobile lourde."
     }
   ],
   "psyPowers": [

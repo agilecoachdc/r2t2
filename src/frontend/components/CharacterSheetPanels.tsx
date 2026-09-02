@@ -1562,13 +1562,22 @@ export function EquipmentPanel({
   character,
   editing,
   update,
+  referenceData,
 }: {
   character: Character;
   editing: boolean;
   update: Update;
+  referenceData: ReferenceData;
 }) {
   const { t } = useTranslation();
   const equipment = character.equipment;
+  // Catalogue "Équipement & cyber" de la règle, groupé par rubrique pour le
+  // sélecteur d'achat ci-dessous (choisir une ligne pré-remplit nom + prix,
+  // l'achat lui-même passe par le même `handleAdd` que la saisie libre).
+  const catalogByCategory = referenceData.equipment.reduce<Record<string, typeof referenceData.equipment>>((acc, item) => {
+    (acc[item.category] ??= []).push(item);
+    return acc;
+  }, {});
   // Mini-formulaire d'achat (nom + prix) plutôt que l'ancien ajout instantané
   // d'une ligne vide : l'AJOUT d'un objet est le seul moment où le prix est
   // déduit du solde (cf. WeaponsArmorPanel.tryPurchase, même principe) —
@@ -1639,6 +1648,32 @@ export function EquipmentPanel({
         <>
           {purchaseError && (
             <p className="mt-2 rounded-lg bg-red-950 px-3 py-2 text-xs text-red-300">⚠️ {purchaseError}</p>
+          )}
+          {referenceData.equipment.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                const item = referenceData.equipment.find((x) => x.name === e.target.value);
+                if (!item) return;
+                setNewLabel(item.name);
+                const price = parseCatalogPrice(item.price);
+                setNewPrice(price != null ? String(price) : "");
+                setPurchaseError(null);
+              }}
+              className="mt-2 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm"
+            >
+              <option value="">{t("— depuis le catalogue Équipement & cyber —")}</option>
+              {Object.entries(catalogByCategory).map(([category, items]) => (
+                <optgroup key={category} label={category}>
+                  {items.map((item) => (
+                    <option key={`${category}-${item.name}`} value={item.name}>
+                      {item.name}
+                      {parseCatalogPrice(item.price) != null ? ` — ${parseCatalogPrice(item.price)} Cr` : ""}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           )}
           <form onSubmit={handleAdd} className="mt-2 flex flex-wrap items-center gap-2">
             <TextInput value={newLabel} onChange={setNewLabel} placeholder={t("Nom de l'objet")} className="flex-1" />

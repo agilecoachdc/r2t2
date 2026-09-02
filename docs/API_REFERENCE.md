@@ -273,6 +273,13 @@ Voir `src/shared/types.ts` (`Character`, `PublicUser`, `ReferenceData`, `Game`, 
 `MembershipStatus`, `JoinRequest`, `ProfileInfo`) et `src/shared/calc-engine.ts`
 (`CharacterComputed`, `BudgetSummary`).
 
+`ReferenceData` comporte désormais un champ `equipment: EquipmentDefinition[]` (catalogue
+"Équipement & cyber" — `{ category, name, essence?, price?, description? }`), renvoyé tel quel par
+toutes les routes qui exposent `referenceData` (`GET /api/characters?groupId=`,
+`GET /api/characters/:id`, `PUT/POST` de personnage, `GET /api/groups/:id/reference`,
+`GET/POST/PUT /api/admin/rulesets*`). Aucune route n'a changé de forme : c'est un champ en plus
+dans un objet déjà transmis. `ArmorDefinition` a de même gagné un `price?` optionnel.
+
 ## Vérification de dérive
 
 - `grep -r "app.route\|app.get\|app.post\|app.put" src/worker/` doit lister exactement les

@@ -37,6 +37,7 @@ const EMPTY_REFERENCE_DATA: ReferenceData = {
   armor: [],
   psyPowers: [],
   advantages: [],
+  equipment: [],
 };
 
 function randomPassword(): string {

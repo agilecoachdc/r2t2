@@ -149,6 +149,19 @@ navigateur intégré, cf. session de build).
       parenthèses en lecture seule) et le solde diminue d'autant. Laisser le prix vide → l'objet est
       ajouté sans rien déduire (comportement identique à avant l'ajout du prix). Modifier ensuite le
       prix affiché sur une ligne déjà ajoutée → aucun effet sur le solde (seul l'ajout déduit).
+- [ ] Sur "Équipement" en édition, sélecteur "— depuis le catalogue Équipement & cyber —" (au-dessus
+      du mini-formulaire) : les options sont groupées par rubrique (Accessoires de mode, Cyberarme,
+      Cybernétique fonctionnelle, Cyberoptique, Améliorations cyber, Améliorations biologiques,
+      Munitions, Exosquelettes). Choisir "Neuromat" → le nom et le prix (3000) se pré-remplissent
+      dans le mini-formulaire. Cliquer "+ Ajouter un objet" avec un solde suffisant → l'objet est
+      ajouté et le solde diminue de 3000 ; avec un solde insuffisant → message rouge, rien n'ajouté.
+- [ ] Page Documentation d'un groupe → section "Équipement & cyber" (repliée par défaut) : dépliée,
+      elle liste toutes les lignes triées par rubrique, colonnes Catégorie / Nom / Essence / Prix /
+      Description. La section "Armures" affiche désormais une colonne "Prix" (ex. Dragoon = 5000).
+- [ ] Éditeur de catalogue admin (`/admin/jeux`, règle ADD40K) → onglet "Équipement & cyber" :
+      ajouter une ligne (rubrique via menu déroulant, nom, essence, prix, description), enregistrer,
+      recharger → la ligne persiste. Vérifier au passage que quelques prix d'armes corrigés d'après
+      le livre sont en base (ex. Widowmaker dégâts 10 / prix 4000, "Cybertech security" prix 450).
 
 ## §4 — Permissions
 

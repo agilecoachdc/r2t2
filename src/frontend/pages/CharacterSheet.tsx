@@ -320,7 +320,7 @@ export default function CharacterSheet() {
         referenceData={referenceData}
       />
       <AdvantagesPanel character={character} editing={editing} update={update} referenceData={referenceData} />
-      <EquipmentPanel character={character} editing={editing} update={update} />
+      <EquipmentPanel character={character} editing={editing} update={update} referenceData={referenceData} />
       <BudgetPanel
         character={character}
         computed={computed}

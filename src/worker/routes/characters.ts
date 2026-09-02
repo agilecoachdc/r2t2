@@ -254,7 +254,7 @@ characterRoutes.put("/:id", async (c) => {
 
   const referenceData: ReferenceData = existing.player_group_id
     ? await getReferenceDataForGroup(c.env.DB, existing.player_group_id)
-    : { races: [], skillCostTable: {}, skills: [], weapons: [], armor: [], psyPowers: [], advantages: [] };
+    : { races: [], skillCostTable: {}, skills: [], weapons: [], armor: [], psyPowers: [], advantages: [], equipment: [] };
 
   // Dépenser des points (monter une compétence/un pouvoir psy, ajouter un
   // avantage) réduit "XP disponible" du montant exact de l'augmentation de

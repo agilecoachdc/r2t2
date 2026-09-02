@@ -718,3 +718,58 @@ describe("budget de points — cas réel Stern Tack", () => {
     expect(budget.solde).toBe(-68);
   });
 });
+
+describe("catalogue — mise à jour livre des prix (ADD40K_prix_completes.docx)", () => {
+  const weapon = (name: string) => referenceData.weapons.find((w) => w.name === name);
+  const armor = (name: string) => referenceData.armor.find((a) => a.name === name);
+  const equip = (category: string, name: string) =>
+    referenceData.equipment.find((e) => e.category === category && e.name === name);
+
+  it("prix/dégâts d'armes corrigés d'après le livre", () => {
+    expect(weapon("Widowmaker")).toMatchObject({ damage: 10, price: 4000 });
+    expect(weapon("Katana")).toMatchObject({ damage: 6, price: 1000 });
+    expect(weapon("Grenades à plasma")).toMatchObject({ damage: 5, price: 150 });
+    expect(weapon("Pistolet Gauss")).toMatchObject({ damage: 7, price: 1000 });
+    // La faute de frappe "Cybertech secutity" est corrigée
+    expect(weapon("Cybertech secutity")).toBeUndefined();
+    expect(weapon("Cybertech security")).toMatchObject({ damage: 5, price: 450 });
+  });
+
+  it("nouvelles armes du livre : Peacemaker, Dominion, Bigripp", () => {
+    expect(weapon("Peacemaker")).toMatchObject({ type: "Fire", price: 600 });
+    expect(weapon("Dominion")).toMatchObject({ type: "Fire", price: 4000 });
+    expect(weapon("Bigripp")).toMatchObject({ type: "Mêl", damage: 8, price: 3200 });
+  });
+
+  it("prix des cyberarmes désormais renseignés (dégâts inchangés)", () => {
+    expect(weapon("Boneripp")).toMatchObject({ damage: 7, price: 3000 });
+    expect(weapon("Snake fangs")).toMatchObject({ damage: 5, price: 1200 });
+  });
+
+  it("prix d'armures renseignés", () => {
+    expect(armor("Dragoon")?.price).toBe(5000);
+    expect(armor("Kevlar (torse)")?.price).toBe(540);
+    expect(armor("Cuir souple (torse, bras)")?.price).toBe("Varie");
+    expect(parseCatalogPrice(armor("Cuir souple (torse, bras)")?.price)).toBeNull();
+  });
+
+  it("catalogue Équipement & cyber : 8 rubriques peuplées", () => {
+    const categories = new Set(referenceData.equipment.map((e) => e.category));
+    expect(categories).toEqual(
+      new Set([
+        "Accessoires de mode",
+        "Cyberarme",
+        "Cybernétique fonctionnelle",
+        "Cyberoptique",
+        "Améliorations cyber",
+        "Améliorations biologiques",
+        "Munitions",
+        "Exosquelettes & armures mobiles",
+      ]),
+    );
+    expect(equip("Cybernétique fonctionnelle", "Neuromat")).toMatchObject({ essence: 1, price: 3000 });
+    expect(equip("Améliorations cyber", "Booster REF")).toMatchObject({ essence: 4, price: 10000 });
+    expect(equip("Améliorations biologiques", "Booster REF")).toMatchObject({ essence: 1, price: 20000 });
+    expect(equip("Exosquelettes & armures mobiles", "Silver Warlord")).toMatchObject({ price: 150000 });
+  });
+});
