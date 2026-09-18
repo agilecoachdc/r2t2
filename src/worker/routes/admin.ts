@@ -10,6 +10,7 @@ import { getMembershipsForUser, toPublicUser } from "../lib/session";
 import { uniqueSlugId } from "../lib/ids";
 import type {
   Game,
+  GroupCharacterSummary,
   GroupMember,
   Language,
   PlayerGroup,
@@ -278,7 +279,20 @@ adminRoutes.get("/groups/:id", async (c) => {
     characterId: m.character_id,
   }));
 
-  const detail: PlayerGroupDetail = { ...toGroup(row), members };
+  // Personnages du groupe — juste de quoi peupler le sélecteur d'assignation
+  // propriétaire côté PlayerGroups.tsx (PUT /characters/:id/owner ci-dessous).
+  const { results: characterRows } = await c.env.DB.prepare(
+    "SELECT id, name, owner_username FROM characters WHERE player_group_id = ?1 ORDER BY name",
+  )
+    .bind(id)
+    .all<{ id: string; name: string; owner_username: string }>();
+  const characters: GroupCharacterSummary[] = (characterRows ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    ownerUsername: r.owner_username,
+  }));
+
+  const detail: PlayerGroupDetail = { ...toGroup(row), members, characters };
   return c.json({ group: detail });
 });
 
@@ -298,7 +312,7 @@ adminRoutes.post("/groups", async (c) => {
     .bind(id, body.name.trim(), body.description?.trim() ?? "", body.rulesetId, body.imageUrl ?? null, body.driveUrl ?? null)
     .run();
   const row = await c.env.DB.prepare(`SELECT ${GROUP_COLUMNS} FROM player_groups WHERE id = ?1`).bind(id).first<GroupRow>();
-  const detail: PlayerGroupDetail = { ...toGroup(row!), members: [] };
+  const detail: PlayerGroupDetail = { ...toGroup(row!), members: [], characters: [] };
   return c.json({ group: detail }, 201);
 });
 
@@ -369,6 +383,56 @@ adminRoutes.delete("/groups/:id/members/:userId", async (c) => {
   const groupId = c.req.param("id");
   const userId = c.req.param("userId");
   await c.env.DB.prepare("DELETE FROM group_memberships WHERE group_id = ?1 AND user_id = ?2").bind(groupId, userId).run();
+  return c.json({ ok: true });
+});
+
+// Réassigne le propriétaire (le compte joueur) d'un personnage — jusqu'ici
+// fixé à la création et jamais modifiable ensuite (cf. commentaire "hors
+// périmètre MVP" sur PUT /characters/:id, routes/characters.ts). Met à jour
+// `characters.owner_username`, la SOURCE DE VÉRITÉ pour les permissions
+// d'édition (canEditCharacter, lib/session.ts) et le badge "Ma fiche"
+// (CharacterList.tsx) — ainsi que `ownerUsername` dans le blob JSON `data`
+// pour rester cohérent avec ce que renvoie GET /characters/:id. Le compte
+// cible doit déjà être membre (approuvé) du groupe du personnage : assigner
+// un personnage à quelqu'un qui n'y aurait ensuite aucun accès n'aurait pas
+// de sens. `users.character_id` (lien pratique "Voir ma fiche" de
+// Profile.tsx) suit : posé sur le nouveau propriétaire, retiré de l'ancien
+// s'il pointait vers ce même personnage.
+adminRoutes.put("/characters/:id/owner", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json<{ userId?: string }>().catch(() => null);
+  if (!body?.userId) return c.json({ error: "Compte requis" }, 400);
+
+  const character = await c.env.DB.prepare(
+    "SELECT id, data, player_group_id FROM characters WHERE id = ?1",
+  )
+    .bind(id)
+    .first<{ id: string; data: string; player_group_id: string | null }>();
+  if (!character) return c.json({ error: "Personnage introuvable" }, 404);
+  if (!character.player_group_id) return c.json({ error: "Personnage non rattaché à un groupe" }, 400);
+
+  const user = await c.env.DB.prepare("SELECT id, username, role FROM users WHERE id = ?1")
+    .bind(body.userId)
+    .first<{ id: string; username: string; role: UserRole }>();
+  if (!user) return c.json({ error: "Compte introuvable" }, 404);
+  if (user.role === "admin") return c.json({ error: "Un compte admin ne peut pas posséder de personnage" }, 400);
+
+  const membership = await c.env.DB.prepare(
+    "SELECT 1 FROM group_memberships WHERE user_id = ?1 AND group_id = ?2 AND status = 'approved'",
+  )
+    .bind(user.id, character.player_group_id)
+    .first();
+  if (!membership) return c.json({ error: "Ce compte n'est pas membre du groupe de ce personnage" }, 400);
+
+  const parsed = JSON.parse(character.data);
+  parsed.ownerUsername = user.username;
+  await c.env.DB.prepare("UPDATE characters SET owner_username = ?1, data = ?2 WHERE id = ?3")
+    .bind(user.username, JSON.stringify(parsed), id)
+    .run();
+
+  await c.env.DB.prepare("UPDATE users SET character_id = ?1 WHERE id = ?2").bind(id, user.id).run();
+  await c.env.DB.prepare("UPDATE users SET character_id = NULL WHERE character_id = ?1 AND id != ?2").bind(id, user.id).run();
+
   return c.json({ ok: true });
 });
 

@@ -139,6 +139,11 @@ export const api = {
     patch: { name?: string; description?: string; rulesetId?: string; imageUrl?: string | null; driveUrl?: string | null },
   ) => request<{ group: PlayerGroup }>(`/admin/groups/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
   deleteGroup: (id: string) => request<{ ok: true }>(`/admin/groups/${id}`, { method: "DELETE" }),
+  // Réassigne le propriétaire (compte joueur) d'un personnage du groupe —
+  // cf. routes/admin.ts PUT /characters/:id/owner pour les garde-fous
+  // (compte cible membre approuvé du groupe, pas admin).
+  assignCharacterOwner: (characterId: string, userId: string) =>
+    request<{ ok: true }>(`/admin/characters/${characterId}/owner`, { method: "PUT", body: JSON.stringify({ userId }) }),
   addGroupMember: (groupId: string, userId: string) =>
     request<{ ok: true }>(`/admin/groups/${groupId}/members`, { method: "POST", body: JSON.stringify({ userId }) }),
   removeGroupMember: (groupId: string, userId: string) =>

@@ -335,8 +335,11 @@ volets :
 
 Trois rôles : `admin` (gère jeux/règles/groupes de joueurs et les comptes, pages `/admin/jeux` et
 `/admin/groupes` — membre d'aucun groupe), `gm` (MJ d'un ou plusieurs groupes : édite tous les
-personnages de chacun, y crée des PNJ) et `player` (lié à un `character_id` par groupe, édite
-uniquement sa fiche). Un compte peut appartenir à **plusieurs groupes de joueurs en même temps**
+personnages de chacun, y crée des PNJ) et `player` (édite uniquement sa fiche). La propriété d'un
+personnage (`characters.owner_username`, la source de vérité pour ces permissions d'édition) se
+réassigne depuis `/admin/groupes` → groupe → section "Personnages" (distincte de "Membres") :
+chaque personnage du groupe y apparaît avec un sélecteur pour choisir quel membre le possède. Un
+compte peut appartenir à **plusieurs groupes de joueurs en même temps**
 (table `group_memberships`, `migrations/0005_memberships.sql` — remplace l'ancien
 `player_group_id` unique) ; les données (personnages, catalogue de règle) restent isolées par
 groupe — un joueur ou MJ ne voit que les personnages des groupes dont il est membre, lisibles par

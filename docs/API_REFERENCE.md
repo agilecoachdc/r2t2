@@ -195,7 +195,9 @@ Toutes les routes ci-dessous sont montées sous `/api/admin/*` avec
   `DELETE /api/admin/rulesets/:id` — CRUD des règles. `DELETE` refusé (`409`) si un groupe
   l'utilise.
 - `GET /api/admin/groups`, `GET /api/admin/groups/:id` (avec `members: GroupMember[]`, membres
-  approuvés uniquement — une demande `pending` ne s'y affiche pas, cf. plus bas),
+  approuvés uniquement — une demande `pending` ne s'y affiche pas, cf. plus bas — et
+  `characters: GroupCharacterSummary[]` (`{ id, name, ownerUsername }`), les personnages du groupe,
+  pour peupler le sélecteur d'assignation propriétaire ci-dessous),
   `POST /api/admin/groups` (`{ name, description, rulesetId, imageUrl?, driveUrl? }`),
   `PUT /api/admin/groups/:id` (mêmes champs, tous optionnels), `DELETE /api/admin/groups/:id` —
   CRUD des groupes de joueurs. `driveUrl` est le lien du dossier Drive du groupe, personnalisable
@@ -204,6 +206,15 @@ Toutes les routes ci-dessous sont montées sous `/api/admin/*` avec
 - `POST /api/admin/groups/:id/members` — Entrée : `{ userId: string }`. Ajoute ce compte comme
   membre du groupe (idempotent — `INSERT OR IGNORE` sur `group_memberships`). Sortie : `{ ok: true }`.
 - `DELETE /api/admin/groups/:id/members/:userId` — Retire ce compte du groupe. Sortie : `{ ok: true }`.
+- `PUT /api/admin/characters/:id/owner` — Entrée : `{ userId: string }`. Réassigne le propriétaire
+  (compte joueur) d'un personnage — jusqu'ici fixé à la création et non modifiable (cf. commentaire
+  "hors périmètre MVP" sur `PUT /api/characters/:id`). Met à jour `characters.owner_username`, la
+  source de vérité pour les permissions d'édition (`canEditCharacter`, `lib/session.ts`) et le
+  badge "Ma fiche" (`CharacterList.tsx`) — ainsi que `ownerUsername` dans le blob JSON `data`, et
+  `users.character_id` (lien "Voir ma fiche" de la page Profil : posé sur le nouveau propriétaire,
+  retiré de l'ancien s'il pointait vers ce même personnage). `404` si le personnage ou le compte
+  cible est introuvable, `400` si le compte cible est admin ou n'est pas membre approuvé du groupe
+  du personnage. Sortie : `{ ok: true }`.
 - `GET /api/admin/users`, `POST /api/admin/users` (`{ username, displayName, role, groupId? }`
   → `{ user, password }`, mot de passe généré renvoyé une seule fois, même principe que
   `scripts/add_user.mjs` ; `groupId` crée aussi la première appartenance), `PUT /api/admin/users/:id`
@@ -269,7 +280,7 @@ compte sans attendre un MJ ; il fait aussi passer une éventuelle demande `pendi
 ## Types
 
 Voir `src/shared/types.ts` (`Character`, `PublicUser`, `ReferenceData`, `Game`, `Ruleset`,
-`RulesetDetail`, `PlayerGroup`, `PlayerGroupDetail`, `GroupMember`, `MembershipInfo`,
+`RulesetDetail`, `PlayerGroup`, `PlayerGroupDetail`, `GroupMember`, `GroupCharacterSummary`, `MembershipInfo`,
 `MembershipStatus`, `JoinRequest`, `ProfileInfo`) et `src/shared/calc-engine.ts`
 (`CharacterComputed`, `BudgetSummary`).
 

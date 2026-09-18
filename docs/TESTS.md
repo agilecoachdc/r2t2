@@ -169,6 +169,17 @@ navigateur intégré, cf. session de build).
       pas de bouton "Modifier" affiché.
 - [ ] `PUT /api/characters/<perso-B>` depuis le compte du joueur A → 403.
 - [ ] Connecté en MJ, `PUT` sur n'importe quel personnage → 200.
+- [ ] Admin, `/admin/groupes` → groupe sélectionné, section "Personnages" (distincte de
+      "Membres") : chaque personnage du groupe apparaît par son nom, avec le `owner_username`
+      actuel affiché à côté et un sélecteur de joueur (membres du groupe uniquement). Choisir un
+      autre membre B pour un personnage qui appartenait à A → réussit, le sélecteur se remet sur
+      "— choisir un joueur —" pour tout autre personnage qui appartenait déjà à B, au rechargement.
+- [ ] Après cette réassignation, connecté en tant que membre B : `GET
+      /api/characters/<perso>` → `canEdit: true`, badge "Ma fiche" visible sur `/groupe/<id>`
+      (`CharacterList.tsx`) ; connecté en tant que membre A (l'ancien propriétaire) → `canEdit:
+      false` sur ce même personnage.
+- [ ] Assigner un personnage à un compte qui n'est pas membre du groupe (via un appel direct à
+      `PUT /api/admin/characters/:id/owner` avec un `userId` hors groupe) → 400.
 
 ## Non couvert (hors périmètre MVP)
 

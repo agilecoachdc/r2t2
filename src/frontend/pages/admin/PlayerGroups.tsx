@@ -176,6 +176,19 @@ export default function PlayerGroups() {
     }
   }
 
+  // Réassigne le propriétaire d'un personnage du groupe à un membre — cf.
+  // api.assignCharacterOwner (met à jour characters.owner_username, la
+  // source de vérité pour les permissions d'édition et le badge "Ma
+  // fiche", cf. routes/admin.ts PUT /characters/:id/owner).
+  async function handleAssignCharacter(characterId: string, userId: string) {
+    try {
+      await api.assignCharacterOwner(characterId, userId);
+      await loadAll();
+    } catch (err) {
+      setError(errMsg(err));
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-slate-950">
       <div className="mx-auto max-w-4xl px-4 py-6">
@@ -323,6 +336,41 @@ export default function PlayerGroups() {
                       </li>
                     ))}
                     {selected.members.length === 0 && <p className="text-sm text-slate-500">Aucun membre.</p>}
+                  </ul>
+                </div>
+
+                <div>
+                  <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Personnages</h2>
+                  <ul className="space-y-1">
+                    {selected.characters.map((ch) => {
+                      // Membre actuellement propriétaire (owner_username, source de vérité — cf.
+                      // lib/session.ts canEditCharacter) — absent des options si le propriétaire
+                      // actuel n'est plus/pas membre de CE groupe (ex. personnage mal rattaché) ;
+                      // le nom d'utilisateur brut reste affiché à côté pour le repérer quand même.
+                      const ownerMember = selected.members.find((m) => m.username === ch.ownerUsername);
+                      return (
+                        <li key={ch.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/50 px-3 py-2 text-sm">
+                          <span className="text-slate-200">
+                            {ch.name} <span className="text-xs text-slate-500">({ch.ownerUsername})</span>
+                          </span>
+                          <select
+                            value={ownerMember?.id ?? ""}
+                            onChange={(e) => {
+                              if (e.target.value) handleAssignCharacter(ch.id, e.target.value);
+                            }}
+                            className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-200"
+                          >
+                            <option value="">— choisir un joueur —</option>
+                            {selected.members.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.displayName} ({m.username})
+                              </option>
+                            ))}
+                          </select>
+                        </li>
+                      );
+                    })}
+                    {selected.characters.length === 0 && <p className="text-sm text-slate-500">Aucun personnage dans ce groupe.</p>}
                   </ul>
                 </div>
 

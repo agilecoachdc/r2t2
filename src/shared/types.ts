@@ -560,8 +560,16 @@ export interface GroupMember {
   characterId: string | null;
 }
 
+/** Personnage du groupe, vue admin — juste de quoi peupler le sélecteur d'assignation propriétaire (PlayerGroups.tsx). */
+export interface GroupCharacterSummary {
+  id: string;
+  name: string;
+  ownerUsername: string;
+}
+
 export interface PlayerGroupDetail extends PlayerGroup {
   members: GroupMember[];
+  characters: GroupCharacterSummary[];
 }
 
 /**
