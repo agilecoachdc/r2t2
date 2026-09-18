@@ -479,7 +479,14 @@ export function SkillsPanel({
         </>
       )}
       <ul className="space-y-1">
-        {skills.map((s, i) => {
+        {skills
+          // Triées par total décroissant (score + bonus d'attribut + affinité/pouvoir
+          // actif) plutôt que par ordre de saisie — `i` reste l'index réel dans
+          // character.skills (setSkill/suppression s'appuient dessus), seul l'ordre
+          // d'affichage change.
+          .map((s, i) => ({ s, i, total: getSkillDisplayTotal(s, character, computed.attributeTotals).total }))
+          .sort((a, b) => b.total - a.total || a.i - b.i)
+          .map(({ s, i }) => {
           const justifications = getSkillJustifications(s);
           const justifiedScore = getSkillJustifiedScore(s);
           const display = getSkillDisplayTotal(s, character, computed.attributeTotals);
@@ -1688,6 +1695,32 @@ export function EquipmentPanel({
             </button>
           </form>
         </>
+      )}
+    </Section>
+  );
+}
+
+// Champ texte libre pour l'inventaire divers (objets non catalogués,
+// munitions, bricolage de session) — réutilise Character.notes, présent
+// dans le modèle depuis le départ mais jamais affiché jusqu'ici. Repliable
+// via Section comme les autres panneaux, donc n'encombre pas la fiche par
+// défaut si vide.
+export function NotesPanel({ character, editing, update }: { character: Character; editing: boolean; update: Update }) {
+  const { t } = useTranslation();
+  return (
+    <Section title={t("Inventaire divers")}>
+      {editing ? (
+        <textarea
+          value={character.notes}
+          onChange={(e) => update({ notes: e.target.value })}
+          placeholder={t("Objets non catalogués, munitions, notes en vrac…")}
+          rows={4}
+          className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-200"
+        />
+      ) : character.notes ? (
+        <p className="whitespace-pre-wrap text-sm text-slate-200">{character.notes}</p>
+      ) : (
+        <p className="text-sm text-slate-500">{t("Aucune note.")}</p>
       )}
     </Section>
   );

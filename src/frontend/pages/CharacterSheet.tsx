@@ -14,6 +14,7 @@ import {
   PsyPowersPanel,
   AdvantagesPanel,
   EquipmentPanel,
+  NotesPanel,
   BudgetPanel,
 } from "../components/CharacterSheetPanels";
 
@@ -321,6 +322,7 @@ export default function CharacterSheet() {
       />
       <AdvantagesPanel character={character} editing={editing} update={update} referenceData={referenceData} />
       <EquipmentPanel character={character} editing={editing} update={update} referenceData={referenceData} />
+      <NotesPanel character={character} editing={editing} update={update} />
       <BudgetPanel
         character={character}
         computed={computed}
