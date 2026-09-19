@@ -78,6 +78,13 @@ navigateur intégré, cf. session de build).
       restent inchangés sur les tuiles PNJ et sur tout personnage joueur non "en jeu". Saisir un
       montant négatif → mêmes tuiles concernées, "XP gagnée" et "dispo" diminuent d'autant (peuvent
       devenir négatifs, aucun plancher côté MJ — même comportement que le "+XP" par tuile).
+- [ ] Uploader un portrait très détaillé (photo haute résolution, beaucoup de texture) sur une
+      fiche ou un PNJ → aucune erreur, l'image affichée reste nette à l'échelle d'une vignette.
+      Vérifier en base que `LENGTH(json_extract(data,'$.portraitUrl'))` reste sous ~55000 (40 Ko de
+      JPEG bruts + marge base64) même pour cette image — cf. incident du 2026-09-19 (README,
+      section "Portraits et limite CPU du Worker") où des portraits dépassaient ce budget et
+      faisaient dépasser la limite CPU du Worker sur `GET /api/characters`, 503 en rafale sur
+      l'écran "Suivi des constantes".
 - [ ] Sur "Concentration psy" (ex. cas réel Karun : score de base 3, mais total 15 une fois Volonté
       + Affinité ajoutés), activer à un palier avec REF choisi → le bonus REF (`AttributesPanel`,
       pris en compte dans le RA) doit se calculer sur le score TOTAL (15), pas le score de base

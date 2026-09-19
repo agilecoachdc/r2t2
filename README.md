@@ -143,6 +143,24 @@ constantes" (icône 💵).
   horizontalement pour voir PER/COM/INT/VOL après FO/VIT/DEX/REF). La migration
   `0009_race_attributes.sql` propage le tout à la règle `add40k` déjà en base.
 
+## Portraits et limite CPU du Worker
+
+Le portrait d'un personnage (`Character.portraitUrl`) est une data URL JPEG stockée directement
+dans le JSON `data` du personnage — pas de bucket R2 dans ce MVP (cf. `src/frontend/lib/image.ts`).
+`GET /api/characters?groupId=...` (écran "Personnages" et écran "Suivi des constantes", ce dernier
+interrogé toutes les 2s via `POLL_INTERVAL_MS`, `GmTracker.tsx`) renvoie tous les portraits du
+groupe d'un coup. **Incident du 2026-09-19** : plusieurs portraits dépassaient largement le budget
+visé ("quelques dizaines de Ko") malgré le plafond 480px — une image très détaillée compresse mal
+à qualité fixe 0.82 (constaté jusqu'à 84 Ko réels sur un seul portrait) — et le total du groupe
+(~913 Ko cumulés sur 16 personnages) a fait dépasser la limite CPU du Worker, 503 en rafale sur
+cette route pendant plusieurs minutes. Corrigé par : `resizePortraitToDataUrl` redescend
+maintenant la qualité JPEG par paliers jusqu'à tenir sous un budget d'octets (`maxBytes`, 40 Ko par
+défaut) plutôt qu'une qualité fixe ; les portraits déjà en base dépassant ce budget ont été
+recompressés directement en D1 (total ramené à ~540 Ko) ; `POLL_INTERVAL_MS` passé de 1000 à 2000ms
+sur l'écran "Suivi des constantes". Si ce 503 revient, vérifier en premier lieu la taille cumulée
+des portraits du groupe (`SELECT SUM(LENGTH(json_extract(data,'$.portraitUrl'))) FROM characters
+WHERE player_group_id = '...'`) avant de chercher ailleurs.
+
 ## Rang d'Action (RA)
 
 Le Rang d'Action détermine l'ordre de jeu en combat : plus le RA final est bas, plus le personnage

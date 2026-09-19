@@ -31,7 +31,12 @@ import { useTranslation } from "../lib/i18n";
 import { LocalisationSilhouette, RaceArmorSilhouette } from "../components/RaceArmorSilhouette";
 import { resizePortraitToDataUrl } from "../lib/image";
 
-const POLL_INTERVAL_MS = 1000;
+// 2000ms plutôt que 1000ms : GET /api/characters renvoie tous les portraits
+// du groupe (jusqu'à ~1 Mo de data URLs JPEG en pratique) — au double de la
+// fréquence, deux GM/joueurs simultanés suffisaient à dépasser la limite CPU
+// du Worker (503 en rafale, incident du 2026-09-19). cf. aussi le plafond de
+// taille resserré dans lib/image.ts (resizePortraitToDataUrl).
+const POLL_INTERVAL_MS = 2000;
 // Anneaux/photo/silhouette dimensionnés pour tenir sur un écran de 390px de
 // large (iPhone 12 Pro) sans scroll horizontal en tuile 1 colonne : silhouette
 // (SIL_SIZE + son padding px-3) + rings + photo + paddings/gap du contenu
