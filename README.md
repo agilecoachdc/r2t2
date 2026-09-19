@@ -155,19 +155,38 @@ constantes" (icône 💵).
 
 Le portrait d'un personnage (`Character.portraitUrl`) est une data URL JPEG stockée directement
 dans le JSON `data` du personnage — pas de bucket R2 dans ce MVP (cf. `src/frontend/lib/image.ts`).
-`GET /api/characters?groupId=...` (écran "Personnages" et écran "Suivi des constantes", ce dernier
-interrogé toutes les 2s via `POLL_INTERVAL_MS`, `GmTracker.tsx`) renvoie tous les portraits du
-groupe d'un coup. **Incident du 2026-09-19** : plusieurs portraits dépassaient largement le budget
-visé ("quelques dizaines de Ko") malgré le plafond 480px — une image très détaillée compresse mal
-à qualité fixe 0.82 (constaté jusqu'à 84 Ko réels sur un seul portrait) — et le total du groupe
-(~913 Ko cumulés sur 16 personnages) a fait dépasser la limite CPU du Worker, 503 en rafale sur
-cette route pendant plusieurs minutes. Corrigé par : `resizePortraitToDataUrl` redescend
-maintenant la qualité JPEG par paliers jusqu'à tenir sous un budget d'octets (`maxBytes`, 40 Ko par
-défaut) plutôt qu'une qualité fixe ; les portraits déjà en base dépassant ce budget ont été
-recompressés directement en D1 (total ramené à ~540 Ko) ; `POLL_INTERVAL_MS` passé de 1000 à 2000ms
-sur l'écran "Suivi des constantes". Si ce 503 revient, vérifier en premier lieu la taille cumulée
-des portraits du groupe (`SELECT SUM(LENGTH(json_extract(data,'$.portraitUrl'))) FROM characters
-WHERE player_group_id = '...'`) avant de chercher ailleurs.
+
+**Incident du 2026-09-19 (deux épisodes le même jour) :** `GET /api/characters?groupId=...` (écran
+"Personnages" et écran "Suivi des constantes", ce dernier interrogé toutes les 2s via
+`POLL_INTERVAL_MS`, `GmTracker.tsx`) renvoyait tous les portraits du groupe embarqués dans le JSON.
+Premier épisode : plusieurs portraits dépassaient largement le budget visé ("quelques dizaines de
+Ko") malgré le plafond 480px — une image très détaillée compresse mal à qualité fixe 0.82 (constaté
+jusqu'à 84 Ko réels sur un seul portrait) — total du groupe ~913 Ko sur 16 personnages, limite CPU
+du Worker dépassée, 503 en rafale. Corrigé une première fois par : `resizePortraitToDataUrl`
+redescend la qualité JPEG par paliers jusqu'à tenir sous un budget d'octets (`maxBytes`, 40 Ko par
+défaut) plutôt qu'une qualité fixe ; portraits déjà en base recompressés en D1 (total ramené à
+~540 Ko) ; `POLL_INTERVAL_MS` 1000 → 2000ms. **Insuffisant** : sous charge concurrente (plusieurs
+onglets/joueurs qui pollent en même temps), même ~665 Ko de payload a suffi à refaire dépasser la
+limite CPU en continu quelques heures plus tard (deuxième épisode, signalé comme "erreur 503 en se
+connectant" — en réalité la connexion elle-même fonctionnait, `POST /api/auth/login` répondait `Ok`
+dans les logs `wrangler tail`, c'est l'appel `GET /api/characters` qui suit immédiatement la
+redirection post-login qui échouait).
+
+**Fix structurel (définitif) :** les portraits ne sont plus JAMAIS embarqués dans
+`GET /api/characters?groupId=...` — `CharacterSummary.portraitUrl` remplacé par
+`CharacterSummary.hasPortrait: boolean` (cf. `src/shared/types.ts`). Le portrait se charge
+désormais via une route dédiée, `GET /api/characters/:id/portrait`, qui sert l'image brute
+(`Content-Type` déduit du data URL, `Cache-Control: private, max-age=300`) — le navigateur ne le
+retélécharge donc plus à chaque poll, contrairement à avant. Vérifié stable en production ensuite
+via `wrangler tail` : plus de 10 requêtes `GET /?groupId=` consécutives réussies, y compris
+concurrentes (plusieurs requêtes à la même seconde), là où le payload embarqué faisait échouer
+quasi 100% des requêtes juste avant.
+
+Si un 503 revient sur cette route malgré tout, chercher ailleurs qu'une histoire de portraits —
+cette classe de bug est maintenant structurellement exclue (aucune donnée volumineuse embarquée
+dans la liste). Suspecter plutôt : nombre de personnages dans le groupe devenu très grand,
+`referenceData` du groupe devenu volumineux (catalogue), ou charge concurrente générale sur le
+Worker au moment du pic.
 
 ## Rang d'Action (RA)
 

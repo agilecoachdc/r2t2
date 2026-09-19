@@ -51,7 +51,23 @@ chaque réponse.
   actif (`Character.activePsyPowers`) — une icône par attribut sur sa tuile (💪 FO, 🧘🏻‍♀️ VIT,
   🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM, 🧠 INT, 🙏 VOL). `boostedSkillNames` (cf.
   `calc-engine.getBoostedSkillNames`) liste les compétences boostées (pas d'icône dédiée, un
-  indicateur "✨" générique s'affiche à la place). Voir `src/shared/types.ts`.
+  indicateur "✨" générique s'affiche à la place). `hasPortrait` (booléen, PAS le portrait
+  lui-même) : si vrai, le portrait se charge séparément via `GET /api/characters/:id/portrait`
+  ci-dessous — remplace l'ancien `portraitUrl` embarqué (data URL base64 complète par personnage),
+  qui faisait dépasser la limite CPU du Worker sous charge concurrente sur cette route, interrogée
+  toutes les 2s par l'écran "Suivi des constantes" (incident du 2026-09-19, cf. README "Portraits
+  et limite CPU du Worker"). Voir `src/shared/types.ts`.
+
+### `GET /api/characters/:id/portrait`
+- Auth : session ; lecture ouverte à tout membre du groupe du personnage (même garde que
+  `GET /:id`).
+- Sert le portrait en image brute (`Content-Type` déduit du data URL stocké, `Cache-Control:
+  private, max-age=300`) — jamais en JSON, pour que le navigateur le mette en cache HTTP au lieu de
+  le retélécharger à chaque poll de `GET /?groupId=`. Décodé à la volée depuis
+  `Character.portraitUrl` (data URL base64) ; rien n'est stocké séparément en base.
+- Sortie : image brute (octets), pas de JSON.
+- Erreurs : `404` (personnage introuvable, hors groupe de l'appelant, ou sans portrait), `500`
+  (data URL stockée dans un format inattendu).
 
 ### `GET /api/characters/:id`
 - Auth : session ; lecture ouverte à tout membre du groupe du personnage.

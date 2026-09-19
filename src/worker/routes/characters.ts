@@ -68,7 +68,7 @@ characterRoutes.get("/", async (c) => {
       name: row.name,
       race: row.race,
       owner_username: row.owner_username,
-      portraitUrl: parsed.portraitUrl,
+      hasPortrait: Boolean(parsed.portraitUrl),
       inGame: parsed.inGame ?? false,
       isNpc: parsed.isNpc ?? false,
       archived: parsed.archived ?? false,
@@ -87,6 +87,38 @@ characterRoutes.get("/", async (c) => {
   });
 
   return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl });
+});
+
+// Sert le portrait d'un personnage en image brute (pas en JSON) — évite de
+// ré-embarquer son data URL base64 dans CHAQUE réponse de GET / (liste),
+// interrogée toutes les 2s par l'écran "Suivi des constantes" (cf.
+// CharacterSummary.hasPortrait). Cache-Control laisse le navigateur ne le
+// retélécharger qu'une fois par fenêtre de 5 minutes au lieu de le
+// retransférer à chaque poll — incident du 2026-09-19 (503 par dépassement
+// de la limite CPU du Worker, cf. README "Portraits et limite CPU du Worker").
+characterRoutes.get("/:id/portrait", async (c) => {
+  const user = c.get("user");
+  const row = await c.env.DB.prepare("SELECT data, player_group_id FROM characters WHERE id = ?1")
+    .bind(c.req.param("id"))
+    .first<{ data: string; player_group_id: string | null }>();
+  if (!row || !row.player_group_id || !user.memberships.includes(row.player_group_id)) {
+    return c.json({ error: "Personnage introuvable" }, 404);
+  }
+  const character: Character = JSON.parse(row.data);
+  const dataUrl = character.portraitUrl;
+  if (!dataUrl) return c.json({ error: "Pas de portrait" }, 404);
+
+  const match = /^data:(?<contentType>[^;]+);base64,(?<base64>.*)$/s.exec(dataUrl);
+  if (!match?.groups) return c.json({ error: "Portrait invalide" }, 500);
+  // Groupes nommés non optionnels dans le motif ci-dessus (pas de `?`) —
+  // toujours présents si `match` a réussi ; `noUncheckedIndexedAccess`
+  // (tsconfig) type quand même l'accès `| undefined`, d'où l'assertion.
+  const contentType = match.groups.contentType!;
+  const base64 = match.groups.base64!;
+  const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+  return new Response(bytes, {
+    headers: { "Content-Type": contentType, "Cache-Control": "private, max-age=300" },
+  });
 });
 
 characterRoutes.get("/:id", async (c) => {

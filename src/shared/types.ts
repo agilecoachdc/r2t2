@@ -623,7 +623,18 @@ export interface CharacterSummary {
   name: string;
   race: string;
   owner_username: string;
-  portraitUrl: string | null;
+  /**
+   * Remplace l'ancien `portraitUrl: string | null` embarqué (data URL base64
+   * complète) — incident du 2026-09-19 bis : même après avoir plafonné la
+   * taille des portraits (cf. lib/image.ts), le total du groupe embarqué
+   * dans CETTE réponse (interrogée toutes les 2s par l'écran "Suivi des
+   * constantes") a continué de dépasser la limite CPU du Worker sous charge
+   * concurrente. Le portrait se récupère désormais via une route dédiée et
+   * cache-friendly, `GET /api/characters/:id/portrait`, appelée par le
+   * navigateur uniquement si `hasPortrait` est vrai — jamais embarquée dans
+   * le JSON de la liste.
+   */
+  hasPortrait: boolean;
   inGame: boolean;
   isNpc: boolean;
   archived: boolean;

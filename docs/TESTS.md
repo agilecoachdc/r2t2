@@ -81,10 +81,19 @@ navigateur intégré, cf. session de build).
 - [ ] Uploader un portrait très détaillé (photo haute résolution, beaucoup de texture) sur une
       fiche ou un PNJ → aucune erreur, l'image affichée reste nette à l'échelle d'une vignette.
       Vérifier en base que `LENGTH(json_extract(data,'$.portraitUrl'))` reste sous ~55000 (40 Ko de
-      JPEG bruts + marge base64) même pour cette image — cf. incident du 2026-09-19 (README,
-      section "Portraits et limite CPU du Worker") où des portraits dépassaient ce budget et
-      faisaient dépasser la limite CPU du Worker sur `GET /api/characters`, 503 en rafale sur
-      l'écran "Suivi des constantes".
+      JPEG bruts + marge base64) même pour cette image.
+- [ ] Sur l'écran "Suivi des constantes" ou "Personnages", un personnage AVEC portrait affiche bien
+      son image (chargée via `GET /api/characters/:id/portrait`, pas embarquée dans la réponse de
+      liste — vérifier dans l'onglet Réseau du navigateur que `GET /api/characters?groupId=...` ne
+      contient PAS de `data:image` dans sa charge utile, seulement `hasPortrait: true/false`) ; un
+      personnage SANS portrait affiche le cercle avec son initiale, sans erreur console.
+- [ ] Charge concurrente réaliste (2+ onglets ou comptes sur l'écran "Suivi des constantes" du même
+      groupe en même temps, laisser tourner ~1 minute) → aucune erreur 503 sur
+      `GET /api/characters?groupId=...`, y compris quand deux requêtes tombent à la même seconde
+      (plusieurs onglets pollent indépendamment). Cf. incident du 2026-09-19 (README, section
+      "Portraits et limite CPU du Worker", deux épisodes) : embarquer les portraits dans cette route
+      faisait dépasser la limite CPU du Worker sous charge concurrente, y compris juste après un
+      login réussi (le login lui-même n'était jamais en cause).
 - [ ] Sur "Concentration psy" (ex. cas réel Karun : score de base 3, mais total 15 une fois Volonté
       + Affinité ajoutés), activer à un palier avec REF choisi → le bonus REF (`AttributesPanel`,
       pris en compte dans le RA) doit se calculer sur le score TOTAL (15), pas le score de base

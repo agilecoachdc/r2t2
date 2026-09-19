@@ -376,9 +376,9 @@ function CharacterTile({
         </div>
         <div className="mt-2 flex flex-1 items-center gap-3">
           <ConstantsRings hpCurrent={c.hpCurrent} hpMax={c.hpMax} pspCurrent={c.pspCurrent} pspMax={c.pspMax} size={RING_SIZE} />
-          {c.portraitUrl ? (
+          {c.hasPortrait ? (
             <img
-              src={c.portraitUrl}
+              src={`/api/characters/${c.id}/portrait`}
               alt={c.name}
               className="shrink-0 rounded-lg object-cover"
               style={{ height: PHOTO_SIZE, width: PHOTO_SIZE }}
