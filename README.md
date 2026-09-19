@@ -134,6 +134,14 @@ constantes" (icône 💵).
   l'Essence et à la description. Les prix/dégâts d'armes et les prix d'armures ont par ailleurs été
   réalignés sur le même livre des prix (cf. en-tête de `src/shared/reference-data.ts`) ; la
   migration `0008_book_prices.sql` propage le tout à la règle `add40k` déjà en base.
+- **Table des races** (`ReferenceData.races`, `RaceDefinition.attributeBonus`) : 11 peuples au total
+  après la dernière révision du MJ — ajout de Thri-Kreen, Gobelin et Drow, "Rohirim" renommé
+  "Rohirrim" (10 points de compétence au lieu de 15), et correctifs d'Intelligence sur l'Orc (-1) et
+  le Gnome (+1). Chaque peuple porte un bonus sur les 8 attributs (`FO/VIT/DEX/REF/PER/COM/INT/VOL`),
+  un bonus de taille et des points de compétence de départ — visibles et éditables sur les 8
+  attributs dans l'éditeur de catalogue admin (onglet "Races", table large : faire défiler
+  horizontalement pour voir PER/COM/INT/VOL après FO/VIT/DEX/REF). La migration
+  `0009_race_attributes.sql` propage le tout à la règle `add40k` déjà en base.
 
 ## Rang d'Action (RA)
 

@@ -162,6 +162,15 @@ navigateur intégré, cf. session de build).
       ajouter une ligne (rubrique via menu déroulant, nom, essence, prix, description), enregistrer,
       recharger → la ligne persiste. Vérifier au passage que quelques prix d'armes corrigés d'après
       le livre sont en base (ex. Widowmaker dégâts 10 / prix 4000, "Cybertech security" prix 450).
+- [ ] Éditeur de catalogue admin (`/admin/jeux`, règle ADD40K) → onglet "Races" : 11 lignes (Eldar,
+      Rohirrim, Gith, Rakshasa, Hobbit, Orc, Gnome, Humain, Thri-Kreen, Gobelin, Drow). La table a 12
+      colonnes (Clé/Nom/Taille/Pts compét. + 8 attributs FO/VIT/DEX/REF/PER/COM/INT/VOL) : faire
+      défiler horizontalement pour vérifier que PER/COM/INT/VOL sont bien éditables après REF (pas
+      juste les 4 premiers attributs visibles sans défiler). Vérifier Orc INT -1 / taille 0, Gnome
+      INT +1, Rohirrim 10 points de compétence.
+- [ ] Sur la fiche d'un personnage Thri-Kreen/Gobelin/Drow (ou en créer un via "+ Ajouter" sur
+      l'onglet Races puis assigner la race à un personnage), le panneau Attributs affiche bien le
+      bonus racial correspondant en développant chaque tuile (section "Racial (NomDeLaRace)").
 
 ## §4 — Permissions
 

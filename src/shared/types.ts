@@ -26,6 +26,9 @@ export const RACES = [
   "orc",
   "gnome",
   "humain",
+  "thri-kreen",
+  "gobelin",
+  "drow",
 ] as const;
 export type Race = (typeof RACES)[number];
 

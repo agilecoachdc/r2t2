@@ -7,14 +7,19 @@
 //    (Mon Drive/ADD40K/ADD40K_prix_completes.docx), qui fait autorité sur
 //    l'économie du jeu depuis sa mise à jour ;
 //  - le catalogue `equipment` (Équipement & cyber), absent du classeur Excel,
-//    repris intégralement des tableaux du même livre des prix.
+//    repris intégralement des tableaux du même livre des prix ;
+//  - la table `races` (attributeBonus/tailleBonus/skillPoints), alignée sur
+//    la dernière table de règles fournie par le MJ (11 peuples : ajout de
+//    Thri-Kreen, Gobelin, Drow ; correctifs INT sur Orc/Gnome ; Rohirim
+//    renommé "Rohirrim" et passé à 10 points de compétence).
 // Une réexécution de `npm run import:xlsx` écraserait ces ajouts : reporter
-// les changements de prix/dégâts et le bloc `equipment` après import.
+// les changements de prix/dégâts, le bloc `equipment` et la table `races`
+// après import.
 //
 // Rappel : en production, le catalogue effectif d'un groupe vient de D1
 // (rulesets.reference_data) — ce fichier n'alimente que les tests et la
-// génération de migrations/0003_platform.sql. La migration 0008 propage les
-// mêmes valeurs à la règle "add40k" déjà en base.
+// génération de migrations/0003_platform.sql. Les migrations 0008 et 0009
+// propagent les mêmes valeurs à la règle "add40k" déjà en base.
 
 import type { ReferenceData } from "./types";
 
@@ -38,7 +43,7 @@ export const referenceData: ReferenceData = {
     },
     {
       "race": "rohirim",
-      "label": "Rohirim",
+      "label": "Rohirrim",
       "attributeBonus": {
         "FO": 0,
         "VIT": 1,
@@ -50,7 +55,7 @@ export const referenceData: ReferenceData = {
         "VOL": 1
       },
       "tailleBonus": -1,
-      "skillPoints": 15
+      "skillPoints": 10
     },
     {
       "race": "gith",
@@ -110,10 +115,10 @@ export const referenceData: ReferenceData = {
         "REF": 0,
         "PER": -1,
         "COM": 0,
-        "INT": 0,
+        "INT": -1,
         "VOL": 0
       },
-      "tailleBonus": 1,
+      "tailleBonus": 0,
       "skillPoints": 20
     },
     {
@@ -126,7 +131,7 @@ export const referenceData: ReferenceData = {
         "REF": 0,
         "PER": 0,
         "COM": 0,
-        "INT": 0,
+        "INT": 1,
         "VOL": 0
       },
       "tailleBonus": -1,
@@ -147,6 +152,54 @@ export const referenceData: ReferenceData = {
       },
       "tailleBonus": 0,
       "skillPoints": 20
+    },
+    {
+      "race": "thri-kreen",
+      "label": "Thri-Kreen",
+      "attributeBonus": {
+        "FO": 0,
+        "VIT": 1,
+        "DEX": 1,
+        "REF": 0,
+        "PER": 0,
+        "COM": 0,
+        "INT": 0,
+        "VOL": 0
+      },
+      "tailleBonus": 0,
+      "skillPoints": 15
+    },
+    {
+      "race": "gobelin",
+      "label": "Gobelin",
+      "attributeBonus": {
+        "FO": -1,
+        "VIT": -1,
+        "DEX": 1,
+        "REF": 0,
+        "PER": 0,
+        "COM": 0,
+        "INT": 2,
+        "VOL": 0
+      },
+      "tailleBonus": -1,
+      "skillPoints": 20
+    },
+    {
+      "race": "drow",
+      "label": "Drow",
+      "attributeBonus": {
+        "FO": 0,
+        "VIT": 0,
+        "DEX": 0,
+        "REF": 1,
+        "PER": 0,
+        "COM": 0,
+        "INT": 0,
+        "VOL": 1
+      },
+      "tailleBonus": 0,
+      "skillPoints": 10
     }
   ],
   // Paliers 11-15 corrigés à la main (+15/niveau au lieu de +20/niveau,
