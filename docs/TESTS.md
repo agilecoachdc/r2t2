@@ -141,6 +141,19 @@ navigateur intégré, cf. session de build).
       champ "Donner des crédits" + "Valider" → même effet que le "+Cr" par tuile (solde mis à jour
       immédiatement, positif ou négatif) ; sert de repli si le bouton par tuile est interrompu par
       une navigation avant validation.
+- [ ] Connecté en tant que JOUEUR (pas MJ) sur sa propre fiche, panneau "Budget de points", section
+      "Crédits" : le champ "Donner des crédits" du MJ n'apparaît PAS, mais "Dépenser / donner des
+      crédits" oui. Saisir un montant ≤ solde actuel, laisser le sélecteur sur "— Dépense (aucun
+      destinataire) —", valider → le solde diminue du montant, message "Dépense enregistrée."
+      Recharger la fiche d'un coéquipier (même groupe) → son solde n'a pas bougé.
+- [ ] Même écran, saisir un montant ≤ solde, choisir un coéquipier dans le sélecteur, valider → le
+      solde du personnage courant diminue du montant, message "Envoyé à <nom>." Recharger la fiche
+      du coéquipier choisi → son solde a augmenté du même montant.
+- [ ] Même écran, saisir un montant > solde actuel, valider (avec ou sans destinataire) → erreur
+      rouge "Solde insuffisant (X Cr disponible)" affichée sous le formulaire, aucun solde ne bouge
+      (ni source ni destinataire).
+- [ ] Connecté en tant que JOUEUR sur la fiche d'un AUTRE personnage (lecture seule, pas le sien) :
+      la section "Dépenser / donner des crédits" n'apparaît pas (ni "Donner des crédits" MJ).
 - [ ] Sur une fiche en édition, avec un solde de quelques centaines de Cr : dans "Armes", cliquer
       "+ Ajouter une arme" puis choisir dans le catalogue une arme au prix connu et inférieur au
       solde → le solde affiché en haut de la section ("💵 Solde : …") diminue du prix de l'arme.

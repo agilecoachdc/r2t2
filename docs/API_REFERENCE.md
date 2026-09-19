@@ -55,9 +55,12 @@ chaque réponse.
 
 ### `GET /api/characters/:id`
 - Auth : session ; lecture ouverte à tout membre du groupe du personnage.
-- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: boolean, referenceData: ReferenceData, groupImageUrl: string | null }`.
+- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: boolean, referenceData: ReferenceData, groupImageUrl: string | null, teammates: { id: string, name: string }[] }`.
   `computed` est calculé côté serveur via `src/shared/calc-engine.ts` (mêmes fonctions que le
-  frontend, pour rester la source de vérité en cas de divergence de version de code).
+  frontend, pour rester la source de vérité en cas de divergence de version de code). `teammates`
+  liste les autres personnages du même groupe (id/nom seulement) — alimente le sélecteur de
+  destinataire de "Dépenser / donner des crédits" (BudgetPanel, cf. `POST /:id/spend-credits`
+  ci-dessous), indépendant du `groupId` de navigation (absent en cas d'accès direct par URL).
 - Erreurs : `404` si le personnage n'existe pas *ou* appartient à un groupe dont l'appelant n'est
   pas membre (traité comme inexistant, pas de fuite d'existence).
 
@@ -118,6 +121,25 @@ chaque réponse.
   (même enveloppe que `PUT /:id` et `POST /:id/xp`).
 - Erreurs : `403` (pas MJ ou pas membre du groupe), `404` (personnage introuvable), `400` (montant
   manquant, non numérique, ou nul).
+
+### `POST /api/characters/:id/spend-credits`
+- Auth : session + `canEditCharacter` (propriétaire du personnage ou MJ du groupe — même garde que
+  `PUT /:id`, PAS `gm` seul contrairement à `POST /:id/credits` ci-dessus).
+- Dépense ou don de crédits déclenché par le JOUEUR lui-même (section "Dépenser / donner des
+  crédits" de `BudgetPanel`, sur la fiche) — hors catalogue (ex. service, pot-de-vin) ou en plus
+  d'un achat catalogue déjà pris en charge par `PUT /:id`. Contrairement à `POST /:id/credits`
+  (MJ, sans plancher), **bloque** (400) si `amount` dépasse le solde actuel.
+- Entrée : `{ amount: number, toCharacterId?: string }` — `amount` positif obligatoire.
+  - Sans `toCharacterId` : simple dépense, `amount` déduit de `character.credits`.
+  - Avec `toCharacterId` : transfert — même déduction côté personnage source, et `amount` ajouté au
+    `credits` du personnage `toCharacterId`, qui DOIT appartenir au même groupe (sinon 400) et ne
+    peut pas être le personnage lui-même (sinon 400). Deux `UPDATE` séquentiels (pas de vraie
+    transaction D1 ici, cf. le même choix pour `group-income`/`group-xp`).
+- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData, transferredTo: string | null }`
+  — `character`/`computed` sont ceux du personnage SOURCE (celui de `:id`) ; `transferredTo` est le
+  nom du destinataire si un don a eu lieu, sinon `null`.
+- Erreurs : `403` (ni propriétaire ni MJ du groupe), `404` (personnage introuvable), `400` (montant
+  manquant/non positif, solde insuffisant, destinataire introuvable/hors groupe/soi-même).
 
 ### `POST /api/characters/end-combat?groupId=`
 - Auth : session + rôle `gm` membre du groupe ciblé.

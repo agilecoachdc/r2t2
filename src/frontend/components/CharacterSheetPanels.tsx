@@ -1736,13 +1736,20 @@ export function BudgetPanel({
   character,
   computed,
   isGm,
+  canEdit,
+  teammates,
   onGrantXp,
   onGrantCredits,
+  onSpendCredits,
   onAcceptDeficit,
 }: {
   character: Pick<Character, "pointsDepart" | "xp" | "xpAvailable" | "credits" | "advantages">;
   computed: CharacterComputed;
   isGm?: boolean;
+  /** Propriétaire du personnage, ou MJ — conditionne "Dépenser / donner des crédits" ci-dessous. */
+  canEdit?: boolean;
+  /** Autres personnages du même groupe (id/nom), pour le sélecteur de destinataire — cf. GET /characters/:id `teammates`. */
+  teammates?: { id: string; name: string }[];
   onGrantXp?: (amount: number) => void | Promise<void>;
   /**
    * Ajustement de crédits (Cr) réservé au MJ — cf. POST
@@ -1751,9 +1758,20 @@ export function BudgetPanel({
    * constantes, sans équivalent ici) : cf. corrigé en session suite au
    * signalement que le bouton "+Cr" par tuile ne permettait pas de saisir
    * le montant voulu (redirection accidentelle vers la fiche) — ce
-   * contrôle sur la fiche elle-même en est le repli fiable.
+   * contrôle sur la fiche elle-même en est le repli fiable. Sans plancher
+   * (peut mettre le personnage en négatif), contrairement à
+   * `onSpendCredits` ci-dessous.
    */
   onGrantCredits?: (amount: number) => void | Promise<void>;
+  /**
+   * Dépense (sans destinataire) ou don (avec) de crédits par le JOUEUR
+   * propriétaire lui-même — cf. POST /api/characters/:id/spend-credits.
+   * Contrairement à `onGrantCredits` (MJ, sans plancher), BLOQUE côté
+   * serveur si le solde est insuffisant. Résout avec le nom du destinataire
+   * si un don a été effectué, sinon `null` — sert au message de
+   * confirmation affiché ici.
+   */
+  onSpendCredits?: (amount: number, toCharacterId?: string) => Promise<string | null>;
   /** Absorbe le solde négatif dans les points de départ — réservé au MJ, cf. CharacterSheet.tsx handleAcceptDeficit. */
   onAcceptDeficit?: () => void | Promise<void>;
 }) {
@@ -1764,6 +1782,11 @@ export function BudgetPanel({
   const [creditsAmount, setCreditsAmount] = useState("");
   const [creditsBusy, setCreditsBusy] = useState(false);
   const [deficitBusy, setDeficitBusy] = useState(false);
+  const [spendAmount, setSpendAmount] = useState("");
+  const [spendTo, setSpendTo] = useState("");
+  const [spendBusy, setSpendBusy] = useState(false);
+  const [spendError, setSpendError] = useState<string | null>(null);
+  const [spendNotice, setSpendNotice] = useState<string | null>(null);
 
   async function handleAcceptDeficit() {
     if (!onAcceptDeficit) return;
@@ -1800,6 +1823,24 @@ export function BudgetPanel({
       setCreditsAmount("");
     } finally {
       setCreditsBusy(false);
+    }
+  }
+
+  async function handleSpendCredits() {
+    const amount = Number(spendAmount);
+    if (!onSpendCredits || !amount || amount <= 0 || !Number.isFinite(amount)) return;
+    setSpendBusy(true);
+    setSpendError(null);
+    setSpendNotice(null);
+    try {
+      const recipientName = await onSpendCredits(amount, spendTo || undefined);
+      setSpendAmount("");
+      setSpendTo("");
+      setSpendNotice(recipientName ? `${t("Envoyé à")} ${recipientName}.` : t("Dépense enregistrée."));
+    } catch (err) {
+      setSpendError(err instanceof Error ? err.message : t("Échec de l'opération"));
+    } finally {
+      setSpendBusy(false);
     }
   }
 
@@ -1883,6 +1924,49 @@ export function BudgetPanel({
             >
               {creditsBusy ? "…" : t("Valider")}
             </button>
+          </div>
+        )}
+        {/*
+          Contrôle JOUEUR (propriétaire, ou MJ aussi) : dépenser ses propres
+          crédits (hors catalogue — ex. service, pot-de-vin) ou en donner à
+          un coéquipier. Bloque côté serveur si le solde est insuffisant
+          (POST /api/characters/:id/spend-credits), contrairement au
+          contrôle MJ ci-dessus qui n'a pas de plancher.
+        */}
+        {canEdit && onSpendCredits && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-sm text-slate-400">{t("Dépenser / donner des crédits")}</label>
+            <input
+              type="number"
+              min={0}
+              value={spendAmount}
+              onChange={(e) => setSpendAmount(e.target.value)}
+              placeholder="ex. 200"
+              className="w-24 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm"
+            />
+            <span className="text-xs text-slate-500">Cr</span>
+            <select
+              value={spendTo}
+              onChange={(e) => setSpendTo(e.target.value)}
+              className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm"
+            >
+              <option value="">{t("— Dépense (aucun destinataire) —")}</option>
+              {(teammates ?? []).map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleSpendCredits}
+              disabled={spendBusy || !spendAmount}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            >
+              {spendBusy ? "…" : t("Valider")}
+            </button>
+            {spendError && <p className="w-full text-xs text-red-400">{spendError}</p>}
+            {spendNotice && <p className="w-full text-xs text-emerald-400">{spendNotice}</p>}
           </div>
         )}
       </div>

@@ -58,6 +58,7 @@ export const api = {
       canEdit: boolean;
       referenceData: ReferenceData;
       groupImageUrl: string | null;
+      teammates: { id: string; name: string }[];
     }>(`/characters/${id}`),
   updateCharacter: (id: string, patch: Partial<Character>) =>
     request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData }>(
@@ -78,6 +79,18 @@ export const api = {
       `/characters/${id}/credits`,
       { method: "POST", body: JSON.stringify({ amount }) },
     ),
+  // Dépense ou don de crédits par le JOUEUR propriétaire (ou le MJ) — sans
+  // toCharacterId, simple dépense ; avec, transfert vers un autre personnage
+  // du même groupe. Bloque (400) si le solde est insuffisant — cf.
+  // characters.ts POST /:id/spend-credits.
+  spendCredits: (id: string, amount: number, toCharacterId?: string) =>
+    request<{
+      character: Character;
+      computed: CharacterComputed;
+      canEdit: boolean;
+      referenceData: ReferenceData;
+      transferredTo: string | null;
+    }>(`/characters/${id}/spend-credits`, { method: "POST", body: JSON.stringify({ amount, toCharacterId }) }),
   createNpc: (groupId: string, input: { name: string; portraitUrl?: string | null; race?: string; vit: number; vol: number }) =>
     request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData }>(
       `/characters?groupId=${encodeURIComponent(groupId)}`,

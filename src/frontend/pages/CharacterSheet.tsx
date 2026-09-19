@@ -51,6 +51,9 @@ export default function CharacterSheet() {
   // migrations/0004_images.sql) ; image plateforme par défaut si absente.
   const [groupImageUrl, setGroupImageUrl] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState(false);
+  // Autres personnages du groupe (id/nom) — sélecteur de destinataire de
+  // "Dépenser / donner des crédits" (BudgetPanel), cf. GET /characters/:id.
+  const [teammates, setTeammates] = useState<{ id: string; name: string }[]>([]);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,11 +62,12 @@ export default function CharacterSheet() {
     if (!id) return;
     api
       .getCharacter(id)
-      .then(({ character, canEdit, referenceData, groupImageUrl }) => {
+      .then(({ character, canEdit, referenceData, groupImageUrl, teammates }) => {
         setCharacter(character);
         setCanEdit(canEdit);
         setReferenceData(referenceData);
         setGroupImageUrl(groupImageUrl);
+        setTeammates(teammates);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
   }, [id]);
@@ -202,6 +206,24 @@ export default function CharacterSheet() {
     }
   }
 
+  // Dépense/don de crédits par le joueur lui-même (BudgetPanel, section
+  // "Dépenser / donner des crédits") — cf. characters.ts POST
+  // /:id/spend-credits. Ne passe PAS par le state `error` de la page (qui
+  // s'affiche en haut, hors du panneau) : l'erreur (ex. solde insuffisant)
+  // est relancée pour que BudgetPanel l'affiche localement, au plus près du
+  // formulaire concerné.
+  async function handleSpendCredits(amount: number, toCharacterId?: string): Promise<string | null> {
+    if (!id) return null;
+    const { character: saved, referenceData: savedReferenceData, transferredTo } = await api.spendCredits(
+      id,
+      amount,
+      toCharacterId,
+    );
+    setCharacter(saved);
+    setReferenceData(savedReferenceData);
+    return transferredTo;
+  }
+
   // Le MJ "accepte" un solde négatif (avertissement rouge de BudgetPanel) en
   // absorbant le déficit dans les points de départ — plutôt que de laisser
   // le personnage hors budget indéfiniment ou de forcer une réduction de
@@ -327,8 +349,11 @@ export default function CharacterSheet() {
         character={character}
         computed={computed}
         isGm={isGm}
+        canEdit={canEdit}
+        teammates={teammates}
         onGrantXp={handleGrantXp}
         onGrantCredits={handleGrantCredits}
+        onSpendCredits={handleSpendCredits}
         onAcceptDeficit={handleAcceptDeficit}
       />
       </div>

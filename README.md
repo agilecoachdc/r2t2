@@ -111,6 +111,14 @@ constantes" (icône 💵).
   interrompu par une redirection (cf. `CharacterTile.formOpen` dans `GmTracker.tsx`, qui bloque la
   navigation de la tuile tant qu'un formulaire "+XP"/"+Cr" y est ouvert, contre un clic fantôme
   différé qui atterrirait sinon sur le lien de la tuile en cours de saisie — cas réel signalé).
+- **Dépense / don par le joueur** : section "Dépenser / donner des crédits" du panneau "Budget de
+  points" (fiche personnage), visible par le PROPRIÉTAIRE du personnage (pas seulement le MJ,
+  contrairement au contrôle ci-dessus) — montant + sélecteur optionnel "destinataire" (les autres
+  personnages du même groupe, `GET /characters/:id` → `teammates`). Sans destinataire : simple
+  dépense (hors catalogue, ex. service/pot-de-vin). Avec : transfert vers ce personnage, qui reçoit
+  le même montant. Contrairement à l'ajustement MJ ci-dessus (sans plancher), **bloque** si le solde
+  est insuffisant (même garde-fou que les achats catalogue ci-dessous). Voir
+  `POST /api/characters/:id/spend-credits` dans `docs/API_REFERENCE.md`.
 - **Achats** : ajouter une NOUVELLE arme ou armure depuis le catalogue (`WeaponsArmorPanel`), ou un
   nouvel objet via le mini-formulaire d'achat (`EquipmentPanel`), déduit automatiquement le prix du
   solde du personnage. Un prix catalogue inconnu (fourchette texte type "10-100", absent) n'est

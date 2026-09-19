@@ -105,12 +105,22 @@ characterRoutes.get("/:id", async (c) => {
   const groupImageUrl = await getGroupImageUrl(c.env.DB, row.player_group_id);
   const character: Character = JSON.parse(row.data);
   const computed = computeCharacter(character, referenceData);
+  // Autres personnages du même groupe (id/nom seulement) — alimente le
+  // sélecteur de destinataire de "Donner des crédits" côté joueur (cf. POST
+  // /:id/spend-credits ci-dessous) sans dépendre du groupId de navigation
+  // (state.groupId, absent en cas d'accès direct par URL/rechargement).
+  const { results: teammateRows } = await c.env.DB.prepare(
+    "SELECT id, name FROM characters WHERE player_group_id = ?1 AND id != ?2 ORDER BY name",
+  )
+    .bind(row.player_group_id, row.id)
+    .all<{ id: string; name: string }>();
   return c.json({
     character,
     computed,
     canEdit: canEditCharacter(user, row.owner_username, row.player_group_id),
     referenceData,
     groupImageUrl,
+    teammates: teammateRows ?? [],
   });
 });
 
@@ -366,6 +376,81 @@ characterRoutes.post("/:id/credits", async (c) => {
   const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
   const computed = computeCharacter(updated, referenceData);
   return c.json({ character: updated, computed, canEdit: true, referenceData });
+});
+
+// Dépense/don de crédits par le JOUEUR propriétaire (ou le MJ) — contrairement
+// à POST /:id/credits ci-dessus (MJ seul, aucun plancher), ce contrôle passe
+// par canEditCharacter et BLOQUE si le solde est insuffisant (même
+// garde-fou que les achats du catalogue, cf. tryPurchase dans
+// CharacterSheetPanels.tsx). Sans `toCharacterId` : simple dépense (hors
+// catalogue, ex. service/pot-de-vin/corruption). Avec `toCharacterId` :
+// transfert vers un autre personnage du MÊME groupe, crédité du même
+// montant — pas de table de transactions, juste deux UPDATE séquentiels
+// (même niveau de garantie que group-income/group-xp plus bas, pas de vrai
+// besoin d'atomicité transactionnelle à cette échelle).
+characterRoutes.post("/:id/spend-credits", async (c) => {
+  const id = c.req.param("id");
+  const user = c.get("user");
+
+  const existing = await c.env.DB.prepare(
+    "SELECT id, data, owner_username, player_group_id FROM characters WHERE id = ?1",
+  )
+    .bind(id)
+    .first<CharacterRow>();
+  if (!existing) return c.json({ error: "Personnage introuvable" }, 404);
+  if (!existing.player_group_id || !canEditCharacter(user, existing.owner_username, existing.player_group_id)) {
+    return c.json({ error: "Vous ne pouvez dépenser que les crédits de votre propre personnage" }, 403);
+  }
+
+  const body = await c.req.json<{ amount?: number; toCharacterId?: string }>().catch(() => null);
+  const amount = body?.amount;
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    return c.json({ error: "Montant requis (positif)" }, 400);
+  }
+
+  const current: Character = JSON.parse(existing.data);
+  const balance = current.credits ?? 0;
+  if (amount > balance) {
+    return c.json({ error: `Solde insuffisant (${balance} Cr disponible)` }, 400);
+  }
+
+  let recipientName: string | null = null;
+  if (body?.toCharacterId) {
+    if (body.toCharacterId === id) {
+      return c.json({ error: "Choisissez un autre personnage que vous-même" }, 400);
+    }
+    const recipient = await c.env.DB.prepare(
+      "SELECT id, name, data, player_group_id FROM characters WHERE id = ?1",
+    )
+      .bind(body.toCharacterId)
+      .first<{ id: string; name: string; data: string; player_group_id: string | null }>();
+    if (!recipient || recipient.player_group_id !== existing.player_group_id) {
+      return c.json({ error: "Destinataire introuvable dans ce groupe" }, 400);
+    }
+    const recipientData: Character = JSON.parse(recipient.data);
+    const updatedRecipient: Character = {
+      ...recipientData,
+      credits: (recipientData.credits ?? 0) + amount,
+      updatedAt: new Date().toISOString(),
+    };
+    await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
+      .bind(JSON.stringify(updatedRecipient), updatedRecipient.updatedAt, recipient.id)
+      .run();
+    recipientName = recipient.name;
+  }
+
+  const updated: Character = {
+    ...current,
+    credits: balance - amount,
+    updatedAt: new Date().toISOString(),
+  };
+  await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
+    .bind(JSON.stringify(updated), updated.updatedAt, id)
+    .run();
+
+  const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
+  const computed = computeCharacter(updated, referenceData);
+  return c.json({ character: updated, computed, canEdit: true, referenceData, transferredTo: recipientName });
 });
 
 // "Fin de combat" — bouton MJ sur l'écran "Suivi des constantes" : désactive
