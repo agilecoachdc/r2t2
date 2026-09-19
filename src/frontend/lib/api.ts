@@ -50,7 +50,15 @@ export const api = {
       referenceData: ReferenceData | null;
       groupImageUrl: string | null;
       groupDriveUrl: string | null;
+      currentRank: number;
     }>(`/characters?groupId=${encodeURIComponent(groupId)}`),
+  // Rang d'Action courant du round (écran "Suivi des constantes"), partagé
+  // entre tous les MJ du groupe — cf. characters.ts POST /group-current-rank.
+  setCurrentRank: (groupId: string, rank: number) =>
+    request<{ ok: true; currentRank: number }>(`/characters/group-current-rank?groupId=${encodeURIComponent(groupId)}`, {
+      method: "POST",
+      body: JSON.stringify({ rank }),
+    }),
   getCharacter: (id: string) =>
     request<{
       character: Character;

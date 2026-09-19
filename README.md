@@ -216,7 +216,12 @@ seulement pendant qu'un pouvoir est actif :
 L'écran "Suivi des constantes" affiche le RA de chaque personnage sur sa tuile, un rang courant en
 haut de l'écran (boutons Précédent/Suivant pour dérouler le round — "Suivant" reboucle à 0 une fois
 dépassé le plus haut RA parmi les personnages en jeu) et surligne les tuiles dont le RA correspond
-exactement au rang affiché — plusieurs personnages peuvent agir au même rang.
+exactement au rang affiché — plusieurs personnages peuvent agir au même rang. Ce rang courant est
+persisté côté serveur (`player_groups.current_rank`, `POST /api/characters/group-current-rank`) et
+repropagé à chaque poll (toutes les 2s) plutôt que d'être local à l'onglet de chaque MJ — plusieurs
+MJ qui suivent le même groupe en même temps (ex. un sur tablette, un sur laptop) voient donc tous le
+même rang, y compris quand un autre MJ clique "Suivant" sur son propre appareil (corrigé, cf.
+incident du 2026-09-19 : le rang ne se mettait auparavant à jour que dans l'onglet qui avait cliqué).
 
 ## Activation des pouvoirs psy et coût en PSP
 

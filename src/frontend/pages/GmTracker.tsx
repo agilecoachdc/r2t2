@@ -453,13 +453,16 @@ export default function GmTracker() {
 
   // Rang d'Action affiché en haut de l'écran — le MJ avance/recule dans le
   // round au fil des actions (cf. calc-engine.getActionRank : plus bas =
-  // agit plus tôt, donc "Suivant" incrémente). État purement local à cette
-  // page (pas de synchro serveur) : seul le MJ pilote cet écran, pas besoin
-  // de le partager. Initialisé une seule fois, au premier chargement, sur
-  // le RA le plus bas parmi les personnages en jeu (celui qui agit en
-  // premier) — rankInitialized évite de réinitialiser à chaque poll (1s).
+  // agit plus tôt, donc "Suivant" incrémente). Persisté côté serveur
+  // (player_groups.current_rank, cf. characters.ts POST /group-current-rank
+  // et migrations/0010_current_rank.sql) et repropagé à chaque poll de
+  // loadCharacters (2s) — PAS un état purement local comme avant : plusieurs
+  // MJ peuvent suivre le même groupe en même temps (ex. tablette + laptop),
+  // et le rang doit rester identique pour tous (signalé : ne se mettait pas
+  // à jour sur une tablette quand un autre MJ cliquait "Suivant"). Mise à
+  // jour locale optimiste au clic (setCurrentRank immédiat), confirmée ou
+  // corrigée par le poll suivant.
   const [currentRank, setCurrentRank] = useState(0);
-  const rankInitialized = useRef(false);
   const [endCombatBusy, setEndCombatBusy] = useState(false);
 
   const [groupXpOpen, setGroupXpOpen] = useState(false);
@@ -495,10 +498,11 @@ export default function GmTracker() {
     if (!groupId) return Promise.resolve();
     return api
       .listCharacters(groupId)
-      .then(({ characters, referenceData, groupImageUrl }) => {
+      .then(({ characters, referenceData, groupImageUrl, currentRank }) => {
         setRows(characters);
         if (referenceData) setReferenceData(referenceData);
         setGroupImageUrl(groupImageUrl);
+        setCurrentRank(currentRank);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
   }
@@ -510,13 +514,15 @@ export default function GmTracker() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
-  useEffect(() => {
-    if (rankInitialized.current || !rows) return;
-    const inGame = rows.filter((c) => c.inGame && !c.archived);
-    if (inGame.length === 0) return;
-    setCurrentRank(Math.min(...inGame.map((c) => c.actionRank)));
-    rankInitialized.current = true;
-  }, [rows]);
+  // Met à jour le rang localement (retour visuel immédiat) puis le persiste
+  // côté serveur — cf. commentaire sur `currentRank` plus haut. `next` est
+  // calculé par l'appelant (boutons Précédent/Suivant ci-dessous) plutôt que
+  // par une fonction updater ici, car il faut la même valeur pour l'appel API.
+  function changeRank(next: number) {
+    if (!groupId) return;
+    setCurrentRank(next);
+    api.setCurrentRank(groupId, next).catch((err) => setError(err instanceof Error ? err.message : "Échec de la mise à jour du rang"));
+  }
 
   // Vue réservée au MJ, membre de ce groupe — un joueur, ou un MJ d'un
   // autre groupe, qui atterrit ici (URL directe) repart à l'accueil.
@@ -722,7 +728,7 @@ export default function GmTracker() {
           <LocalisationSilhouette size={64} />
           <button
             type="button"
-            onClick={() => setCurrentRank((r) => r - 1)}
+            onClick={() => changeRank(Math.max(0, currentRank - 1))}
             className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700"
           >
             {t("← Précédent")}
@@ -733,7 +739,7 @@ export default function GmTracker() {
           </div>
           <button
             type="button"
-            onClick={() => setCurrentRank((r) => (r >= maxRank ? 0 : r + 1))}
+            onClick={() => changeRank(currentRank >= maxRank ? 0 : currentRank + 1)}
             className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
           >
             {t("Suivant →")}

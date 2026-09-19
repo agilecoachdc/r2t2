@@ -94,6 +94,12 @@ navigateur intégré, cf. session de build).
       "Portraits et limite CPU du Worker", deux épisodes) : embarquer les portraits dans cette route
       faisait dépasser la limite CPU du Worker sous charge concurrente, y compris juste après un
       login réussi (le login lui-même n'était jamais en cause).
+- [ ] Deux comptes MJ (ou un même compte sur deux appareils/onglets) ouvrent l'écran "Suivi des
+      constantes" du même groupe. Sur le premier, cliquer "Suivant →" plusieurs fois → le rang
+      affiché change. Sur le second (sans rien cliquer), attendre jusqu'à 2s (le poll) → le rang s'y
+      met à jour tout seul, identique au premier. Idem avec "← Précédent". Recharger la page
+      (F5) → le rang affiché reste celui du dernier clic (persisté côté serveur, pas réinitialisé).
+      Cliquer "← Précédent" au rang 0 → reste à 0 (pas de négatif).
 - [ ] Sur "Concentration psy" (ex. cas réel Karun : score de base 3, mais total 15 une fois Volonté
       + Affinité ajoutés), activer à un palier avec REF choisi → le bonus REF (`AttributesPanel`,
       pris en compte dans le RA) doit se calculer sur le score TOTAL (15), pas le score de base

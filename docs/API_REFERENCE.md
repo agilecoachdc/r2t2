@@ -36,7 +36,7 @@ chaque réponse.
 
 ### `GET /api/characters?groupId=`
 - Auth : session ; `groupId` doit être dans `user.memberships` (403 sinon).
-- Sortie : `{ characters: CharacterSummary[], referenceData: ReferenceData, groupImageUrl: string | null, groupDriveUrl: string | null }`
+- Sortie : `{ characters: CharacterSummary[], referenceData: ReferenceData, groupImageUrl: string | null, groupDriveUrl: string | null, currentRank: number }`
   — résumé enrichi (portrait, statut `inGame`, `isNpc`, `archived`, PV/PSP courant + max calculé,
   `xp`/`xpAvailable`, `credits` (solde en Cr, cf. section "Monnaie" du README), `actionRank`)
   utilisé par l'écran "Personnages" et l'écran "Suivi des
@@ -46,7 +46,10 @@ chaque réponse.
   de lien ADD40K en dur). `actionRank` (cf. `calc-engine.getActionRank`) est le Rang d'Action
   courant du personnage — plus bas = agit plus tôt ; l'écran "Suivi des constantes" affiche un
   rang courant (boutons Précédent/Suivant) et surligne les tuiles dont `actionRank` correspond
-  exactement (plusieurs personnages peuvent agir au même rang). `boostedAttributes` (cf.
+  exactement (plusieurs personnages peuvent agir au même rang). `currentRank` est CE rang courant
+  du round (`player_groups.current_rank`, cf. `POST /group-current-rank` plus bas) — partagé entre
+  tous les MJ qui suivent ce groupe en même temps, repropagé à chaque poll (2s) plutôt que local à
+  chaque onglet (corrigé, incident du 2026-09-19). `boostedAttributes` (cf.
   `calc-engine.getBoostedAttributes`) liste les attributs actuellement boostés par un pouvoir psy
   actif (`Character.activePsyPowers`) — une icône par attribut sur sa tuile (💪 FO, 🧘🏻‍♀️ VIT,
   🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM, 🧠 INT, 🙏 VOL). `boostedSkillNames` (cf.
@@ -156,6 +159,18 @@ chaque réponse.
   nom du destinataire si un don a eu lieu, sinon `null`.
 - Erreurs : `403` (ni propriétaire ni MJ du groupe), `404` (personnage introuvable), `400` (montant
   manquant/non positif, solde insuffisant, destinataire introuvable/hors groupe/soi-même).
+
+### `POST /api/characters/group-current-rank?groupId=`
+- Auth : session + rôle `gm` membre du groupe ciblé.
+- Persiste le rang courant du round (boutons Précédent/Suivant, écran "Suivi des constantes") côté
+  serveur, pour qu'il reste identique pour tous les MJ qui suivent ce même groupe en même temps —
+  cf. `currentRank` sur `GET /?groupId=` ci-dessus, `player_groups.current_rank`
+  (`migrations/0010_current_rank.sql`). Corrige un bug signalé : le rang ne se mettait à jour que
+  dans l'onglet du MJ qui avait cliqué, invisible sur les autres appareils.
+- Entrée : `{ rank: number }` (entier ≥ 0).
+- Sortie : `{ ok: true, currentRank: number }`.
+- Erreurs : `403` (pas MJ ou pas membre du groupe), `404` (`groupId` manquant ou hors
+  `user.memberships`), `400` (rang manquant, non entier, ou négatif).
 
 ### `POST /api/characters/end-combat?groupId=`
 - Auth : session + rôle `gm` membre du groupe ciblé.

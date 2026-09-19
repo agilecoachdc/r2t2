@@ -15,7 +15,7 @@
 import { Hono } from "hono";
 import type { Env } from "../lib/session";
 import { canEditCharacter } from "../lib/session";
-import { getGroupDriveUrl, getGroupImageUrl, getReferenceDataForGroup } from "../lib/reference";
+import { getGroupCurrentRank, getGroupDriveUrl, getGroupImageUrl, getReferenceDataForGroup } from "../lib/reference";
 import type { PublicUser } from "../../shared/types";
 import type { AttributeScores, Character, CharacterSummary, ReferenceData } from "../../shared/types";
 import { ATTRIBUTES } from "../../shared/types";
@@ -51,6 +51,7 @@ characterRoutes.get("/", async (c) => {
   const referenceData = await getReferenceDataForGroup(c.env.DB, groupId);
   const groupImageUrl = await getGroupImageUrl(c.env.DB, groupId);
   const groupDriveUrl = await getGroupDriveUrl(c.env.DB, groupId);
+  const currentRank = await getGroupCurrentRank(c.env.DB, groupId);
   const { results } = await c.env.DB.prepare(
     "SELECT id, name, race, owner_username, data FROM characters WHERE player_group_id = ?1 ORDER BY name",
   )
@@ -86,7 +87,38 @@ characterRoutes.get("/", async (c) => {
     };
   });
 
-  return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl });
+  return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl, currentRank });
+});
+
+// Rang d'Action courant du round, écran "Suivi des constantes" — persisté
+// côté serveur (player_groups.current_rank, cf. migrations/0010_current_rank.sql)
+// plutôt que local à l'onglet de chaque MJ comme avant, pour que tous les MJ
+// qui suivent le même groupe en même temps (ex. un sur tablette, un sur
+// laptop) voient le même rang, propagé par le poll existant de GET /
+// (2s, GmTracker.tsx) — signalé : le rang ne se mettait pas à jour sur une
+// tablette quand un autre MJ cliquait "Suivant" sur son propre appareil.
+// POST plutôt que PUT, et nommée /group-current-rank plutôt que /current-rank
+// : même convention que /end-combat, /group-xp, /group-income ci-dessous
+// (actions groupées scopées ?groupId=, pas /:id) — évite aussi toute
+// ambiguïté de routage avec PUT /:id (édition de fiche) sur un même segment.
+characterRoutes.post("/group-current-rank", async (c) => {
+  const user = c.get("user");
+  const groupId = c.req.query("groupId");
+  if (!groupId || !user.memberships.includes(groupId)) {
+    return c.json({ error: "Groupe introuvable ou non membre" }, 404);
+  }
+  if (user.role !== "gm") {
+    return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  }
+
+  const body = await c.req.json<{ rank?: number }>().catch(() => null);
+  const rank = body?.rank;
+  if (typeof rank !== "number" || !Number.isFinite(rank) || !Number.isInteger(rank) || rank < 0) {
+    return c.json({ error: "Rang requis (entier positif ou nul)" }, 400);
+  }
+
+  await c.env.DB.prepare("UPDATE player_groups SET current_rank = ?1 WHERE id = ?2").bind(rank, groupId).run();
+  return c.json({ ok: true, currentRank: rank });
 });
 
 // Sert le portrait d'un personnage en image brute (pas en JSON) — évite de

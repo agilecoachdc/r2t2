@@ -50,3 +50,15 @@ export async function getGroupDriveUrl(db: D1Database, groupId: string): Promise
   const row = await db.prepare("SELECT drive_url FROM player_groups WHERE id = ?1").bind(groupId).first<{ drive_url: string | null }>();
   return row?.drive_url ?? null;
 }
+
+/**
+ * Rang d'Action courant du round, écran "Suivi des constantes" — partagé
+ * entre tous les MJ qui consultent ce groupe en même temps (cf.
+ * migrations/0010_current_rank.sql), plutôt que local à l'onglet de chacun
+ * comme avant (signalé : ne se mettait pas à jour sur une tablette quand un
+ * autre MJ cliquait "Suivant"). 0 si le groupe n'existe pas.
+ */
+export async function getGroupCurrentRank(db: D1Database, groupId: string): Promise<number> {
+  const row = await db.prepare("SELECT current_rank FROM player_groups WHERE id = ?1").bind(groupId).first<{ current_rank: number }>();
+  return row?.current_rank ?? 0;
+}
