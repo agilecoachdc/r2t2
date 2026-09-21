@@ -220,6 +220,7 @@ const EN: Record<string, string> = {
   "— choisir —": "— choose —",
   "Équipement": "Equipment",
   "+ Ajouter un objet": "+ Add an item",
+  "Prix fixé par le catalogue — non modifiable.": "Price set by the catalog — cannot be changed.",
   "Inventaire divers": "Misc inventory",
   "Objets non catalogués, munitions, notes en vrac…": "Uncatalogued items, ammo, loose notes…",
   "Aucune note.": "No notes.",

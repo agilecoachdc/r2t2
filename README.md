@@ -137,7 +137,12 @@ constantes" (icône 💵).
   les armes/armures. Éditable via l'éditeur de catalogue admin (onglet "Équipement & cyber"),
   consultable dans la Documentation (section "Équipement & cyber", groupée par rubrique), et proposé
   à l'achat sur la fiche : le `EquipmentPanel` affiche un sélecteur groupé par rubrique qui
-  pré-remplit nom + prix du mini-formulaire (l'achat lui-même reste identique). Les cyberarmes
+  pré-remplit nom + prix du mini-formulaire (l'achat lui-même reste identique). Le champ prix se
+  verrouille (non éditable) dès que la ligne catalogue choisie a un prix connu — un joueur pouvait
+  jusqu'ici le baisser avant de valider l'achat, contrairement aux armes/armures dont le prix
+  catalogue est déduit sans jamais passer par un champ éditable (signalé, corrigé). Reste éditable
+  si le prix catalogue est absent (fourchette texte, non renseigné), ou en saisie libre sans ligne
+  catalogue choisie. Les cyberarmes
   gardent leurs stats de combat (dégâts/RA) dans `weapons` — cette liste ne sert qu'au prix, à
   l'Essence et à la description. Les prix/dégâts d'armes et les prix d'armures ont par ailleurs été
   réalignés sur le même livre des prix (cf. en-tête de `src/shared/reference-data.ts`) ; la

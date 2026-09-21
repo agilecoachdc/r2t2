@@ -77,13 +77,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function NumberInput({ value, onChange, className = "" }: { value: number; onChange: (n: number) => void; className?: string }) {
+function NumberInput({
+  value,
+  onChange,
+  className = "",
+  disabled = false,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  className?: string;
+  disabled?: boolean;
+}) {
   return (
     <input
       type="number"
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className={`w-16 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-center text-sm ${className}`}
+      disabled={disabled}
+      className={`w-16 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-center text-sm disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     />
   );
 }
@@ -1593,6 +1604,13 @@ export function EquipmentPanel({
   // (comportement identique à avant l'ajout de ce champ).
   const [newLabel, setNewLabel] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  // Verrouille le champ prix quand il vient d'une ligne catalogue avec un
+  // prix connu (signalé : un joueur pouvait baisser le prix pré-rempli
+  // avant de valider l'achat, contrairement aux armes/armures où le prix
+  // catalogue est déduit sans jamais passer par un champ éditable). Reste
+  // éditable si le catalogue n'a pas de prix pour cette ligne (fourchette
+  // texte, absent), ou en saisie libre (aucune ligne catalogue choisie).
+  const [priceLocked, setPriceLocked] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
   function handleAdd(e: React.FormEvent) {
@@ -1613,6 +1631,7 @@ export function EquipmentPanel({
     setPurchaseError(null);
     setNewLabel("");
     setNewPrice("");
+    setPriceLocked(false);
   }
 
   return (
@@ -1665,6 +1684,7 @@ export function EquipmentPanel({
                 setNewLabel(item.name);
                 const price = parseCatalogPrice(item.price);
                 setNewPrice(price != null ? String(price) : "");
+                setPriceLocked(price != null);
                 setPurchaseError(null);
               }}
               className="mt-2 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm"
@@ -1683,8 +1703,21 @@ export function EquipmentPanel({
             </select>
           )}
           <form onSubmit={handleAdd} className="mt-2 flex flex-wrap items-center gap-2">
-            <TextInput value={newLabel} onChange={setNewLabel} placeholder={t("Nom de l'objet")} className="flex-1" />
-            <NumberInput value={newPrice === "" ? 0 : Number(newPrice)} onChange={(n) => setNewPrice(n ? String(n) : "")} className="w-20" />
+            <TextInput
+              value={newLabel}
+              onChange={(v) => {
+                setPriceLocked(false);
+                setNewLabel(v);
+              }}
+              placeholder={t("Nom de l'objet")}
+              className="flex-1"
+            />
+            <NumberInput
+              value={newPrice === "" ? 0 : Number(newPrice)}
+              onChange={(n) => setNewPrice(n ? String(n) : "")}
+              disabled={priceLocked}
+              className="w-20"
+            />
             <span className="text-xs text-slate-500">Cr</span>
             <button
               type="submit"
@@ -1694,6 +1727,9 @@ export function EquipmentPanel({
               {t("+ Ajouter un objet")}
             </button>
           </form>
+          {priceLocked && (
+            <p className="mt-1 text-xs text-slate-500">{t("Prix fixé par le catalogue — non modifiable.")}</p>
+          )}
         </>
       )}
     </Section>

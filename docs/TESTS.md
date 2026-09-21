@@ -188,8 +188,13 @@ navigateur intégré, cf. session de build).
       du mini-formulaire) : les options sont groupées par rubrique (Accessoires de mode, Cyberarme,
       Cybernétique fonctionnelle, Cyberoptique, Améliorations cyber, Améliorations biologiques,
       Munitions, Exosquelettes). Choisir "Neuromat" → le nom et le prix (3000) se pré-remplissent
-      dans le mini-formulaire. Cliquer "+ Ajouter un objet" avec un solde suffisant → l'objet est
-      ajouté et le solde diminue de 3000 ; avec un solde insuffisant → message rouge, rien n'ajouté.
+      dans le mini-formulaire, le champ prix est GRISÉ/NON ÉDITABLE (essayer d'y taper → aucun effet)
+      et le texte "Prix fixé par le catalogue — non modifiable." apparaît sous le formulaire. Cliquer
+      "+ Ajouter un objet" avec un solde suffisant → l'objet est ajouté et le solde diminue de 3000 ;
+      avec un solde insuffisant → message rouge, rien n'ajouté. Choisir ensuite une ligne SANS prix
+      catalogue (fourchette texte ou absent) → le champ prix reste éditable normalement. Retaper
+      manuellement le nom de l'objet après avoir choisi une ligne catalogue (au lieu de valider tel
+      quel) → le champ prix se déverrouille (saisie libre).
 - [ ] Page Documentation d'un groupe → section "Équipement & cyber" (repliée par défaut) : dépliée,
       elle liste toutes les lignes triées par rubrique, colonnes Catégorie / Nom / Essence / Prix /
       Description. La section "Armures" affiche désormais une colonne "Prix" (ex. Dragoon = 5000).
