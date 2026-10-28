@@ -34,6 +34,7 @@ import type {
   AttributeScores,
   Character,
   ReferenceData,
+  SkillDefinition,
   SkillEntry,
   WeaponEntry,
   WeaponType,
@@ -62,14 +63,23 @@ export interface SkillTotal {
  * nom quand renseigné — nécessaire pour une compétence hors catalogue (texte
  * libre, ex. compétence `free` justifiée par un avantage/du matériel) dont
  * le nom ne suit pas la convention "Nom (ATTR)" du catalogue.
+ * À défaut (ni override, ni code dans le nom), on retombe sur l'attribut de
+ * l'entrée du catalogue de même nom (`catalogSkills`) — une compétence
+ * ajoutée au catalogue par le MJ sans le suffixe "(ATTR)" (ex.
+ * "Intimidation", attribut COM) comptait sinon 0 d'attribut.
  */
 export function getSkillTotal(
   skillName: string,
   score: number,
   attributeTotals: AttributeScores,
   attributeOverride?: Attribute | null,
+  catalogSkills?: readonly Pick<SkillDefinition, "name" | "attribute">[],
 ): SkillTotal {
-  const attribute = attributeOverride ?? parseSkillAttribute(skillName);
+  const attribute =
+    attributeOverride ??
+    parseSkillAttribute(skillName) ??
+    catalogSkills?.find((sd) => sd.name === skillName)?.attribute ??
+    null;
   const attributeValue = attribute ? attributeTotals[attribute] : 0;
   return { attribute, attributeValue, total: score + attributeValue };
 }
@@ -324,12 +334,13 @@ export function getSkillDisplayTotal(
   skill: Pick<SkillEntry, "name" | "score" | "attribute" | "isAffinity" | "justification" | "justifications">,
   character: Pick<Character, "skills" | "activePsyPowers">,
   attributeTotals: AttributeScores,
+  catalogSkills?: readonly Pick<SkillDefinition, "name" | "attribute">[],
 ): SkillDisplayTotal {
   const baseScore = getSkillJustifiedScore(skill);
   if (skill.isAffinity) {
     return { attribute: null, attributeValue: 0, affinityBonus: 0, activeBoost: 0, total: baseScore };
   }
-  const { attribute, attributeValue } = getSkillTotal(skill.name, baseScore, attributeTotals, skill.attribute);
+  const { attribute, attributeValue } = getSkillTotal(skill.name, baseScore, attributeTotals, skill.attribute, catalogSkills);
   const affinityBonus = getSkillAffinityBonus(character, skill.name);
   const activeBoost = getActivePsyPowerSkillBoost(character, skill.name);
   return { attribute, attributeValue, affinityBonus, activeBoost, total: baseScore + attributeValue + affinityBonus + activeBoost };

@@ -215,6 +215,9 @@ navigateur intégré, cf. session de build).
       à solde 0, monter une compétence (ex. +5 Intimidation → solde -25, "Enregistrer" bloqué),
       cliquer "Accepter" sur l'avertissement rouge → points de départ +25, la compétence reste à
       sa nouvelle valeur, **solde = 0** (pas +25), mode édition quitté. Recharger → idem en base.
+- [ ] Compétence de catalogue sans suffixe "(ATTR)" : dans l'éditeur de catalogue, une compétence
+      "Intimidation" avec attribut COM ; sur une fiche qui l'a à 5, la ligne affiche l'attribut COM
+      et un total = 5 + COM (ex. Conrad : 7), y compris dans le tri par total.
 
 ## §4 — Permissions
 

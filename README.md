@@ -337,7 +337,10 @@ sur les fiches existantes (migration transparente en lecture, cf.
 plus souvent hors du catalogue de règle (son nom ne suit donc pas la convention "Nom (ATTR)" utilisée
 pour en déduire l'attribut lié), son nom se saisit en texte libre et son attribut se choisit
 manuellement dans un sélecteur dédié (`SkillEntry.attribute`, prioritaire sur le parsing du nom —
-`calc-engine.getSkillTotal`).
+`calc-engine.getSkillTotal`). Ordre de résolution de l'attribut lié : `SkillEntry.attribute` → code
+"(ATTR)" dans le nom → attribut de l'entrée du catalogue de même nom (`SkillDefinition.attribute`) —
+ce dernier repli couvre une compétence ajoutée au catalogue par le MJ sans suffixe "(ATTR)" (ex.
+"Intimidation", COM).
 
 ## Affinité (modificateur pour une compétence, un pouvoir, ou toute une discipline)
 

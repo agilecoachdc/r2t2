@@ -96,6 +96,15 @@ describe("parseSkillAttribute / getSkillTotal", () => {
     expect(result.attribute).toBe("VOL");
     expect(result.attributeValue).toBe(attributeTotals.VOL);
   });
+
+  it("retombe sur l'attribut du catalogue quand le nom n'a pas de suffixe (ATTR) (cas réel : 'Intimidation' ajoutée par le MJ avec COM)", () => {
+    const attributeTotals = computeCharacter(sternTack, referenceData).attributeTotals;
+    const catalog = [{ name: "Intimidation", attribute: "COM" as const }];
+    expect(getSkillTotal("Intimidation", 5, attributeTotals).attribute).toBeNull();
+    const result = getSkillTotal("Intimidation", 5, attributeTotals, undefined, catalog);
+    expect(result.attribute).toBe("COM");
+    expect(result.total).toBe(5 + attributeTotals.COM);
+  });
 });
 
 describe("getSkillsCostTotal — compétences 'free' (justifiées par un avantage/du matériel)", () => {

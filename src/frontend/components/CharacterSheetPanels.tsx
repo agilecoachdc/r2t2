@@ -495,12 +495,12 @@ export function SkillsPanel({
           // actif) plutôt que par ordre de saisie — `i` reste l'index réel dans
           // character.skills (setSkill/suppression s'appuient dessus), seul l'ordre
           // d'affichage change.
-          .map((s, i) => ({ s, i, total: getSkillDisplayTotal(s, character, computed.attributeTotals).total }))
+          .map((s, i) => ({ s, i, total: getSkillDisplayTotal(s, character, computed.attributeTotals, referenceData.skills).total }))
           .sort((a, b) => b.total - a.total || a.i - b.i)
           .map(({ s, i }) => {
           const justifications = getSkillJustifications(s);
           const justifiedScore = getSkillJustifiedScore(s);
-          const display = getSkillDisplayTotal(s, character, computed.attributeTotals);
+          const display = getSkillDisplayTotal(s, character, computed.attributeTotals, referenceData.skills);
           const extra = display.affinityBonus + display.activeBoost;
           return (
             <li key={i} className="space-y-1">
