@@ -69,18 +69,17 @@ identique visuellement aux fiches de `Fiches App/`.
 
 L'XP d'un personnage est distribuée par le MJ, jamais auto-attribuée par le joueur : un bouton
 "Donner de l'XP" apparaît, pour le MJ uniquement, sur la fiche détaillée (panneau "Budget de
-points") et sur chaque tuile de l'écran "Suivi des constantes". Deux champs distincts, à ne pas
-confondre :
+points") et sur chaque tuile de l'écran "Suivi des constantes".
 
 - **`Character.xp`** ("XP gagnée (depuis la création)" à l'écran) — total net : la valeur importée
   depuis la fiche Excel d'origine, plus/moins toutes les distributions du MJ depuis (positives ou
-  négatives — un retrait décidé par le MJ vaut son approbation). Contribue au budget total dispo
-  (additionné aux points raciaux + points de départ, cf. calc-engine.getTotalDispo).
-- **`Character.xpAvailable`** ("XP disponible" à l'écran) — pool d'appoint géré par le MJ, séparé
-  du budget total dispo (n'y contribue pas). Bouge du même montant que `xp` à chaque distribution/
-  retrait du MJ, et diminue aussi séparément quand le coût de la fiche augmente (compétence/pouvoir
-  psy monté, avantage ajouté — remboursé symétriquement en cas d'allègement). Peut devenir négatif
-  dans les deux cas (aucun plancher).
+  négatives — un retrait décidé par le MJ vaut son approbation), plus les déficits acceptés par le
+  MJ (bouton "Accepter", cf. plus bas). Contribue au budget total dispo (additionné aux points
+  raciaux + points de départ, cf. calc-engine.getTotalDispo).
+- **Solde** (`calc-engine.getBudgetSummary`) — le SEUL compteur des points restant à répartir sur
+  la fiche : total dispo − coûts. Calculé, jamais stocké. L'ancien champ `xpAvailable` ("XP
+  disponible"), qui faisait doublon avec le solde, a été supprimé ; la clé peut encore traîner dans
+  le JSON d'anciennes fiches (ignorée, purgée au prochain `PUT /:id`).
 
 Voir `POST /api/characters/:id/xp` dans `docs/API_REFERENCE.md`.
 
@@ -103,7 +102,7 @@ constantes" (icône 💵).
 - **Ajustement individuel** : bouton "+Cr" sur chaque tuile de l'écran "Suivi des constantes", juste
   à côté du solde — même mini-formulaire inline (montant + Valider) que le "+XP" par tuile,
   réutilisé via le composant générique `GrantAmountControl`. Positif ou négatif, sans plancher (même
-  convention que `xpAvailable`) ; pour un ajustement ponctuel (récompense/pénalité, correction),
+  convention que `xp`) ; pour un ajustement ponctuel (récompense/pénalité, correction),
   distinct du revenu mensuel automatique ci-dessus (toujours un montant direct en Cr, jamais un
   nombre de mois — ça, c'est le bouton groupé). Voir `POST /api/characters/:id/credits`. Même
   contrôle également disponible directement sur la fiche détaillée (panneau "Budget de points",
@@ -279,7 +278,7 @@ seule cette action groupée ou une désactivation manuelle par fiche met fin à 
 Le bouton "Donner de l'XP à tous" (MJ, écran "Suivi des constantes",
 `POST /api/characters/group-xp`) applique le même montant d'XP, choisi par le MJ, à tous les
 personnages **joueurs** actuellement en jeu du groupe en une seule action — même mécanisme que le
-bouton "+XP" par tuile (`POST /:id/xp`, alimente `xp` et `xpAvailable` symétriquement), mais groupé.
+bouton "+XP" par tuile (`POST /:id/xp`, alimente `xp`, donc le solde), mais groupé.
 Les PNJ ne sont pas concernés : l'XP est un mécanisme de progression des joueurs.
 
 ## Descriptions du catalogue et infobulles
@@ -312,10 +311,10 @@ repère générique en haut de l'écran "Suivi des constantes" — remplace l'an
 
 Un solde négatif (dépense au-delà du budget) bloque l'enregistrement de la fiche en mode édition —
 il faut d'abord ajuster la fiche, ou passer par le MJ : soit une distribution d'XP (ci-dessus), soit
-le bouton "Accepter" du message d'avertissement rouge, qui absorbe le déficit dans les points de
-départ pour ramener le solde à 0 (`onAcceptDeficit`, `BudgetPanel`). Si le déficit vient d'une
+le bouton "Accepter" du message d'avertissement rouge, qui ajoute le déficit à l'XP gagnée
+(`xp`) pour ramener le solde à 0 — les points de départ restent ceux de la création (`onAcceptDeficit`, `BudgetPanel`). Si le déficit vient d'une
 édition en cours (non enregistrée), "Accepter" enregistre la fiche complète en même temps que
-l'ajustement des points de départ (et quitte le mode édition) — sinon le serveur fusionnait
+l'ajustement de l'XP (et quitte le mode édition) — sinon le serveur fusionnait
 +déficit avec les anciennes compétences et le solde remontait à +déficit au lieu de 0.
 
 ## Compétences gratuites (justifiées par un avantage/du matériel)

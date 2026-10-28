@@ -327,7 +327,7 @@ export interface Character {
   // détail affiché à l'écran ("Total dispo" = raceSkillPoints + pointsDepart
   // + xp ; "Dépenses" = coûts compétences/pouvoirs psy/avantages, résumés
   // dans "XP utilisée" ; "Solde" = ce qui reste).
-  /** Points de départ ("Points de départ" à l'écran) — fixés à la création du personnage, distincts de l'XP distribuée ensuite par le MJ (`xp`/`xpAvailable` ci-dessous). */
+  /** Points de départ ("Points de départ" à l'écran) — fixés à la création du personnage, distincts de l'XP distribuée ensuite par le MJ (`xp` ci-dessous). */
   pointsDepart: number;
   /**
    * XP gagnée depuis la création du personnage ("XP gagnée (depuis la
@@ -336,32 +336,18 @@ export interface Character {
    * MJ depuis (bouton "Donner de l'XP", fiche vue MJ et écran "Suivi des
    * constantes" — POST /api/characters/:id/xp, montant positif ou négatif).
    * Contribue au budget total dispo comme les points de départ (cf.
-   * calc-engine.getTotalDispo). Un retrait du MJ réduit ce champ ET
-   * `xpAvailable` du même montant (symétrique de la distribution) ; seul un
-   * import Excel envoyant une valeur négative est bloqué (clampé à 0 côté
-   * PUT /api/characters/:id — protection contre une cellule mal formée, pas
-   * une règle de jeu).
+   * calc-engine.getTotalDispo). Un déficit accepté par le MJ (bouton
+   * "Accepter" de BudgetPanel) s'y ajoute aussi. Seul un import Excel
+   * envoyant une valeur négative est bloqué (clampé à 0 côté PUT
+   * /api/characters/:id — protection contre une cellule mal formée, pas une
+   * règle de jeu).
+   *
+   * Il n'y a PAS de compteur séparé des points restant à dépenser : c'est le
+   * "Solde" calculé (calc-engine.getBudgetSummary). L'ancien champ
+   * `xpAvailable` ("XP disponible"), qui faisait doublon, a été supprimé ;
+   * la clé peut subsister dans le JSON des anciennes fiches, elle est ignorée.
    */
   xp: number;
-  /**
-   * XP actuellement disponible ("XP disponible" à l'écran) — pool distinct
-   * de `xp`, qui suit ce qui reste à dépenser : augmente/diminue du même
-   * montant que `xp` à chaque distribution/retrait du MJ (POST
-   * /api/characters/:id/xp), et diminue aussi séparément quand le joueur ou
-   * le MJ augmente le coût de la fiche (monter une compétence/un pouvoir
-   * psy, ajouter un avantage — PUT /api/characters/:id calcule la
-   * différence de coût avant/après et l'applique ici), ou augmente en cas
-   * d'allègement (baisser une compétence, retirer un avantage). Peut
-   * devenir négatif dans les deux cas (retrait du MJ, ou dépense supérieure
-   * à ce qui était disponible) — aucun plancher à 0. Ne contribue PAS au
-   * budget total dispo (calc-engine.getTotalDispo n'en tient pas compte) :
-   * c'est un compteur d'appoint pour suivre ce qui reste "à consommer" de
-   * l'XP gagnée, pas une seconde source de points. Absent des fiches créées
-   * avant l'ajout de ce champ — traité comme `0` côté route (GET
-   * /api/characters, GET/PUT /api/characters/:id), pas de
-   * migration nécessaire (colonne `data` JSON libre).
-   */
-  xpAvailable: number;
 
   // Argent — voir BudgetPanel (section "Crédits") et calc-engine.getMonthlyIncome.
   /**
@@ -376,7 +362,7 @@ export interface Character {
    * solde ne suffit pas (même logique de validation client que le solde de
    * points négatif, cf. docs/API_REFERENCE.md). Absent des fiches créées
    * avant l'ajout de ce champ — traité comme `0` partout où il est lu (même
-   * convention que `xpAvailable`).
+   * convention que `xp`).
    */
   credits: number;
 
@@ -644,9 +630,9 @@ export interface CharacterSummary {
   pspMax: number;
   /** VP de protection par membre — mêmes clés que calc-engine.ArmorTotals, dupliquées ici pour éviter un import croisé types.ts ↔ calc-engine.ts. */
   armorTotals: { vpTete: number; vpBras: number; vpTorse: number; vpJambes: number };
-  /** XP gagnée (cumulatif) et XP disponible (pool géré par le MJ) — cf. Character.xp/xpAvailable. Affichés sur la tuile de l'écran "Suivi des constantes". */
+  /** XP gagnée (cumulatif, cf. Character.xp) et solde de points restant (calc-engine.getBudgetSummary) — affichés sur la tuile de l'écran "Suivi des constantes". */
   xp: number;
-  xpAvailable: number;
+  solde: number;
   /** Solde en crédits (Cr) — cf. Character.credits. Affiché sur la tuile de l'écran "Suivi des constantes" avec l'icône 💵. */
   credits: number;
   /**

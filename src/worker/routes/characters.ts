@@ -21,13 +21,10 @@ import type { AttributeScores, Character, CharacterSummary, ReferenceData } from
 import { ATTRIBUTES } from "../../shared/types";
 import {
   computeCharacter,
-  getAdvantagesNet,
   getBoostedAttributes,
   getBoostedSkillNames,
   getMonthlyIncome,
   getPsyPowerActivationCost,
-  getPsyPowersCostTotal,
-  getSkillsCostTotal,
 } from "../../shared/calc-engine";
 
 type HonoEnv = { Bindings: Env; Variables: { user: PublicUser } };
@@ -63,7 +60,7 @@ characterRoutes.get("/", async (c) => {
   // hpMax/pspMax comme pour la fiche détaillée, même source de vérité.
   const characters: CharacterSummary[] = (results ?? []).map((row) => {
     const parsed: Character = JSON.parse(row.data);
-    const { hpMax, pspMax, armorTotals, actionRank, attributeTotals } = computeCharacter(parsed, referenceData);
+    const { hpMax, pspMax, armorTotals, actionRank, attributeTotals, budget } = computeCharacter(parsed, referenceData);
     return {
       id: row.id,
       name: row.name,
@@ -79,7 +76,7 @@ characterRoutes.get("/", async (c) => {
       pspMax,
       armorTotals,
       xp: parsed.xp ?? 0,
-      xpAvailable: parsed.xpAvailable ?? 0,
+      solde: budget.solde,
       credits: parsed.credits ?? 0,
       actionRank,
       boostedAttributes: getBoostedAttributes(parsed, attributeTotals),
@@ -271,7 +268,6 @@ characterRoutes.post("/", async (c) => {
     equipment: [],
     pointsDepart: 0,
     xp: 0,
-    xpAvailable: 0,
     credits: 0,
     reputations: "",
     notes: "",
@@ -323,23 +319,15 @@ characterRoutes.put("/:id", async (c) => {
   // cette route (import Excel ou édition directe) — protection contre une
   // valeur négative importée depuis une cellule Excel. Un retrait du MJ
   // (POST /characters/:id/xp) peut en revanche la faire baisser, cf.
-  // Character.xp/xpAvailable dans shared/types.ts.
+  // Character.xp dans shared/types.ts.
   if (updated.xp < 0) updated.xp = 0;
+  // Ancien compteur "XP disponible", supprimé (doublon du solde calculé) —
+  // on purge la clé des fiches au passage.
+  delete (updated as Partial<Character> & { xpAvailable?: number }).xpAvailable;
 
   const referenceData: ReferenceData = existing.player_group_id
     ? await getReferenceDataForGroup(c.env.DB, existing.player_group_id)
     : { races: [], skillCostTable: {}, skills: [], weapons: [], armor: [], psyPowers: [], advantages: [], equipment: [] };
-
-  // Dépenser des points (monter une compétence/un pouvoir psy, ajouter un
-  // avantage) réduit "XP disponible" du montant exact de l'augmentation de
-  // coût — et un allègement (baisser une compétence, retirer un avantage)
-  // la rembourse symétriquement. On ignore ici toute valeur de xpAvailable
-  // envoyée par le client (aucune UI n'expose son édition directe hors du
-  // bouton "Donner de l'XP" du MJ, POST /characters/:id/xp) : elle est
-  // entièrement recalculée à partir de la différence de coût avant/après.
-  const costBefore = getSkillsCostTotal(current, referenceData) + getPsyPowersCostTotal(current, referenceData) + getAdvantagesNet(current);
-  const costAfter = getSkillsCostTotal(updated, referenceData) + getPsyPowersCostTotal(updated, referenceData) + getAdvantagesNet(updated);
-  updated.xpAvailable = (current.xpAvailable ?? 0) - (costAfter - costBefore);
 
   await c.env.DB.prepare(
     "UPDATE characters SET name = ?1, race = ?2, data = ?3, updated_at = ?4 WHERE id = ?5",
@@ -355,13 +343,11 @@ characterRoutes.put("/:id", async (c) => {
 // personnage (contrairement à PUT ci-dessus, le joueur propriétaire ne peut
 // pas s'en servir : l'XP est décidée par le MJ, jamais auto-attribuée). Le
 // montant (positif = distribution, négatif = retrait, décidé par le MJ, ce
-// qui vaut ici son "approbation") s'applique symétriquement à `xp` ("XP
-// gagnée depuis la création", contribue au budget total dispo, cf.
-// calc-engine.getTotalDispo) et à `xpAvailable` ("XP disponible", pool géré
-// par le MJ, distinct du budget total dispo — diminue aussi séparément
-// quand le joueur dépense des points, cf. PUT ci-dessus). Aucun plancher :
-// un retrait peut faire descendre l'un ou l'autre sous 0. Cf. Character.xp/
-// xpAvailable dans shared/types.ts.
+// qui vaut ici son "approbation") s'applique à `xp` ("XP gagnée depuis la
+// création", contribue au budget total dispo, cf. calc-engine.getTotalDispo)
+// — le solde de points restant suit donc du même montant. Aucun plancher :
+// un retrait peut faire descendre `xp` sous 0. Cf. Character.xp dans
+// shared/types.ts.
 characterRoutes.post("/:id/xp", async (c) => {
   const id = c.req.param("id");
   const user = c.get("user");
@@ -386,7 +372,6 @@ characterRoutes.post("/:id/xp", async (c) => {
   const updated: Character = {
     ...current,
     xp: current.xp + amount,
-    xpAvailable: (current.xpAvailable ?? 0) + amount,
     updatedAt: new Date().toISOString(),
   };
 
@@ -405,7 +390,7 @@ characterRoutes.post("/:id/xp", async (c) => {
 // un ajustement ponctuel hors du revenu mensuel automatique (POST
 // /group-income) — ex. récompense/pénalité ad hoc, correction d'un achat.
 // Aucun plancher : un retrait peut faire descendre le solde sous 0 (même
-// convention que xp/xpAvailable ci-dessus).
+// convention que xp ci-dessus).
 characterRoutes.post("/:id/credits", async (c) => {
   const id = c.req.param("id");
   const user = c.get("user");
@@ -567,7 +552,7 @@ characterRoutes.post("/end-combat", async (c) => {
 // groupe (inGame && !isNpc && !archived — les PNJ sont exclus, l'XP est un
 // mécanisme de progression des joueurs, tranché via AskUserQuestion en
 // session). Même effet par personnage que POST /:id/xp (positif ou négatif,
-// alimente xp ET xpAvailable symétriquement), appliqué en boucle plutôt que
+// alimente xp, donc le solde), appliqué en boucle plutôt que
 // personnage par personnage depuis le frontend pour rester atomique côté
 // MJ (un seul clic, un seul message d'erreur global en cas d'échec partiel).
 characterRoutes.post("/group-xp", async (c) => {
@@ -597,7 +582,6 @@ characterRoutes.post("/group-xp", async (c) => {
     const updated: Character = {
       ...character,
       xp: character.xp + amount,
-      xpAvailable: (character.xpAvailable ?? 0) + amount,
       updatedAt: now,
     };
     await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")

@@ -1779,7 +1779,7 @@ export function BudgetPanel({
   onSpendCredits,
   onAcceptDeficit,
 }: {
-  character: Pick<Character, "pointsDepart" | "xp" | "xpAvailable" | "credits" | "advantages">;
+  character: Pick<Character, "pointsDepart" | "xp" | "credits" | "advantages">;
   computed: CharacterComputed;
   isGm?: boolean;
   /** Propriétaire du personnage, ou MJ — conditionne "Dépenser / donner des crédits" ci-dessous. */
@@ -1886,19 +1886,15 @@ export function BudgetPanel({
         Deux groupes : ce qui alimente le total dispo (points raciaux +
         points de départ + XP gagnée = Total), puis ce qui en est consommé
         (coûts + solde). "XP gagnée" (character.xp) est un total net
-        ("depuis la création") qui contribue au total dispo ; "XP
-        disponible" (character.xpAvailable) suit à part ce qui reste à
-        dépenser — diminue quand le coût de la fiche augmente (compétence/
-        pouvoir psy monté, avantage ajouté) ou qu'un retrait est décidé par
-        le MJ, augmente symétriquement sinon (cf. PUT et POST
-        /api/characters/:id/xp) — et ne compte PAS dans le total dispo.
+        ("depuis la création") qui contribue au total dispo — toute XP donnée
+        ou tout déficit approuvé par le MJ s'y cumule. "Solde" est le seul
+        compteur des points restant à répartir (pas de champ séparé).
       */}
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("Total dispo")}</p>
       <dl className="mb-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
         <Metric label={t("Points raciaux")} value={budget.raceSkillPoints} />
         <Metric label={t("Points de départ")} value={character.pointsDepart} />
         <Metric label={t("XP gagnée (depuis la création)")} value={character.xp} />
-        <Metric label={t("XP disponible")} value={character.xpAvailable} />
         <Metric label={t("Total")} value={budget.totalDispo} emphasis />
       </dl>
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("Dépenses")}</p>

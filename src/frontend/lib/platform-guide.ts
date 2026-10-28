@@ -88,7 +88,7 @@ const FR: GuideContent = {
       title: "Budget de points et XP",
       paragraphs: [
         "Le panneau « Budget de points » résume ce qui alimente votre total disponible (points raciaux + points de départ + XP gagnée) et ce qui en est dépensé (coût des compétences, des pouvoirs psy, net des avantages) — le solde restant s'affiche en évidence, en rouge s'il devient négatif.",
-        "Un solde négatif bloque l'enregistrement de la fiche en mode édition tant qu'il n'est pas résolu — soit en ajustant la fiche, soit en demandant au MJ une distribution d'XP ou d'accepter le déficit (bouton « Accepter » du message d'avertissement, qui absorbe le manque dans les points de départ).",
+        "Un solde négatif bloque l'enregistrement de la fiche en mode édition tant qu'il n'est pas résolu — soit en ajustant la fiche, soit en demandant au MJ une distribution d'XP ou d'accepter le déficit (bouton « Accepter » du message d'avertissement, qui ajoute le manque à l'XP gagnée).",
       ],
     },
     {
@@ -129,7 +129,7 @@ const FR: GuideContent = {
     {
       title: "Distribuer de l'XP",
       paragraphs: [
-        "Le bouton « Donner de l'XP » (sur la fiche détaillée ou directement depuis une tuile du Suivi des constantes) permet de créditer ou retirer de l'XP à un personnage. Un montant positif augmente à la fois l'XP gagnée (historique cumulatif) et l'XP disponible ; un montant négatif ne réduit que l'XP disponible.",
+        "Le bouton « Donner de l'XP » (sur la fiche détaillée ou directement depuis une tuile du Suivi des constantes) permet de créditer ou retirer de l'XP à un personnage. Le montant (positif ou négatif) s'ajoute à l'XP gagnée, et donc au solde de points restant à répartir — il n'y a pas d'autre compteur.",
       ],
     },
     {
@@ -141,7 +141,7 @@ const FR: GuideContent = {
     {
       title: "Accepter un solde négatif",
       paragraphs: [
-        "Si le budget de points d'un personnage devient négatif, le message d'avertissement rouge (visible même hors mode édition) propose un bouton « Accepter » qui absorbe le déficit dans ses points de départ, ramenant le solde à 0 — une alternative à demander au joueur d'ajuster sa fiche. Si le déficit vient d'une modification en cours (mode édition), « Accepter » enregistre aussi cette modification.",
+        "Si le budget de points d'un personnage devient négatif, le message d'avertissement rouge (visible même hors mode édition) propose un bouton « Accepter » qui ajoute le déficit à son XP gagnée, ramenant le solde à 0 — une alternative à demander au joueur d'ajuster sa fiche. Si le déficit vient d'une modification en cours (mode édition), « Accepter » enregistre aussi cette modification.",
       ],
     },
     {
@@ -217,7 +217,7 @@ const EN: GuideContent = {
       title: "Point budget and XP",
       paragraphs: [
         "The \"Point budget\" panel summarizes what feeds your total available points (racial points + starting points + XP earned) and what's spent from it (skill cost, psychic power cost, net advantages) — the remaining balance is shown prominently, in red if it goes negative.",
-        "A negative balance blocks saving the sheet in edit mode until it's resolved — either by adjusting the sheet, or by asking the GM for an XP grant or to accept the deficit (\"Accept\" button on the warning message, which absorbs the shortfall into starting points).",
+        "A negative balance blocks saving the sheet in edit mode until it's resolved — either by adjusting the sheet, or by asking the GM for an XP grant or to accept the deficit (\"Accept\" button on the warning message, which adds the shortfall to XP earned).",
       ],
     },
     {
@@ -258,7 +258,7 @@ const EN: GuideContent = {
     {
       title: "Granting XP",
       paragraphs: [
-        "The \"Give XP\" button (on the detailed sheet or directly from a tile on the Vitals tracker) credits or withdraws XP for a character. A positive amount increases both XP earned (cumulative history) and XP available; a negative amount only reduces XP available.",
+        "The \"Give XP\" button (on the detailed sheet or directly from a tile on the Vitals tracker) credits or withdraws XP for a character. The amount (positive or negative) is added to XP earned, and therefore to the balance of points left to spend — there is no other counter.",
       ],
     },
     {
@@ -270,7 +270,7 @@ const EN: GuideContent = {
     {
       title: "Accepting a negative balance",
       paragraphs: [
-        "If a character's point budget goes negative, the red warning message (visible even outside edit mode) offers an \"Accept\" button that absorbs the deficit into their starting points, bringing the balance back to 0 — an alternative to asking the player to adjust their sheet. If the deficit comes from an edit in progress (edit mode), \"Accept\" also saves that edit.",
+        "If a character's point budget goes negative, the red warning message (visible even outside edit mode) offers an \"Accept\" button that adds the deficit to their XP earned, bringing the balance back to 0 — an alternative to asking the player to adjust their sheet. If the deficit comes from an edit in progress (edit mode), \"Accept\" also saves that edit.",
       ],
     },
     {

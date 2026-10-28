@@ -38,7 +38,7 @@ chaque réponse.
 - Auth : session ; `groupId` doit être dans `user.memberships` (403 sinon).
 - Sortie : `{ characters: CharacterSummary[], referenceData: ReferenceData, groupImageUrl: string | null, groupDriveUrl: string | null, currentRank: number }`
   — résumé enrichi (portrait, statut `inGame`, `isNpc`, `archived`, PV/PSP courant + max calculé,
-  `xp`/`xpAvailable`, `credits` (solde en Cr, cf. section "Monnaie" du README), `actionRank`)
+  `xp`, `solde` (points restant à répartir, calculé — cf. `calc-engine.getBudgetSummary`), `credits` (solde en Cr, cf. section "Monnaie" du README), `actionRank`)
   utilisé par l'écran "Personnages" et l'écran "Suivi des
   constantes" (MJ), tous deux scopés `/groupe/:groupId` et `/suivi/:groupId`. `groupImageUrl` est
   l'image du groupe (`player_groups.image_url`, fond d'écran) ; `groupDriveUrl` est le lien Drive
@@ -100,13 +100,14 @@ chaque réponse.
 - Entrée : `Partial<Character>` — fusionné avec les données existantes côté serveur
   (`id` et `ownerUsername` du client sont ignorés). `xp` ("XP gagnée depuis la création" à
   l'écran) est clampé à `0` minimum si le patch en envoie un négatif (import Excel ou autre) —
-  cf. `POST /:id/xp` ci-dessous pour les retraits du MJ (qui touchent `xp` et `xpAvailable`
-  ensemble). C'est aussi cette route qui gère, en dehors du mode édition de la fiche,
+  cf. `POST /:id/xp` ci-dessous pour les retraits du MJ. Une éventuelle clé héritée
+  `xpAvailable` est supprimée de la fiche à l'enregistrement (champ retiré, doublon du solde). C'est aussi cette route qui gère, en dehors du mode édition de la fiche,
   `weapons[].equipped` (arme en main — un des termes du Rang d'Action, cf. `computed.actionRank`
   et `calc-engine.getActionRank`) et `activePsyPowers` (pouvoirs activés "à la demande" en séance,
   cf. `ActivePsyPower` dans `shared/types.ts` — seul "Concentration psy" y a un effet chiffré, un
   bonus de Réflexe pris en compte dans le calcul du RA). C'est également par cette route (patch
-  `{ pointsDepart }`) que le MJ absorbe un solde négatif (bouton "Accepter" de BudgetPanel) — le
+  de la fiche complète avec `xp` augmenté du déficit) que le MJ absorbe un solde négatif (bouton
+  "Accepter" de BudgetPanel) — le
   blocage de l'enregistrement en cas de solde négatif est une validation côté client uniquement
   (bouton "Enregistrer" désactivé), pas une contrainte appliquée par cette route elle-même.
 - Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData }`
@@ -118,13 +119,10 @@ chaque réponse.
 - Auth : session + rôle `gm` membre du groupe du personnage (contrairement à `PUT` ci-dessus, le
   joueur propriétaire ne peut pas s'en servir même avec `canEdit` — l'XP est décidée par le MJ).
 - Entrée : `{ amount: number }` (non nul).
-  - Positif : ajouté à la fois à `character.xp` ("XP gagnée (depuis la création)" à l'écran —
-    historique cumulatif qui contribue au budget total dispo, cf. calc-engine.getTotalDispo) et à
-    `character.xpAvailable` ("XP disponible" à l'écran — pool d'appoint géré par le MJ, hors
-    budget total dispo), du même montant pour les deux.
-  - Négatif : un retrait décidé par le MJ, ce qui vaut ici son "approbation" — ne réduit que
-    `character.xpAvailable`, qui peut devenir négatif (pas de plancher, contrairement à `xp` qui
-    n'est jamais réduit par un retrait).
+  - Ajouté (positif ou négatif — un retrait décidé par le MJ vaut ici son "approbation") à
+    `character.xp` ("XP gagnée (depuis la création)" à l'écran — contribue au budget total dispo,
+    cf. calc-engine.getTotalDispo), donc au solde de points restant du même montant. Pas de
+    plancher.
 - Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData }`
   (même enveloppe que `PUT /:id`).
 - Erreurs : `403` (pas MJ ou pas membre du groupe), `404` (personnage introuvable), `400` (montant
@@ -134,7 +132,7 @@ chaque réponse.
 - Auth : session + rôle `gm` membre du groupe du personnage — même garde que `POST /:id/xp`.
 - Ajustement individuel de crédits (bouton "+Cr" par tuile, écran "Suivi des constantes") — ponctuel,
   hors du revenu mensuel automatique (cf. `POST /group-income` plus bas). Ajoute `amount` (positif
-  ou négatif) à `character.credits`, sans plancher (même convention que `xpAvailable` ci-dessus).
+  ou négatif) à `character.credits`, sans plancher (même convention que `xp` ci-dessus).
 - Entrée : `{ amount: number }` (non nul).
 - Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData }`
   (même enveloppe que `PUT /:id` et `POST /:id/xp`).
@@ -190,7 +188,7 @@ chaque réponse.
 - "Donner de l'XP à tous" (bouton MJ, écran "Suivi des constantes") : applique le même montant
   d'XP, en une seule requête, à tous les personnages **joueurs** (pas les PNJ) actuellement
   `inGame` et non archivés de ce groupe — même effet par personnage que `POST /:id/xp` (positif ou
-  négatif, alimente `xp` et `xpAvailable` symétriquement, cf. ci-dessus), simplement appliqué en
+  négatif, alimente `xp`, cf. ci-dessus), simplement appliqué en
   boucle côté serveur plutôt que par des appels individuels depuis le client.
 - Entrée : `{ amount: number }` (non nul).
 - Sortie : `{ ok: true, granted: number }` (nombre de personnages ayant reçu l'XP).

@@ -225,14 +225,15 @@ export default function CharacterSheet() {
   }
 
   // Le MJ "accepte" un solde négatif (avertissement rouge de BudgetPanel) en
-  // absorbant le déficit dans les points de départ — plutôt que de laisser
+  // ajoutant le déficit à l'XP gagnée — tout point donné ou approuvé par le
+  // MJ s'y cumule, les points de départ restant ceux de la création. Plutôt que de laisser
   // le personnage hors budget indéfiniment ou de forcer une réduction de
   // compétences. Ramène le solde à 0 exactement (le déficit ajouté = le
   // manque actuel).
   // Le déficit vient en général d'une édition locale NON enregistrée (save()
   // est bloqué tant que le solde est négatif) : on envoie donc la fiche
-  // locale complète avec les points de départ ajustés, pas seulement
-  // `pointsDepart`. Sinon le PUT fusionnait +déficit avec les anciennes
+  // locale complète avec l'XP ajustée, pas seulement `xp`. Sinon le PUT
+  // fusionnait +déficit avec les anciennes
   // compétences en base et le solde remontait à +déficit au lieu de 0 (bug
   // signalé sur Conrad : +5 Intimidation, déficit 25 accepté → solde 25).
   async function handleAcceptDeficit() {
@@ -243,7 +244,7 @@ export default function CharacterSheet() {
     try {
       const { character: saved, referenceData: savedReferenceData } = await api.updateCharacter(id, {
         ...character,
-        pointsDepart: character.pointsDepart + deficit,
+        xp: character.xp + deficit,
       });
       setCharacter(saved);
       setReferenceData(savedReferenceData);

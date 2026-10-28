@@ -213,11 +213,15 @@ navigateur intégré, cf. session de build).
       bonus racial correspondant en développant chaque tuile (section "Racial (NomDeLaRace)").
 - [ ] Solde négatif accepté par le MJ pendant une édition : en tant que MJ, "Modifier" sur une fiche
       à solde 0, monter une compétence (ex. +5 Intimidation → solde -25, "Enregistrer" bloqué),
-      cliquer "Accepter" sur l'avertissement rouge → points de départ +25, la compétence reste à
+      cliquer "Accepter" sur l'avertissement rouge → XP gagnée +25 (points de départ inchangés), la compétence reste à
       sa nouvelle valeur, **solde = 0** (pas +25), mode édition quitté. Recharger → idem en base.
 - [ ] Compétence de catalogue sans suffixe "(ATTR)" : dans l'éditeur de catalogue, une compétence
       "Intimidation" avec attribut COM ; sur une fiche qui l'a à 5, la ligne affiche l'attribut COM
       et un total = 5 + COM (ex. Conrad : 7), y compris dans le tri par total.
+- [ ] Un seul compteur de points restants : le panneau "Budget de points" n'affiche plus "XP
+      disponible", seulement "Solde". MJ → "Donner de l'XP" +10 → XP gagnée +10 et Solde +10 ; -10 →
+      les deux reviennent. Sur le Suivi des constantes, chaque tuile affiche "XP gagnée X · Solde Y"
+      (Y en rouge si négatif), cohérent avec la fiche.
 
 ## §4 — Permissions
 
