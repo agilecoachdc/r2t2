@@ -211,6 +211,10 @@ navigateur intégré, cf. session de build).
 - [ ] Sur la fiche d'un personnage Thri-Kreen/Gobelin/Drow (ou en créer un via "+ Ajouter" sur
       l'onglet Races puis assigner la race à un personnage), le panneau Attributs affiche bien le
       bonus racial correspondant en développant chaque tuile (section "Racial (NomDeLaRace)").
+- [ ] Solde négatif accepté par le MJ pendant une édition : en tant que MJ, "Modifier" sur une fiche
+      à solde 0, monter une compétence (ex. +5 Intimidation → solde -25, "Enregistrer" bloqué),
+      cliquer "Accepter" sur l'avertissement rouge → points de départ +25, la compétence reste à
+      sa nouvelle valeur, **solde = 0** (pas +25), mode édition quitté. Recharger → idem en base.
 
 ## §4 — Permissions
 

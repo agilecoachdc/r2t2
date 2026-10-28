@@ -313,7 +313,10 @@ repère générique en haut de l'écran "Suivi des constantes" — remplace l'an
 Un solde négatif (dépense au-delà du budget) bloque l'enregistrement de la fiche en mode édition —
 il faut d'abord ajuster la fiche, ou passer par le MJ : soit une distribution d'XP (ci-dessus), soit
 le bouton "Accepter" du message d'avertissement rouge, qui absorbe le déficit dans les points de
-départ pour ramener le solde à 0 (`onAcceptDeficit`, `BudgetPanel`).
+départ pour ramener le solde à 0 (`onAcceptDeficit`, `BudgetPanel`). Si le déficit vient d'une
+édition en cours (non enregistrée), "Accepter" enregistre la fiche complète en même temps que
+l'ajustement des points de départ (et quitte le mode édition) — sinon le serveur fusionnait
++déficit avec les anciennes compétences et le solde remontait à +déficit au lieu de 0.
 
 ## Compétences gratuites (justifiées par un avantage/du matériel)
 

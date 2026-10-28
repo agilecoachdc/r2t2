@@ -229,6 +229,12 @@ export default function CharacterSheet() {
   // le personnage hors budget indéfiniment ou de forcer une réduction de
   // compétences. Ramène le solde à 0 exactement (le déficit ajouté = le
   // manque actuel).
+  // Le déficit vient en général d'une édition locale NON enregistrée (save()
+  // est bloqué tant que le solde est négatif) : on envoie donc la fiche
+  // locale complète avec les points de départ ajustés, pas seulement
+  // `pointsDepart`. Sinon le PUT fusionnait +déficit avec les anciennes
+  // compétences en base et le solde remontait à +déficit au lieu de 0 (bug
+  // signalé sur Conrad : +5 Intimidation, déficit 25 accepté → solde 25).
   async function handleAcceptDeficit() {
     if (!character || !id) return;
     const deficit = Math.abs(computed.budget.solde);
@@ -236,10 +242,12 @@ export default function CharacterSheet() {
     setError(null);
     try {
       const { character: saved, referenceData: savedReferenceData } = await api.updateCharacter(id, {
+        ...character,
         pointsDepart: character.pointsDepart + deficit,
       });
       setCharacter(saved);
       setReferenceData(savedReferenceData);
+      setEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de la correction du solde");
     }

@@ -141,7 +141,7 @@ const FR: GuideContent = {
     {
       title: "Accepter un solde négatif",
       paragraphs: [
-        "Si le budget de points d'un personnage devient négatif, le message d'avertissement rouge (visible même hors mode édition) propose un bouton « Accepter » qui absorbe le déficit dans ses points de départ, ramenant le solde à 0 — une alternative à demander au joueur d'ajuster sa fiche.",
+        "Si le budget de points d'un personnage devient négatif, le message d'avertissement rouge (visible même hors mode édition) propose un bouton « Accepter » qui absorbe le déficit dans ses points de départ, ramenant le solde à 0 — une alternative à demander au joueur d'ajuster sa fiche. Si le déficit vient d'une modification en cours (mode édition), « Accepter » enregistre aussi cette modification.",
       ],
     },
     {
@@ -270,7 +270,7 @@ const EN: GuideContent = {
     {
       title: "Accepting a negative balance",
       paragraphs: [
-        "If a character's point budget goes negative, the red warning message (visible even outside edit mode) offers an \"Accept\" button that absorbs the deficit into their starting points, bringing the balance back to 0 — an alternative to asking the player to adjust their sheet.",
+        "If a character's point budget goes negative, the red warning message (visible even outside edit mode) offers an \"Accept\" button that absorbs the deficit into their starting points, bringing the balance back to 0 — an alternative to asking the player to adjust their sheet. If the deficit comes from an edit in progress (edit mode), \"Accept\" also saves that edit.",
       ],
     },
     {
