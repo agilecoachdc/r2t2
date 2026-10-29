@@ -29,7 +29,7 @@ const FR: GuideContent = {
     {
       title: "Se connecter et changer de langue",
       paragraphs: [
-        "Connectez-vous avec l'identifiant et le mot de passe fournis par votre MJ ou l'administrateur de la plateforme. Une fois connecté, la page « Mon profil » (lien en haut de chaque écran) permet de changer la langue de l'interface entre français et anglais — le choix est mémorisé sur votre compte et s'applique dès la prochaine page chargée.",
+        "Connectez-vous avec l'identifiant et le mot de passe fournis par votre MJ ou l'administrateur de la plateforme. Une fois connecté, la page « Mon profil » (lien en haut de chaque écran) permet de changer la langue de l'interface entre français et anglais — le choix est mémorisé sur votre compte et s'applique dès la prochaine page chargée. Mot de passe oublié : demandez à l'administrateur de la plateforme, qui peut le réinitialiser depuis la page admin « Comptes ».",
       ],
     },
     {
@@ -158,7 +158,7 @@ const EN: GuideContent = {
     {
       title: "Logging in and changing language",
       paragraphs: [
-        "Log in with the username and password provided by your GM or the platform admin. Once logged in, the \"My profile\" page (linked at the top of every screen) lets you switch the interface language between French and English — the choice is saved on your account and applies from the next page load.",
+        "Log in with the username and password provided by your GM or the platform admin. Once logged in, the \"My profile\" page (linked at the top of every screen) lets you switch the interface language between French and English — the choice is saved on your account and applies from the next page load. Forgot your password? Ask the platform admin, who can reset it from the admin \"Comptes\" (Accounts) page.",
       ],
     },
     {

@@ -536,3 +536,32 @@ adminRoutes.put("/users/:id", async (c) => {
   const memberships = await getMembershipsForUser(c.env.DB, id);
   return c.json({ user: toPublicUser({ ...existing, display_name: displayName, role }, memberships) });
 });
+
+const MIN_PASSWORD_LENGTH = 8;
+
+// Réinitialisation par l'admin d'un mot de passe oublié — saisi en clair
+// par l'admin (pas de génération ici), à communiquer hors-ligne au joueur.
+// Ferme toutes les sessions ouvertes du compte, sauf celle de l'admin
+// lui-même s'il réinitialise son propre mot de passe.
+adminRoutes.put("/users/:id/password", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json<{ password?: string }>().catch(() => null);
+  const password = body?.password ?? "";
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return c.json({ error: `Mot de passe trop court (${MIN_PASSWORD_LENGTH} caractères minimum)` }, 400);
+  }
+
+  const existing = await c.env.DB.prepare("SELECT 1 FROM users WHERE id = ?1").bind(id).first();
+  if (!existing) return c.json({ error: "Compte introuvable" }, 404);
+
+  const { hash, salt } = await hashPassword(password);
+  await c.env.DB.prepare("UPDATE users SET password_hash = ?1, password_salt = ?2 WHERE id = ?3")
+    .bind(hash, salt, id)
+    .run();
+
+  if (id !== c.get("user").id) {
+    await c.env.DB.prepare("DELETE FROM sessions WHERE user_id = ?1").bind(id).run();
+  }
+
+  return c.json({ ok: true });
+});

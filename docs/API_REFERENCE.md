@@ -274,6 +274,11 @@ Toutes les routes ci-dessous sont montées sous `/api/admin/*` avec
   rôle+groupe avait démis un admin en le "réassignant"). L'appartenance aux groupes se gère
   exclusivement via les deux routes `/members` ci-dessus. Passer `role: "admin"` retire
   automatiquement toutes les appartenances existantes (un admin n'est membre d'aucun groupe).
+- `PUT /api/admin/users/:id/password` — Entrée : `{ password: string }` (8 caractères minimum,
+  sinon `400`). Remplace le mot de passe du compte par celui saisi par l'admin (re-hashé PBKDF2,
+  nouveau sel), et supprime toutes les sessions ouvertes de ce compte — sauf si l'admin
+  réinitialise le sien, pour ne pas se déconnecter lui-même. `404` si le compte est introuvable.
+  Sortie : `{ ok: true }`. Utilisé par la page admin "Comptes" (colonne "Nouveau mot de passe").
 
 `imageUrl` (games/rulesets/groups) est soit une data URL (image importée depuis l'admin ou la
 page Profil, redimensionnée côté client via `resizePortraitToDataUrl`, même principe que le

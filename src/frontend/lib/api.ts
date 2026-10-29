@@ -175,6 +175,8 @@ export const api = {
     request<{ user: PublicUser; password: string }>("/admin/users", { method: "POST", body: JSON.stringify(input) }),
   updateUser: (id: string, patch: { displayName?: string; role?: UserRole }) =>
     request<{ user: PublicUser }>(`/admin/users/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  resetUserPassword: (id: string, password: string) =>
+    request<{ ok: true }>(`/admin/users/${id}/password`, { method: "PUT", body: JSON.stringify({ password }) }),
 
   // ---------------------------------------------------------------------
   // Jeux / règles / groupes — parcourir, rejoindre/quitter, créer/éditer

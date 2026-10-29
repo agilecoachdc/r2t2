@@ -407,6 +407,9 @@ personnages de chacun, y crée des PNJ) et `player` (édite uniquement sa fiche)
 personnage (`characters.owner_username`, la source de vérité pour ces permissions d'édition) se
 réassigne depuis `/admin/groupes` → groupe → section "Personnages" (distincte de "Membres") :
 chaque personnage du groupe y apparaît avec un sélecteur pour choisir quel membre le possède. Un
+admin peut aussi réinitialiser le mot de passe d'un compte depuis `/admin/comptes` en saisissant
+le nouveau (8 caractères minimum, `PUT /api/admin/users/:id/password`) — les sessions ouvertes de
+ce compte sont fermées, le nouveau mot de passe est à communiquer hors-ligne. Un
 compte peut appartenir à **plusieurs groupes de joueurs en même temps**
 (table `group_memberships`, `migrations/0005_memberships.sql` — remplace l'ancien
 `player_group_id` unique) ; les données (personnages, catalogue de règle) restent isolées par

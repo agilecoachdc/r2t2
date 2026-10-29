@@ -11,6 +11,10 @@
 // 18/08). PlayerGroups.tsx exclut désormais les comptes admin de son
 // sélecteur d'assignation ; cette page permet en plus de voir tous les
 // comptes d'un coup d'œil et de corriger un rôle directement.
+//
+// Permet aussi de réinitialiser le mot de passe d'un compte (joueur oublieux)
+// en saisissant le nouveau — cf. PUT /api/admin/users/:id/password, qui ferme
+// les sessions ouvertes de ce compte.
 
 import { useEffect, useState } from "react";
 import type { PlayerGroup, PublicUser, UserRole } from "@shared/types";
@@ -35,6 +39,9 @@ export default function Accounts() {
   const [drafts, setDrafts] = useState<Record<string, UserRole>>({});
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [passwordDrafts, setPasswordDrafts] = useState<Record<string, string>>({});
+  const [resettingId, setResettingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   function loadAll() {
     return Promise.all([api.listUsers(), api.listGroups()])
@@ -70,6 +77,26 @@ export default function Accounts() {
     }
   }
 
+  async function handleResetPassword(u: PublicUser) {
+    const password = passwordDrafts[u.id] ?? "";
+    if (password.length < 8) {
+      setError("Mot de passe trop court (8 caractères minimum)");
+      return;
+    }
+    setResettingId(u.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.resetUserPassword(u.id, password);
+      setPasswordDrafts((d) => ({ ...d, [u.id]: "" }));
+      setNotice(`Mot de passe de « ${u.username} » réinitialisé — à lui communiquer hors-ligne.`);
+    } catch (err) {
+      setError(errMsg(err));
+    } finally {
+      setResettingId(null);
+    }
+  }
+
   const sorted = [...users].sort((a, b) => a.displayName.localeCompare(b.displayName));
 
   return (
@@ -81,9 +108,11 @@ export default function Accounts() {
         </header>
 
         {error && <p className="mb-4 text-red-400">{error}</p>}
+        {notice && <p className="mb-4 text-emerald-400">{notice}</p>}
         <p className="mb-4 text-sm text-slate-500">
           L'appartenance aux groupes se gère depuis la page « Groupes » (assigner/retirer un membre). Cette page ne
-          modifie que le rôle du compte.
+          modifie que le rôle du compte et, si besoin, son mot de passe (saisir le nouveau puis « Réinitialiser » —
+          le joueur est déconnecté de ses sessions en cours).
         </p>
 
         <div className="overflow-x-auto rounded-xl bg-slate-900 shadow">
@@ -95,6 +124,7 @@ export default function Accounts() {
                 <th className="px-4 py-2">Rôle</th>
                 <th className="px-4 py-2">Groupes</th>
                 <th className="px-4 py-2" />
+                <th className="px-4 py-2">Nouveau mot de passe</th>
               </tr>
             </thead>
             <tbody>
@@ -129,12 +159,37 @@ export default function Accounts() {
                         {savingId === u.id ? "…" : "Enregistrer"}
                       </button>
                     </td>
+                    <td className="px-4 py-2">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleResetPassword(u);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          type="text"
+                          autoComplete="off"
+                          value={passwordDrafts[u.id] ?? ""}
+                          onChange={(e) => setPasswordDrafts((d) => ({ ...d, [u.id]: e.target.value }))}
+                          placeholder="8 caractères min."
+                          className="w-40 rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!passwordDrafts[u.id] || resettingId === u.id}
+                          className="rounded-lg bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500 disabled:opacity-40"
+                        >
+                          {resettingId === u.id ? "…" : "Réinitialiser"}
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 );
               })}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-sm text-slate-500">
+                  <td colSpan={6} className="px-4 py-3 text-sm text-slate-500">
                     Aucun compte.
                   </td>
                 </tr>

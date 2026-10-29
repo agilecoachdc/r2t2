@@ -15,6 +15,10 @@ navigateur intégré, cf. session de build).
 - [ ] Login joueur (ex. `jo` / Karun) → même liste visible en lecture, badge "Ma fiche" sur Karun
       uniquement.
 - [ ] Login avec mauvais mot de passe → message "Identifiants invalides", pas de redirection.
+- [ ] Admin, `/admin/comptes` → saisir un nouveau mot de passe (≥ 8 caractères) sur un compte
+      joueur → "Réinitialiser" → message de confirmation ; le joueur, déjà connecté ailleurs, est
+      renvoyé vers la connexion au prochain appel ; l'ancien mot de passe échoue, le nouveau
+      fonctionne. Moins de 8 caractères → erreur, rien n'est modifié.
 - [ ] Déconnexion → retour à `/login`, `GET /api/auth/me` renvoie 401.
 
 ## §2 — Consultation
