@@ -7,6 +7,8 @@
 import { describe, expect, it } from "vitest";
 import {
   applyConsumableChange,
+  fireShot,
+  getShotsLeft,
   getConsumableUnitPrice,
   computeCharacter,
   getActionRank,
@@ -889,5 +891,77 @@ describe("consommables (applyConsumableChange)", () => {
 
   it("munition spéciale : réservée à la rubrique Munitions", () => {
     expect(applyConsumableChange({ credits: 1000 }, ref, "Grenade à fragmentation", 1, true)).toHaveProperty("error");
+  });
+});
+
+describe("décompte des coups (fireShot)", () => {
+  const ref = {
+    ...referenceData,
+    consumables: [
+      { category: "Munitions", name: "Pistolets", price: 5, shotsPerMagazine: 3 },
+      { category: "Munitions", name: "Dominion", price: null },
+    ],
+  };
+
+  it("chargeur en cours plein par défaut, plafonné à la capacité", () => {
+    expect(getShotsLeft({}, ref.consumables[0])).toBe(3);
+    expect(getShotsLeft({ shotsLeft: 9 }, ref.consumables[0])).toBe(3);
+    expect(getShotsLeft({}, ref.consumables[1])).toBeNull();
+  });
+
+  it("−1 coup décompte dans le chargeur en cours", () => {
+    expect(fireShot({ consumables: [{ name: "Pistolets", quantity: 2 }] }, ref, "Pistolets")).toEqual({
+      consumables: [{ name: "Pistolets", quantity: 2, shotsLeft: 2 }],
+      reloaded: false,
+    });
+  });
+
+  it("chargeur vidé : jeté, le suivant est engagé plein", () => {
+    expect(fireShot({ consumables: [{ name: "Pistolets", quantity: 2, shotsLeft: 1 }] }, ref, "Pistolets")).toEqual({
+      consumables: [{ name: "Pistolets", quantity: 1 }],
+      reloaded: true,
+    });
+  });
+
+  it("dernier chargeur vidé : la ligne disparaît, plus de tir possible", () => {
+    const r = fireShot({ consumables: [{ name: "Pistolets", quantity: 1, shotsLeft: 1 }] }, ref, "Pistolets");
+    expect(r).toEqual({ consumables: [], reloaded: false });
+    expect(fireShot({ consumables: [] }, ref, "Pistolets")).toHaveProperty("error");
+  });
+
+  it("cycle complet : 2 chargeurs × 3 coups = 6 tirs", () => {
+    let stock: { name: string; quantity: number; shotsLeft?: number }[] = [{ name: "Pistolets", quantity: 2 }];
+    for (let i = 0; i < 6; i++) {
+      const r = fireShot({ consumables: stock }, ref, "Pistolets");
+      if ("error" in r) throw new Error(r.error);
+      stock = r.consumables;
+    }
+    expect(stock).toEqual([]);
+  });
+
+  it("normale et spéciale décomptées séparément", () => {
+    const stock = {
+      consumables: [
+        { name: "Pistolets", quantity: 1 },
+        { name: "Pistolets", quantity: 1, special: true },
+      ],
+    };
+    expect(fireShot(stock, ref, "Pistolets", true)).toMatchObject({
+      consumables: [{ name: "Pistolets", quantity: 1 }, { name: "Pistolets", quantity: 1, special: true, shotsLeft: 2 }],
+    });
+  });
+
+  it("refusé sans capacité de chargeur au catalogue", () => {
+    expect(fireShot({ consumables: [{ name: "Dominion", quantity: 1 }] }, ref, "Dominion")).toHaveProperty("error");
+  });
+
+  it("acheter des chargeurs ne touche pas au chargeur en cours", () => {
+    const r = applyConsumableChange(
+      { credits: 100, consumables: [{ name: "Pistolets", quantity: 1, shotsLeft: 1 }] },
+      ref,
+      "Pistolets",
+      2,
+    );
+    expect(r).toMatchObject({ consumables: [{ name: "Pistolets", quantity: 3, shotsLeft: 1 }] });
   });
 });

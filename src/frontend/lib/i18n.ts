@@ -274,6 +274,13 @@ const EN: Record<string, string> = {
   "Échec de la mise à jour des consommables": "Failed to update consumables",
   "spéciale": "special",
   "Spéciale (×2)": "Special (×2)",
+  "Coups": "Shots",
+  "−1 coup": "−1 shot",
+  "Coups / chargeur": "Shots / magazine",
+  "Coups restants dans le chargeur en cours": "Shots left in the current magazine",
+  "Tirer un coup — chargeur vide : le suivant est engagé automatiquement": "Fire one shot — when empty, the next magazine loads automatically",
+  "Retirer un chargeur entier": "Remove a whole magazine",
+  "Chargeurs détenus (celui en cours inclus)": "Magazines held (current one included)",
   "Munition spéciale : prix × 2 de la munition normale de l'arme": "Special ammo: price × 2 of the weapon's normal ammo",
 };
 

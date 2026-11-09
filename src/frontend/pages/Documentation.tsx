@@ -128,10 +128,10 @@ function RulesetReference({ referenceData, t }: { referenceData: ReferenceData; 
       {(referenceData.consumables ?? []).length > 0 && (
         <DocSection title={t("Consommables")} defaultOpen={false}>
           <Table
-            headers={[t("Catégorie"), t("Nom"), "Prix", t("Description")]}
+            headers={[t("Catégorie"), t("Nom"), "Prix", t("Coups / chargeur"), t("Description")]}
             rows={[...(referenceData.consumables ?? [])]
               .sort((a, b) => a.category.localeCompare(b.category, "fr"))
-              .map((c) => [c.category, c.name, c.price ?? "—", c.description ?? "—"])}
+              .map((c) => [c.category, c.name, c.price ?? "—", c.shotsPerMagazine ?? "—", c.description ?? "—"])}
           />
         </DocSection>
       )}

@@ -107,6 +107,14 @@ export const api = {
       referenceData: ReferenceData;
       cost: number;
     }>(`/characters/${id}/consumables`, { method: "POST", body: JSON.stringify({ name, delta, special }) }),
+  fireShot: (id: string, name: string, special = false) =>
+    request<{
+      character: Character;
+      computed: CharacterComputed;
+      canEdit: boolean;
+      referenceData: ReferenceData;
+      reloaded: boolean;
+    }>(`/characters/${id}/consumables`, { method: "POST", body: JSON.stringify({ name, special, fire: true }) }),
   createNpc: (groupId: string, input: { name: string; portraitUrl?: string | null; race?: string; vit: number; vol: number }) =>
     request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData }>(
       `/characters?groupId=${encodeURIComponent(groupId)}`,

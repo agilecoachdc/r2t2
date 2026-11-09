@@ -861,6 +861,66 @@ export function applyConsumableChange(
   return { consumables, credits: credits - cost, cost };
 }
 
+/** Coups par chargeur d'un consommable du catalogue, ou null si non suivi coup par coup. */
+export function getShotsPerMagazine(def: { shotsPerMagazine?: number | null } | undefined): number | null {
+  const n = def?.shotsPerMagazine;
+  return typeof n === "number" && Number.isInteger(n) && n > 0 ? n : null;
+}
+
+/**
+ * Coups restants dans le chargeur en cours d'une ligne de stock (absent =
+ * plein ; plafonné au chargeur plein si le catalogue a baissé la capacité
+ * depuis), ou null si la munition n'est pas suivie coup par coup.
+ */
+export function getShotsLeft(
+  entry: Pick<ConsumableEntry, "shotsLeft">,
+  def: { shotsPerMagazine?: number | null } | undefined,
+): number | null {
+  const full = getShotsPerMagazine(def);
+  if (full == null) return null;
+  const left = entry.shotsLeft;
+  return typeof left === "number" && left >= 0 ? Math.min(left, full) : full;
+}
+
+/**
+ * Tire un coup ("−1 coup" sur la fiche) dans le chargeur en cours d'une
+ * ligne de munitions (normale OU spéciale, cf. `special`). À 0 coup, le
+ * chargeur vide est retiré (`quantity` − 1) et le suivant est engagé
+ * automatiquement, plein ; au dernier chargeur vidé, la ligne disparaît.
+ * Refusé si la munition n'a pas de `shotsPerMagazine` au catalogue ou si
+ * la ligne n'existe pas. Pas de crédits en jeu.
+ */
+export function fireShot(
+  character: Pick<Character, "consumables">,
+  reference: ReferenceData,
+  name: string,
+  special = false,
+): { consumables: ConsumableEntry[]; reloaded: boolean } | { error: string } {
+  const stock = character.consumables ?? [];
+  const entry = stock.find((c) => sameStockLine(c, name, special));
+  if (!entry || entry.quantity <= 0) return { error: `Plus de ${name} en stock` };
+  const def = (reference.consumables ?? []).find((c) => c.name === name);
+  const full = getShotsPerMagazine(def);
+  const left = getShotsLeft(entry, def);
+  if (full == null || left == null) return { error: `Pas de décompte de coups pour ${name} (coups par chargeur non fixés)` };
+
+  const nextLeft = left - 1;
+  if (nextLeft > 0) {
+    return {
+      consumables: stock.map((c) => (c === entry ? { ...c, shotsLeft: nextLeft } : c)),
+      reloaded: false,
+    };
+  }
+  // Chargeur vidé : on le jette et on engage le suivant (plein), s'il y en a.
+  const remaining = entry.quantity - 1;
+  if (remaining <= 0) return { consumables: stock.filter((c) => c !== entry), reloaded: false };
+  const { shotsLeft: _discarded, ...rest } = entry;
+  return {
+    consumables: stock.map((c) => (c === entry ? { ...rest, quantity: remaining } : c)),
+    reloaded: true,
+  };
+}
+
 export function getRaceSkillPoints(character: Pick<Character, "race">, reference: ReferenceData): number {
   return reference.races.find((r) => r.race === character.race)?.skillPoints ?? 0;
 }

@@ -23,6 +23,7 @@ import { ATTRIBUTES } from "../../shared/types";
 import {
   applyConsumableChange,
   computeCharacter,
+  fireShot,
   getBoostedAttributes,
   getBoostedSkillNames,
   getMonthlyIncome,
@@ -538,20 +539,28 @@ characterRoutes.post("/:id/consumables", async (c) => {
     return c.json({ error: "Vous ne pouvez gérer que les consommables de votre propre personnage" }, 403);
   }
 
-  const body = await c.req.json<{ name?: string; delta?: number; special?: boolean }>().catch(() => null);
-  if (!body?.name || typeof body.delta !== "number") {
+  const body = await c.req
+    .json<{ name?: string; delta?: number; special?: boolean; fire?: boolean }>()
+    .catch(() => null);
+  if (!body?.name || (body.fire !== true && typeof body.delta !== "number")) {
     return c.json({ error: "Consommable et quantité requis" }, 400);
   }
 
   const current: Character = JSON.parse(existing.data);
   const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
-  const result = applyConsumableChange(current, referenceData, body.name, body.delta, body.special === true);
+  const special = body.special === true;
+  // `fire: true` = "−1 coup" (décompte dans le chargeur en cours, recharge
+  // automatique — calc-engine.fireShot) ; sinon achat/retrait de chargeurs.
+  const result =
+    body.fire === true
+      ? fireShot(current, referenceData, body.name, special)
+      : applyConsumableChange(current, referenceData, body.name, body.delta as number, special);
   if ("error" in result) return c.json({ error: result.error }, 400);
 
   const updated: Character = {
     ...current,
     consumables: result.consumables,
-    credits: result.credits,
+    credits: "credits" in result ? result.credits : current.credits,
     updatedAt: new Date().toISOString(),
   };
   await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
@@ -559,7 +568,14 @@ characterRoutes.post("/:id/consumables", async (c) => {
     .run();
 
   const computed = computeCharacter(updated, referenceData);
-  return c.json({ character: updated, computed, canEdit: true, referenceData, cost: result.cost });
+  return c.json({
+    character: updated,
+    computed,
+    canEdit: true,
+    referenceData,
+    cost: "cost" in result ? result.cost : 0,
+    reloaded: "reloaded" in result ? result.reloaded : false,
+  });
 });
 
 // "Fin de combat" — bouton MJ sur l'écran "Suivi des constantes" : désactive

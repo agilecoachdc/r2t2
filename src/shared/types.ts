@@ -284,6 +284,15 @@ export interface ConsumableEntry {
    * version (fixé à l'achat, cf. applyConsumableChange). Absent = normale.
    */
   special?: boolean;
+  /**
+   * Coups restants dans le chargeur en cours — uniquement pour une munition
+   * dont le catalogue fixe `shotsPerMagazine`. `quantity` compte TOUS les
+   * chargeurs détenus, celui en cours inclus. Absent = chargeur en cours
+   * plein. Décompté par le bouton "−1 coup" (calc-engine.fireShot) : à 0, le
+   * chargeur vide est jeté et le suivant engagé automatiquement (plein),
+   * jusqu'au dernier.
+   */
+  shotsLeft?: number;
 }
 
 export interface Character {
@@ -503,6 +512,12 @@ export interface ConsumableDefinition {
    * passe sans rien débiter (même règle que tryPurchase pour l'équipement).
    */
   price?: number | string | null;
+  /**
+   * Nombre de coups par chargeur (munitions) — active le décompte coup par
+   * coup sur la fiche (ConsumableEntry.shotsLeft). Null/absent = pas de
+   * décompte, la ligne se gère seulement par chargeur entier.
+   */
+  shotsPerMagazine?: number | null;
   description?: string;
 }
 

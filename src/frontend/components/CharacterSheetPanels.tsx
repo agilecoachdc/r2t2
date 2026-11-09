@@ -22,6 +22,8 @@ import {
   canBeSpecial,
   getActivePsyPowerAttributeBoost,
   getConsumableUnitPrice,
+  getShotsLeft,
+  getShotsPerMagazine,
   getActivePsyPowerSkillBoost,
   getDualWieldPenalty,
   getMonthlyIncome,
@@ -1525,6 +1527,7 @@ export function ConsumablesPanel({
   canEdit,
   referenceData,
   onChange,
+  onFire,
 }: {
   character: Character;
   editing: boolean;
@@ -1532,6 +1535,8 @@ export function ConsumablesPanel({
   referenceData: ReferenceData;
   /** Lève une erreur (ex. solde insuffisant) affichée localement par le panneau. */
   onChange: (name: string, delta: number, special: boolean) => Promise<void>;
+  /** "−1 coup" : décompte dans le chargeur en cours, recharge automatique (cf. calc-engine.fireShot). */
+  onFire: (name: string, special: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const catalog = referenceData.consumables ?? [];
@@ -1558,11 +1563,12 @@ export function ConsumablesPanel({
   const pickedPrice = pickedDef ? getConsumableUnitPrice(pickedDef, pickedSpecial) : null;
   const qty = Number.isInteger(quantity) && quantity > 0 ? quantity : 0;
 
-  async function run(name: string, delta: number, lineSpecial: boolean) {
+  async function run(name: string, delta: number, lineSpecial: boolean, fire = false) {
     setBusy(true);
     setError(null);
     try {
-      await onChange(name, delta, lineSpecial);
+      if (fire) await onFire(name, lineSpecial);
+      else await onChange(name, delta, lineSpecial);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : t("Échec de la mise à jour des consommables"));
@@ -1592,8 +1598,11 @@ export function ConsumablesPanel({
             const def = findDef(c.name);
             const lineSpecial = !!c.special;
             const price = def ? getConsumableUnitPrice(def, lineSpecial) : null;
+            // Décompte coup par coup si le catalogue fixe la capacité du chargeur.
+            const full = getShotsPerMagazine(def);
+            const shotsLeft = getShotsLeft(c, def);
             return (
-              <li key={`${c.name}-${lineSpecial ? "s" : "n"}`} className="flex items-center gap-2">
+              <li key={`${c.name}-${lineSpecial ? "s" : "n"}`} className="flex flex-wrap items-center gap-2">
                 <span className="flex-1">
                   {c.name}
                   {lineSpecial && (
@@ -1607,13 +1616,18 @@ export function ConsumablesPanel({
                     type="button"
                     disabled={busy}
                     onClick={() => run(c.name, -1, lineSpecial)}
-                    title={t("Utiliser (retire 1 du stock)")}
+                    title={full != null ? t("Retirer un chargeur entier") : t("Utiliser (retire 1 du stock)")}
                     className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-50"
                   >
                     −1
                   </button>
                 )}
-                <span className="w-10 text-center font-semibold tabular-nums">× {c.quantity}</span>
+                <span
+                  className="w-10 text-center font-semibold tabular-nums"
+                  title={full != null ? t("Chargeurs détenus (celui en cours inclus)") : undefined}
+                >
+                  × {c.quantity}
+                </span>
                 {canAct && def && (
                   <button
                     type="button"
@@ -1624,6 +1638,27 @@ export function ConsumablesPanel({
                   >
                     +1
                   </button>
+                )}
+                {full != null && shotsLeft != null && (
+                  <span className="flex w-full items-center justify-end gap-2 sm:w-auto">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs tabular-nums ${shotsLeft <= Math.ceil(full / 4) ? "bg-red-950 text-red-300" : "bg-slate-800 text-slate-300"}`}
+                      title={t("Coups restants dans le chargeur en cours")}
+                    >
+                      {t("Coups")} {shotsLeft}/{full}
+                    </span>
+                    {canAct && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => run(c.name, 0, lineSpecial, true)}
+                        title={t("Tirer un coup — chargeur vide : le suivant est engagé automatiquement")}
+                        className="rounded bg-red-800 px-2 py-0.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {t("−1 coup")}
+                      </button>
+                    )}
+                  </span>
                 )}
               </li>
             );

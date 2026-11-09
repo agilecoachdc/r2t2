@@ -145,7 +145,17 @@ constantes" (icône 💵).
   `ConsumableEntry.special` fait partie de l'identité de la ligne (normale et spéciale d'une même
   munition = deux lignes séparées, "+1"/"−1" n'agissent que sur la leur) et n'est fixé qu'à
   l'achat — aucune opération ne convertit une munition normale en spéciale, le surcoût ne peut
-  donc pas être contourné. Remplace l'ancienne ligne catalogue "Munition spéciale", retirée. Les deux champs sont
+  donc pas être contourné. Remplace l'ancienne ligne catalogue "Munition spéciale", retirée.
+  **Décompte des coups** : les prix des munitions sont au chargeur ; une colonne "Coups /
+  chargeur" (`ConsumableDefinition.shotsPerMagazine`, onglet admin "Consommables") active, sur
+  chaque ligne de cette munition, une cellule "Coups x/y" et un bouton "−1 coup"
+  (`POST /:id/consumables` avec `fire: true`, `calc-engine.fireShot`). `quantity` compte tous
+  les chargeurs, celui en cours inclus ; `ConsumableEntry.shotsLeft` = coups restants dans le
+  chargeur en cours (absent = plein). Au dernier coup d'un chargeur, il est jeté (`quantity` − 1)
+  et le suivant est engagé automatiquement, plein ; au dernier chargeur vidé, la ligne disparaît.
+  Normales et spéciales sont décomptées séparément. Sans capacité saisie au catalogue, pas de
+  décompte (gestion par chargeur entier seulement) — aucune capacité n'est renseignée par défaut,
+  le livre de règles n'en donnant pas. Les deux champs sont
   optionnels (absents des règles/fiches antérieures, traités comme `[]`, pas de migration).
 - **Catalogue "Équipement & cyber"** (`ReferenceData.equipment`, `EquipmentDefinition`) : rubriques
   du livre des prix (`Mon Drive/ADD40K/ADD40K_prix_completes.docx`) — accessoires de mode,

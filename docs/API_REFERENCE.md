@@ -170,11 +170,16 @@ chaque réponse.
   "munition spéciale" : à l'achat, prix unitaire × 2, refusé (`400`) hors rubrique "Munitions" ; la
   ligne spéciale est distincte de la normale (clé `name` + `special`), et une utilisation ne puise
   que dans la ligne visée. Aucune route ne convertit une ligne d'une version à l'autre.
+- `fire: true` (au lieu de `delta`) : tire un coup dans le chargeur en cours de la ligne
+  `name`/`special` (`calc-engine.fireShot`) — `shotsLeft` − 1 ; à 0, chargeur jeté (`quantity` − 1)
+  et suivant engagé plein (`reloaded: true` dans la réponse) ; dernier chargeur vidé = ligne
+  retirée. `400` si la ligne n'existe pas ("Plus de … en stock") ou si le catalogue ne fixe pas
+  `shotsPerMagazine` pour cette munition. Aucun mouvement de crédits.
 - Achat : `name` doit exister dans `referenceData.consumables` de la règle du groupe ; coût =
   prix unitaire × `delta` (prix lu côté serveur, `parseCatalogPrice` ; non chiffré = 0), débité de
   `credits`. Utilisation : retire du stock sans remboursement ; ligne supprimée à 0. Logique :
   `calc-engine.applyConsumableChange`.
-- Sortie : `{ character, computed, canEdit: true, referenceData, cost: number }`.
+- Sortie : `{ character, computed, canEdit: true, referenceData, cost: number, reloaded: boolean }`.
 - Erreurs : `403` (ni propriétaire ni MJ), `404` (personnage introuvable), `400` (champ manquant,
   quantité non entière ou nulle, consommable hors catalogue à l'achat, solde insuffisant, stock
   insuffisant).

@@ -524,6 +524,13 @@ export default function GamesRulesets() {
                   { key: "name", label: "Nom", kind: "text", get: (r) => r.name, set: (r, v) => ({ ...r, name: v }) },
                   { key: "price", label: "Prix unitaire", kind: "text", get: (r) => r.price ?? "", set: (r, v) => ({ ...r, price: v || null }) },
                   {
+                    key: "shotsPerMagazine",
+                    label: "Coups / chargeur",
+                    kind: "number",
+                    get: (r) => r.shotsPerMagazine ?? "",
+                    set: (r, v) => ({ ...r, shotsPerMagazine: v === "" || !(Number(v) > 0) ? null : Math.floor(Number(v)) }),
+                  },
+                  {
                     key: "description",
                     label: "Description",
                     kind: "text",

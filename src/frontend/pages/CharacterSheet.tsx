@@ -239,6 +239,15 @@ export default function CharacterSheet() {
     setReferenceData(savedReferenceData);
   }
 
+  // "−1 coup" sur une ligne de munitions — cf. calc-engine.fireShot (même
+  // route, `fire: true`) ; recharge automatique au chargeur vidé.
+  async function handleFireShot(name: string, special: boolean) {
+    if (!id) return;
+    const { character: saved, referenceData: savedReferenceData } = await api.fireShot(id, name, special);
+    setCharacter(saved);
+    setReferenceData(savedReferenceData);
+  }
+
   // Le MJ "accepte" un solde négatif (avertissement rouge de BudgetPanel) en
   // ajoutant le déficit à l'XP gagnée — tout point donné ou approuvé par le
   // MJ s'y cumule, les points de départ restant ceux de la création. Plutôt que de laisser
@@ -372,6 +381,7 @@ export default function CharacterSheet() {
         canEdit={canEdit}
         referenceData={referenceData}
         onChange={handleConsumableChange}
+        onFire={handleFireShot}
       />
       <AdvantagesPanel character={character} editing={editing} update={update} referenceData={referenceData} />
       <EquipmentPanel character={character} editing={editing} update={update} referenceData={referenceData} />

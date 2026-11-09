@@ -244,6 +244,15 @@ navigateur intégré, cf. session de build).
       spéciale. Aucun moyen de passer une ligne normale en spéciale.
 - [ ] Choisir une grenade : pas de case "Spéciale" ; appel direct avec `special: true` → 400.
 - [ ] Catalogue "Consommables" : plus de ligne "Munition spéciale".
+- [ ] Admin, onglet "Consommables" : saisir 3 dans "Coups / chargeur" pour "Pistolets",
+      enregistrer. Fiche : acheter 2 chargeurs → ligne "Pistolets × 2", cellule "Coups 3/3" et
+      bouton "−1 coup".
+- [ ] "−1 coup" ×3 → 2/3, 1/3 (cellule rouge), puis rechargement automatique : "× 1", "Coups 3/3",
+      crédits inchangés. 3 coups de plus → la ligne disparaît.
+- [ ] Ligne normale et spéciale de la même munition : "−1 coup" sur l'une ne touche pas l'autre.
+- [ ] Acheter un chargeur pendant qu'un chargeur entamé est en cours → la quantité monte, les
+      coups restants ne changent pas.
+- [ ] Munition sans "Coups / chargeur" (ex. "Dominion") : pas de cellule ni de bouton "−1 coup".
 - [ ] Mode édition : section en lecture seule (pas de boutons), message "hors du mode édition" ;
       "Enregistrer" ne change pas les consommables.
 - [ ] `PUT /api/characters/<id>` avec `consumables: [{ name: "X", quantity: 99 }]` → ignoré.
