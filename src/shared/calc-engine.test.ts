@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyConsumableChange,
+  getConsumableUnitPrice,
   computeCharacter,
   getActionRank,
   getActivePsyPowerAttributeBoost,
@@ -789,6 +790,7 @@ describe("consommables (applyConsumableChange)", () => {
     consumables: [
       { category: "Munitions", name: "Pistolets", price: 5 },
       { category: "Munitions", name: "Dominion", price: null },
+      { category: "Grenades & explosifs", name: "Grenade à fragmentation", price: 100 },
     ],
   };
 
@@ -797,6 +799,8 @@ describe("consommables (applyConsumableChange)", () => {
     expect(names).toContain("Pistolets");
     expect(names).toContain("Grenade à fragmentation");
     expect(referenceData.equipment.some((e) => e.category === "Munitions")).toBe(false);
+    // Remplacée par la case "Spéciale" (ConsumableEntry.special).
+    expect(names).not.toContain("Munition spéciale");
   });
 
   it("achat : débite prix × quantité et crée la ligne", () => {
@@ -845,5 +849,45 @@ describe("consommables (applyConsumableChange)", () => {
   it("utilisation possible même si la ligne a quitté le catalogue", () => {
     const stock = { credits: 0, consumables: [{ name: "Ancien", quantity: 1 }] };
     expect(applyConsumableChange(stock, ref, "Ancien", -1)).toEqual({ consumables: [], credits: 0, cost: 0 });
+  });
+
+  it("munition spéciale : prix × 2, ligne distincte de la normale", () => {
+    expect(getConsumableUnitPrice({ price: 5 }, true)).toBe(10);
+    expect(getConsumableUnitPrice({ price: null }, true)).toBeNull();
+    const stock = { credits: 100, consumables: [{ name: "Pistolets", quantity: 2 }] };
+    expect(applyConsumableChange(stock, ref, "Pistolets", 3, true)).toEqual({
+      consumables: [
+        { name: "Pistolets", quantity: 2 },
+        { name: "Pistolets", quantity: 3, special: true },
+      ],
+      credits: 70,
+      cost: 30,
+    });
+  });
+
+  it("munition spéciale : +1/−1 n'agissent que sur leur propre ligne", () => {
+    const stock = {
+      credits: 100,
+      consumables: [
+        { name: "Pistolets", quantity: 2 },
+        { name: "Pistolets", quantity: 1, special: true },
+      ],
+    };
+    expect(applyConsumableChange(stock, ref, "Pistolets", 1, true)).toMatchObject({
+      consumables: [
+        { name: "Pistolets", quantity: 2 },
+        { name: "Pistolets", quantity: 2, special: true },
+      ],
+      cost: 10,
+    });
+    expect(applyConsumableChange(stock, ref, "Pistolets", -1, false)).toMatchObject({
+      consumables: [{ name: "Pistolets", quantity: 1 }, { name: "Pistolets", quantity: 1, special: true }],
+    });
+    // Pas de munitions spéciales "empruntées" au stock normal.
+    expect(applyConsumableChange(stock, ref, "Pistolets", -2, true)).toHaveProperty("error");
+  });
+
+  it("munition spéciale : réservée à la rubrique Munitions", () => {
+    expect(applyConsumableChange({ credits: 1000 }, ref, "Grenade à fragmentation", 1, true)).toHaveProperty("error");
   });
 });

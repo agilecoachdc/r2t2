@@ -774,17 +774,54 @@ export function parseCatalogPrice(price: number | string | null | undefined): nu
 }
 
 /**
+ * Rubrique du catalogue "Consommables" dont les lignes peuvent être
+ * achetées en version "spéciale" (anti-personnel, perforante, incendiaire,
+ * poison…) — cf. ConsumableEntry.special.
+ */
+export const SPECIAL_AMMO_CATEGORY = "Munitions";
+/** Surcoût d'une munition spéciale : prix de la munition normale de l'arme × 2. */
+export const SPECIAL_AMMO_MULTIPLIER = 2;
+
+/** Vrai si ce consommable du catalogue peut être acheté en version spéciale. */
+export function canBeSpecial(def: { category: string } | undefined): boolean {
+  return def?.category === SPECIAL_AMMO_CATEGORY;
+}
+
+/** Même ligne de stock : même nom ET même version (normale/spéciale). */
+function sameStockLine(entry: ConsumableEntry, name: string, special: boolean): boolean {
+  return entry.name === name && !!entry.special === special;
+}
+
+/**
+ * Prix unitaire effectif d'un consommable (null si non chiffré au
+ * catalogue) — × SPECIAL_AMMO_MULTIPLIER pour une munition spéciale.
+ */
+export function getConsumableUnitPrice(
+  def: { price?: number | string | null } | undefined,
+  special: boolean,
+): number | null {
+  const base = parseCatalogPrice(def?.price);
+  if (base == null) return null;
+  return special ? base * SPECIAL_AMMO_MULTIPLIER : base;
+}
+
+/**
  * Achat (`delta` > 0) ou utilisation (`delta` < 0) d'un consommable — cf.
  * Character.consumables, ReferenceData.consumables. Logique pure, partagée
  * par la route POST /api/characters/:id/consumables (seule à l'appliquer,
  * avec le catalogue du groupe chargé côté serveur — le client ne fixe
  * jamais le prix) et par les tests.
  *  - Achat : le consommable doit exister au catalogue ; coût = prix
- *    unitaire × quantité, refusé si supérieur aux crédits. Un prix non
+ *    unitaire × quantité (× 2 si `special`, réservé à la rubrique
+ *    SPECIAL_AMMO_CATEGORY), refusé si supérieur aux crédits. Un prix non
  *    chiffré (cf. parseCatalogPrice) n'est pas bloquant : coût 0, même règle
  *    que tryPurchase pour l'équipement.
- *  - Utilisation : retire du stock, sans remboursement ; refusé au-delà de
- *    la quantité détenue. Possible même si la ligne a disparu du catalogue.
+ *  - Utilisation : retire du stock de la ligne visée (normale OU spéciale),
+ *    sans remboursement ; refusé au-delà de la quantité détenue. Possible
+ *    même si la ligne a disparu du catalogue.
+ * Normale et spéciale sont deux lignes distinctes (clé nom + `special`) :
+ * il n'existe aucune opération qui fasse passer une munition normale en
+ * spéciale — le surcoût ne peut donc être payé qu'à l'achat.
  * Une ligne tombée à 0 est retirée de la liste.
  */
 export function applyConsumableChange(
@@ -792,29 +829,34 @@ export function applyConsumableChange(
   reference: ReferenceData,
   name: string,
   delta: number,
+  special = false,
 ): { consumables: ConsumableEntry[]; credits: number; cost: number } | { error: string } {
   if (!Number.isInteger(delta) || delta === 0) return { error: "Quantité requise (entier non nul)" };
   const stock = character.consumables ?? [];
   const credits = character.credits ?? 0;
-  const held = stock.find((c) => c.name === name)?.quantity ?? 0;
+  const held = stock.find((c) => sameStockLine(c, name, special))?.quantity ?? 0;
 
   let cost = 0;
   if (delta > 0) {
     const def = (reference.consumables ?? []).find((c) => c.name === name);
     if (!def) return { error: `Consommable introuvable au catalogue : ${name}` };
-    cost = (parseCatalogPrice(def.price) ?? 0) * delta;
+    if (special && !canBeSpecial(def)) {
+      return { error: `Seules les munitions peuvent être achetées en version spéciale` };
+    }
+    cost = (getConsumableUnitPrice(def, special) ?? 0) * delta;
     if (cost > credits) return { error: `Solde insuffisant (${cost} Cr requis, ${credits} Cr disponible)` };
   } else if (-delta > held) {
     return { error: `Quantité insuffisante (${held} en stock)` };
   }
 
   const nextQuantity = held + delta;
-  const others = stock.filter((c) => c.name !== name);
+  const others = stock.filter((c) => !sameStockLine(c, name, special));
+  const newLine: ConsumableEntry = special ? { name, quantity: nextQuantity, special: true } : { name, quantity: nextQuantity };
   const consumables =
     nextQuantity > 0
       ? held > 0
-        ? stock.map((c) => (c.name === name ? { ...c, quantity: nextQuantity } : c))
-        : [...others, { name, quantity: nextQuantity }]
+        ? stock.map((c) => (sameStockLine(c, name, special) ? { ...c, quantity: nextQuantity } : c))
+        : [...others, newLine]
       : others;
   return { consumables, credits: credits - cost, cost };
 }

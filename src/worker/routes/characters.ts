@@ -519,7 +519,9 @@ characterRoutes.post("/:id/spend-credits", async (c) => {
 // fiche, utilisable en jeu sans passer en mode édition. `delta` > 0 =
 // achat au prix du catalogue de la règle du groupe (chargé ici, jamais
 // fourni par le client), débité des crédits ; `delta` < 0 = utilisation,
-// retirée du stock sans remboursement. Même garde que spend-credits
+// retirée du stock sans remboursement. `special: true` vise la version
+// "munition spéciale" (prix × 2 à l'achat, ligne distincte de la normale).
+// Même garde que spend-credits
 // (propriétaire ou MJ du groupe, ou admin). Règles détaillées :
 // calc-engine.applyConsumableChange.
 characterRoutes.post("/:id/consumables", async (c) => {
@@ -536,14 +538,14 @@ characterRoutes.post("/:id/consumables", async (c) => {
     return c.json({ error: "Vous ne pouvez gérer que les consommables de votre propre personnage" }, 403);
   }
 
-  const body = await c.req.json<{ name?: string; delta?: number }>().catch(() => null);
+  const body = await c.req.json<{ name?: string; delta?: number; special?: boolean }>().catch(() => null);
   if (!body?.name || typeof body.delta !== "number") {
     return c.json({ error: "Consommable et quantité requis" }, 400);
   }
 
   const current: Character = JSON.parse(existing.data);
   const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
-  const result = applyConsumableChange(current, referenceData, body.name, body.delta);
+  const result = applyConsumableChange(current, referenceData, body.name, body.delta, body.special === true);
   if ("error" in result) return c.json({ error: result.error }, 400);
 
   const updated: Character = {

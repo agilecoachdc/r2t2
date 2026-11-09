@@ -19,7 +19,9 @@ import {
 import type { CharacterComputed } from "@shared/calc-engine";
 import {
   CONCENTRATION_PSY_ATTRIBUTES,
+  canBeSpecial,
   getActivePsyPowerAttributeBoost,
+  getConsumableUnitPrice,
   getActivePsyPowerSkillBoost,
   getDualWieldPenalty,
   getMonthlyIncome,
@@ -1529,7 +1531,7 @@ export function ConsumablesPanel({
   canEdit: boolean;
   referenceData: ReferenceData;
   /** Lève une erreur (ex. solde insuffisant) affichée localement par le panneau. */
-  onChange: (name: string, delta: number) => Promise<void>;
+  onChange: (name: string, delta: number, special: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const catalog = referenceData.consumables ?? [];
@@ -1540,20 +1542,27 @@ export function ConsumablesPanel({
   const [error, setError] = useState<string | null>(null);
   const [pick, setPick] = useState("");
   const [quantity, setQuantity] = useState(1);
+  // Case "Spéciale" du formulaire d'achat — munitions uniquement, prix × 2.
+  // Seul moment où la version se choisit : une ligne de stock ne change
+  // jamais de version ensuite (cf. calc-engine.applyConsumableChange).
+  const [special, setSpecial] = useState(false);
 
   const catalogByCategory = catalog.reduce<Record<string, typeof catalog>>((acc, item) => {
     (acc[item.category] ??= []).push(item);
     return acc;
   }, {});
-  const unitPrice = (name: string) => parseCatalogPrice(catalog.find((c) => c.name === name)?.price);
-  const pickedPrice = pick ? unitPrice(pick) : null;
+  const findDef = (name: string) => catalog.find((c) => c.name === name);
+  const pickedDef = pick ? findDef(pick) : undefined;
+  const pickedCanBeSpecial = canBeSpecial(pickedDef);
+  const pickedSpecial = special && pickedCanBeSpecial;
+  const pickedPrice = pickedDef ? getConsumableUnitPrice(pickedDef, pickedSpecial) : null;
   const qty = Number.isInteger(quantity) && quantity > 0 ? quantity : 0;
 
-  async function run(name: string, delta: number) {
+  async function run(name: string, delta: number, lineSpecial: boolean) {
     setBusy(true);
     setError(null);
     try {
-      await onChange(name, delta);
+      await onChange(name, delta, lineSpecial);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : t("Échec de la mise à jour des consommables"));
@@ -1566,9 +1575,10 @@ export function ConsumablesPanel({
   async function handleBuy(e: React.FormEvent) {
     e.preventDefault();
     if (!pick || qty === 0) return;
-    if (await run(pick, qty)) {
+    if (await run(pick, qty, pickedSpecial)) {
       setPick("");
       setQuantity(1);
+      setSpecial(false);
     }
   }
 
@@ -1579,12 +1589,16 @@ export function ConsumablesPanel({
       ) : (
         <ul className="space-y-1 text-sm text-slate-200">
           {stock.map((c) => {
-            const def = catalog.find((d) => d.name === c.name);
-            const price = unitPrice(c.name);
+            const def = findDef(c.name);
+            const lineSpecial = !!c.special;
+            const price = def ? getConsumableUnitPrice(def, lineSpecial) : null;
             return (
-              <li key={c.name} className="flex items-center gap-2">
+              <li key={`${c.name}-${lineSpecial ? "s" : "n"}`} className="flex items-center gap-2">
                 <span className="flex-1">
                   {c.name}
+                  {lineSpecial && (
+                    <span className="ml-1 rounded bg-amber-900/60 px-1.5 py-0.5 text-xs text-amber-300">{t("spéciale")}</span>
+                  )}
                   {def && <span className="text-xs text-slate-500"> · {def.category}</span>}
                   {price != null && <span className="text-xs text-slate-500"> · {price} Cr</span>}
                 </span>
@@ -1592,7 +1606,7 @@ export function ConsumablesPanel({
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => run(c.name, -1)}
+                    onClick={() => run(c.name, -1, lineSpecial)}
                     title={t("Utiliser (retire 1 du stock)")}
                     className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-50"
                   >
@@ -1604,7 +1618,7 @@ export function ConsumablesPanel({
                   <button
                     type="button"
                     disabled={busy || (price != null && price > credits)}
-                    onClick={() => run(c.name, 1)}
+                    onClick={() => run(c.name, 1, lineSpecial)}
                     title={t("Acheter 1 (débite le prix du catalogue)")}
                     className="rounded bg-indigo-600 px-2 py-0.5 text-xs text-white hover:bg-indigo-500 disabled:opacity-50"
                   >
@@ -1644,6 +1658,12 @@ export function ConsumablesPanel({
             ))}
           </select>
           <NumberInput value={quantity} onChange={setQuantity} className="w-16" />
+          {pickedCanBeSpecial && (
+            <label className="flex items-center gap-1 text-xs text-slate-300" title={t("Munition spéciale : prix × 2 de la munition normale de l'arme")}>
+              <input type="checkbox" checked={special} onChange={(e) => setSpecial(e.target.checked)} />
+              {t("Spéciale (×2)")}
+            </label>
+          )}
           <button
             type="submit"
             disabled={busy || !pick || qty === 0 || (pickedPrice != null && pickedPrice * qty > credits)}

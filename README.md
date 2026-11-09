@@ -139,7 +139,13 @@ constantes" (icône 💵).
   crédits, refusé si solde insuffisant ; prix non chiffré = gratuit, non bloquant) et utilisation
   (−1, sans remboursement) **hors mode édition**, via `POST /api/characters/:id/consumables` qui
   applique le prix du catalogue côté serveur (`calc-engine.applyConsumableChange`). Le `PUT` de
-  fiche ignore `consumables` : ce champ n'a qu'un seul point d'écriture. Les deux champs sont
+  fiche ignore `consumables` : ce champ n'a qu'un seul point d'écriture. **Munitions
+  spéciales** : case "Spéciale (×2)" à l'achat, réservée à la rubrique "Munitions"
+  (`SPECIAL_AMMO_CATEGORY`), prix = munition normale × 2 (`getConsumableUnitPrice`) ; le drapeau
+  `ConsumableEntry.special` fait partie de l'identité de la ligne (normale et spéciale d'une même
+  munition = deux lignes séparées, "+1"/"−1" n'agissent que sur la leur) et n'est fixé qu'à
+  l'achat — aucune opération ne convertit une munition normale en spéciale, le surcoût ne peut
+  donc pas être contourné. Remplace l'ancienne ligne catalogue "Munition spéciale", retirée. Les deux champs sont
   optionnels (absents des règles/fiches antérieures, traités comme `[]`, pas de migration).
 - **Catalogue "Équipement & cyber"** (`ReferenceData.equipment`, `EquipmentDefinition`) : rubriques
   du livre des prix (`Mon Drive/ADD40K/ADD40K_prix_completes.docx`) — accessoires de mode,

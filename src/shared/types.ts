@@ -275,6 +275,15 @@ export interface ConsumableEntry {
   name: string;
   /** Toujours > 0 — une ligne tombée à 0 est retirée de la liste. */
   quantity: number;
+  /**
+   * Munition spéciale (anti-personnel, perforante, incendiaire, poison…),
+   * achetée au double du prix de la munition normale — réservé à la
+   * rubrique "Munitions" (cf. calc-engine.SPECIAL_AMMO_CATEGORY). Fait
+   * partie de l'identité de la ligne : normale et spéciale d'une même
+   * munition sont deux lignes distinctes, et une ligne ne change jamais de
+   * version (fixé à l'achat, cf. applyConsumableChange). Absent = normale.
+   */
+  special?: boolean;
 }
 
 export interface Character {

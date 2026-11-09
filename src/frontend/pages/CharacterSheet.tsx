@@ -232,9 +232,9 @@ export default function CharacterSheet() {
   // serveur). Hors mode édition uniquement : la fiche renvoyée remplace
   // l'état local. L'erreur (solde/stock insuffisant) est relancée pour que
   // le panneau l'affiche au plus près du formulaire.
-  async function handleConsumableChange(name: string, delta: number) {
+  async function handleConsumableChange(name: string, delta: number, special: boolean) {
     if (!id) return;
-    const { character: saved, referenceData: savedReferenceData } = await api.changeConsumable(id, name, delta);
+    const { character: saved, referenceData: savedReferenceData } = await api.changeConsumable(id, name, delta, special);
     setCharacter(saved);
     setReferenceData(savedReferenceData);
   }

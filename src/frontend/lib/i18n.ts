@@ -272,6 +272,9 @@ const EN: Record<string, string> = {
   "Les consommables s'achètent et s'utilisent hors du mode édition.": "Consumables are bought and used outside edit mode.",
   "Aucun consommable au catalogue de cette règle.": "No consumables in this ruleset's catalogue.",
   "Échec de la mise à jour des consommables": "Failed to update consumables",
+  "spéciale": "special",
+  "Spéciale (×2)": "Special (×2)",
+  "Munition spéciale : prix × 2 de la munition normale de l'arme": "Special ammo: price × 2 of the weapon's normal ammo",
 };
 
 const DICTIONARIES: Partial<Record<Language, Record<string, string>>> = { en: EN };

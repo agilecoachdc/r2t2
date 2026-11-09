@@ -238,6 +238,12 @@ navigateur intégré, cf. session de build).
       ligne retirée.
 - [ ] Acheter au-delà du solde → bouton désactivé ; appel direct → 400 "Solde insuffisant".
 - [ ] Consommable à prix non fixé (ex. "Dominion") → ajouté sans débit.
+- [ ] Choisir "Pistolets" : case "Spéciale (×2)" visible ; cochée, quantité 2 → "Acheter (20 Cr)",
+      ligne "Pistolets [spéciale] × 2" séparée de la ligne normale "Pistolets × 3".
+- [ ] "+1" sur la ligne spéciale → débite 10 Cr ; "−1" sur la ligne normale ne touche pas la
+      spéciale. Aucun moyen de passer une ligne normale en spéciale.
+- [ ] Choisir une grenade : pas de case "Spéciale" ; appel direct avec `special: true` → 400.
+- [ ] Catalogue "Consommables" : plus de ligne "Munition spéciale".
 - [ ] Mode édition : section en lecture seule (pas de boutons), message "hors du mode édition" ;
       "Enregistrer" ne change pas les consommables.
 - [ ] `PUT /api/characters/<id>` avec `consumables: [{ name: "X", quantity: 99 }]` → ignoré.

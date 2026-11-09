@@ -81,7 +81,9 @@ const FR: GuideContent = {
       title: "Consommables",
       paragraphs: [
         "La section « Consommables », sous les pouvoirs psy, tient le stock de ce qui s'épuise à l'usage (munitions, grenades, soins…) avec une quantité par ligne. La liste et les prix viennent du catalogue « Consommables » de la règle du groupe.",
-        "Tout se fait en jeu, sans passer en mode édition : choisissez un consommable et une quantité puis « Acheter » — le prix unitaire × la quantité est débité de vos crédits (achat refusé si le solde ne suffit pas) ; « +1 » rachète une unité d'une ligne existante ; « −1 » la retire du stock quand vous l'utilisez, sans remboursement. Une ligne à 0 disparaît. Un consommable dont le prix n'est pas fixé au catalogue s'ajoute sans rien débiter. En mode édition, la section reste en lecture seule et la sauvegarde de la fiche ne modifie jamais les consommables.",
+        "Tout se fait en jeu, sans passer en mode édition : choisissez un consommable et une quantité puis « Acheter » — le prix unitaire × la quantité est débité de vos crédits (achat refusé si le solde ne suffit pas) ; « +1 » rachète une unité d'une ligne existante ; « −1 » la retire du stock quand vous l'utilisez, sans remboursement. Une ligne à 0 disparaît. Un consommable dont le prix n'est pas fixé au catalogue s'ajoute sans rien débiter.",
+        "Munitions spéciales (anti-personnel, perforantes, incendiaires, poison…) : en choisissant une munition, cochez « Spéciale (×2) » — elle coûte le double de la munition normale de l'arme. Normales et spéciales restent sur deux lignes séparées, chacune avec ses propres « +1 » / « −1 », et une munition achetée normale ne peut pas devenir spéciale ensuite : le surcoût se paie à l'achat.",
+        "En mode édition, la section reste en lecture seule et la sauvegarde de la fiche ne modifie jamais les consommables.",
       ],
     },
     {
@@ -223,7 +225,9 @@ const EN: GuideContent = {
       title: "Consumables",
       paragraphs: [
         "The \"Consumables\" section, below psychic powers, tracks what gets used up (ammunition, grenades, medical supplies…) with a quantity per line. The list and prices come from the group's ruleset \"Consumables\" catalogue.",
-        "Everything happens in play, without entering edit mode: pick a consumable and a quantity, then \"Buy\" — unit price × quantity is deducted from your credits (refused if the balance is too low); \"+1\" buys one more of an existing line; \"−1\" removes one from stock when you use it, with no refund. A line at 0 disappears. A consumable with no price set in the catalogue is added without charging anything. In edit mode the section is read-only, and saving the sheet never changes consumables.",
+        "Everything happens in play, without entering edit mode: pick a consumable and a quantity, then \"Buy\" — unit price × quantity is deducted from your credits (refused if the balance is too low); \"+1\" buys one more of an existing line; \"−1\" removes one from stock when you use it, with no refund. A line at 0 disappears. A consumable with no price set in the catalogue is added without charging anything.",
+        "Special ammunition (anti-personnel, armor-piercing, incendiary, poison…): when picking ammunition, tick \"Special (×2)\" — it costs twice the weapon's normal ammo. Normal and special stay on two separate lines, each with its own \"+1\" / \"−1\", and ammo bought as normal can never become special later: the surcharge is paid at purchase.",
+        "In edit mode the section is read-only, and saving the sheet never changes consumables.",
       ],
     },
     {

@@ -1709,7 +1709,9 @@ export const referenceData: ReferenceData = {
   // Catalogue "Consommables" (achetés en quantité, épuisés à l'usage) :
   // munitions sorties du bloc `equipment` (ex-rubrique "Munitions" de
   // "Équipement & cyber"), grenades recopiées depuis `weapons` (elles y
-  // restent pour le score de l'arme de jet). Même opération appliquée
+  // restent pour le score de l'arme de jet). L'ancienne ligne "Munition
+  // spéciale" est remplacée par la case "Spéciale" à l'achat (prix × 2 de
+  // la munition de l'arme, cf. ConsumableEntry.special). Même opération appliquée
   // directement à la règle "add40k" en production.
   "consumables": [
     {
@@ -1759,12 +1761,6 @@ export const referenceData: ReferenceData = {
       "name": "RPG",
       "price": null,
       "description": "Roquette Wild RPG (prix non fixé)."
-    },
-    {
-      "category": "Munitions",
-      "name": "Munition spéciale",
-      "price": null,
-      "description": "Anti-personnel, perforant, incendiaire ou poison : prix de la munition de base ×2."
     },
     {
       "category": "Grenades & explosifs",

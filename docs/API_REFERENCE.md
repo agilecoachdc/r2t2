@@ -165,8 +165,11 @@ chaque réponse.
 ### `POST /api/characters/:id/consumables`
 - Auth : session + `canEditCharacter` (propriétaire, MJ du groupe ou admin — même garde que
   `spend-credits`).
-- Entrée : `{ name: string, delta: number }` — `delta` entier non nul : > 0 = achat de `delta`
-  unités, < 0 = utilisation (retrait du stock).
+- Entrée : `{ name: string, delta: number, special?: boolean }` — `delta` entier non nul : > 0 =
+  achat de `delta` unités, < 0 = utilisation (retrait du stock). `special: true` vise la version
+  "munition spéciale" : à l'achat, prix unitaire × 2, refusé (`400`) hors rubrique "Munitions" ; la
+  ligne spéciale est distincte de la normale (clé `name` + `special`), et une utilisation ne puise
+  que dans la ligne visée. Aucune route ne convertit une ligne d'une version à l'autre.
 - Achat : `name` doit exister dans `referenceData.consumables` de la règle du groupe ; coût =
   prix unitaire × `delta` (prix lu côté serveur, `parseCatalogPrice` ; non chiffré = 0), débité de
   `credits`. Utilisation : retire du stock sans remboursement ; ligne supprimée à 0. Logique :
