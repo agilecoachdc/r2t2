@@ -78,10 +78,17 @@ const FR: GuideContent = {
       ],
     },
     {
+      title: "Consommables",
+      paragraphs: [
+        "La section « Consommables », sous les pouvoirs psy, tient le stock de ce qui s'épuise à l'usage (munitions, grenades, soins…) avec une quantité par ligne. La liste et les prix viennent du catalogue « Consommables » de la règle du groupe.",
+        "Tout se fait en jeu, sans passer en mode édition : choisissez un consommable et une quantité puis « Acheter » — le prix unitaire × la quantité est débité de vos crédits (achat refusé si le solde ne suffit pas) ; « +1 » rachète une unité d'une ligne existante ; « −1 » la retire du stock quand vous l'utilisez, sans remboursement. Une ligne à 0 disparaît. Un consommable dont le prix n'est pas fixé au catalogue s'ajoute sans rien débiter. En mode édition, la section reste en lecture seule et la sauvegarde de la fiche ne modifie jamais les consommables.",
+      ],
+    },
+    {
       title: "Avantages, inconvénients et équipement",
       paragraphs: [
         "Un avantage coûte des points de budget, un inconvénient en rend — le libellé et la valeur d'un avantage/inconvénient viennent toujours du catalogue de la règle, jamais d'une saisie manuelle. L'équipement est une simple liste de texte libre, sans effet chiffré automatique en dehors de servir de justification pour des modificateurs d'arme ou des compétences gratuites.",
-        "Le mini-formulaire d'ajout d'équipement propose un sélecteur « depuis le catalogue Équipement & cyber » (cybernétique, bio-améliorations, accessoires de mode, munitions, exosquelettes), groupé par rubrique : choisir une ligne pré-remplit son nom et son prix, et l'ajout déduit ce prix du solde en crédits comme pour une arme ou une armure. Le coût en Essence affiché dans le catalogue (Documentation) est purement indicatif — il n'entre dans aucun calcul. Les cyberarmes gardent leurs dégâts et leur Rang d'Action dans la liste des armes.",
+        "Le mini-formulaire d'ajout d'équipement propose un sélecteur « depuis le catalogue Équipement & cyber » (cybernétique, bio-améliorations, accessoires de mode, exosquelettes — les munitions sont désormais dans « Consommables »), groupé par rubrique : choisir une ligne pré-remplit son nom et son prix, et l'ajout déduit ce prix du solde en crédits comme pour une arme ou une armure. Le coût en Essence affiché dans le catalogue (Documentation) est purement indicatif — il n'entre dans aucun calcul. Les cyberarmes gardent leurs dégâts et leur Rang d'Action dans la liste des armes.",
       ],
     },
     {
@@ -153,7 +160,7 @@ const FR: GuideContent = {
     {
       title: "Administrateur : les droits MJ sur tous les groupes",
       paragraphs: [
-        "Le compte administrateur de la plateforme dispose des droits MJ sur tous les groupes, sans avoir à en être membre : depuis l'accueil, chaque groupe ouvre son écran « Personnages » (fiches éditables, PNJ, XP, crédits, demandes d'adhésion) et son « Suivi des constantes ». La page admin « Groupes » propose les mêmes raccourcis pour le groupe sélectionné, et l'écran « Personnages » renvoie vers « Jeux & règles ». Vous pouvez ainsi modifier une règle ou ajouter un équipement au catalogue, puis ajuster les fiches, sans changer de compte.",
+        "Le compte administrateur de la plateforme dispose des droits MJ sur tous les groupes, sans avoir à en être membre : depuis l'accueil, chaque groupe ouvre son écran « Personnages » (fiches éditables, PNJ, XP, crédits, demandes d'adhésion) et son « Suivi des constantes ». Le catalogue des consommables (munitions, grenades…) se gère dans l'onglet « Consommables » de « Jeux & règles ». La page admin « Groupes » propose les mêmes raccourcis pour le groupe sélectionné, et l'écran « Personnages » renvoie vers « Jeux & règles ». Vous pouvez ainsi modifier une règle ou ajouter un équipement au catalogue, puis ajuster les fiches, sans changer de compte.",
       ],
     },
   ],
@@ -213,10 +220,17 @@ const EN: GuideContent = {
       ],
     },
     {
+      title: "Consumables",
+      paragraphs: [
+        "The \"Consumables\" section, below psychic powers, tracks what gets used up (ammunition, grenades, medical supplies…) with a quantity per line. The list and prices come from the group's ruleset \"Consumables\" catalogue.",
+        "Everything happens in play, without entering edit mode: pick a consumable and a quantity, then \"Buy\" — unit price × quantity is deducted from your credits (refused if the balance is too low); \"+1\" buys one more of an existing line; \"−1\" removes one from stock when you use it, with no refund. A line at 0 disappears. A consumable with no price set in the catalogue is added without charging anything. In edit mode the section is read-only, and saving the sheet never changes consumables.",
+      ],
+    },
+    {
       title: "Advantages, disadvantages and equipment",
       paragraphs: [
         "An advantage costs budget points, a disadvantage gives some back — an advantage/disadvantage's label and value always come from the ruleset's catalog, never from manual entry. Equipment is a simple free-text list, with no automatic numeric effect beyond serving as a justification for weapon modifiers or free skills.",
-        "The add-equipment mini-form offers a \"from the Equipment & cyber catalogue\" picker (cyberware, bio-upgrades, fashion accessories, ammunition, exoskeletons), grouped by category: picking an entry pre-fills its name and price, and adding it deducts that price from the credit balance just like a weapon or armor. The Essence cost shown in the catalogue (Documentation) is purely informational — it feeds no calculation. Cyber weapons keep their damage and Action Rank in the weapons list.",
+        "The add-equipment mini-form offers a \"from the Equipment & cyber catalogue\" picker (cyberware, bio-upgrades, fashion accessories, exoskeletons — ammunition now lives under \"Consumables\"), grouped by category: picking an entry pre-fills its name and price, and adding it deducts that price from the credit balance just like a weapon or armor. The Essence cost shown in the catalogue (Documentation) is purely informational — it feeds no calculation. Cyber weapons keep their damage and Action Rank in the weapons list.",
       ],
     },
     {
@@ -288,7 +302,7 @@ const EN: GuideContent = {
     {
       title: "Admin: GM rights on every group",
       paragraphs: [
-        "The platform admin account has GM rights on every group without having to be a member: from the home screen, each group opens its \"Characters\" screen (editable sheets, NPCs, XP, credits, join requests) and its \"Vitals tracker\". The admin \"Groupes\" (Groups) page offers the same shortcuts for the selected group, and the \"Characters\" screen links back to \"Jeux & règles\" (Games & rules). You can therefore change a rule or add equipment to the catalog, then adjust the sheets, without switching accounts.",
+        "The platform admin account has GM rights on every group without having to be a member: from the home screen, each group opens its \"Characters\" screen (editable sheets, NPCs, XP, credits, join requests) and its \"Vitals tracker\". The consumables catalogue (ammunition, grenades…) is managed in the \"Consommables\" (Consumables) tab of \"Jeux & règles\". The admin \"Groupes\" (Groups) page offers the same shortcuts for the selected group, and the \"Characters\" screen links back to \"Jeux & règles\" (Games & rules). You can therefore change a rule or add equipment to the catalog, then adjust the sheets, without switching accounts.",
       ],
     },
   ],

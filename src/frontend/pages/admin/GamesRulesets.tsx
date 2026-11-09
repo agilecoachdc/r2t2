@@ -7,10 +7,12 @@
 import { useEffect, useState } from "react";
 import {
   ATTRIBUTES,
+  CONSUMABLE_CATEGORIES,
   EQUIPMENT_CATEGORIES,
   WEAPON_TYPES,
   type AdvantageDefinition,
   type ArmorDefinition,
+  type ConsumableDefinition,
   type EquipmentDefinition,
   type Game,
   type PsyPowerDefinition,
@@ -32,6 +34,7 @@ const CATALOG_TABS = [
   "Armes",
   "Armures",
   "Équipement & cyber",
+  "Consommables",
   "Pouvoirs psy",
   "Avantages",
   "Table de coût",
@@ -492,6 +495,34 @@ export default function GamesRulesets() {
                     set: (r, v) => ({ ...r, essence: v === "" ? null : Number(v) }),
                   },
                   { key: "price", label: "Prix", kind: "text", get: (r) => r.price ?? "", set: (r, v) => ({ ...r, price: v || null }) },
+                  {
+                    key: "description",
+                    label: "Description",
+                    kind: "text",
+                    get: (r) => r.description ?? "",
+                    set: (r, v) => ({ ...r, description: v || undefined }),
+                  },
+                ]}
+              />
+            )}
+
+            {tab === "Consommables" && (
+              <CatalogTable<ConsumableDefinition>
+                rows={draft.referenceData.consumables ?? []}
+                onChange={(consumables) => updateReferenceData({ consumables })}
+                addLabel="+ Ajouter un consommable"
+                emptyRow={() => ({ category: CONSUMABLE_CATEGORIES[0], name: "", price: null })}
+                columns={[
+                  {
+                    key: "category",
+                    label: "Catégorie",
+                    kind: "select",
+                    options: [...CONSUMABLE_CATEGORIES],
+                    get: (r) => r.category,
+                    set: (r, v) => ({ ...r, category: v || CONSUMABLE_CATEGORIES[0] }),
+                  },
+                  { key: "name", label: "Nom", kind: "text", get: (r) => r.name, set: (r, v) => ({ ...r, name: v }) },
+                  { key: "price", label: "Prix unitaire", kind: "text", get: (r) => r.price ?? "", set: (r, v) => ({ ...r, price: v || null }) },
                   {
                     key: "description",
                     label: "Description",

@@ -12,6 +12,7 @@ import {
   SkillsPanel,
   WeaponsArmorPanel,
   PsyPowersPanel,
+  ConsumablesPanel,
   AdvantagesPanel,
   EquipmentPanel,
   NotesPanel,
@@ -226,6 +227,18 @@ export default function CharacterSheet() {
     return transferredTo;
   }
 
+  // Achat (+) / utilisation (−) d'un consommable — cf. ConsumablesPanel et
+  // characters.ts POST /:id/consumables (prix du catalogue appliqué côté
+  // serveur). Hors mode édition uniquement : la fiche renvoyée remplace
+  // l'état local. L'erreur (solde/stock insuffisant) est relancée pour que
+  // le panneau l'affiche au plus près du formulaire.
+  async function handleConsumableChange(name: string, delta: number) {
+    if (!id) return;
+    const { character: saved, referenceData: savedReferenceData } = await api.changeConsumable(id, name, delta);
+    setCharacter(saved);
+    setReferenceData(savedReferenceData);
+  }
+
   // Le MJ "accepte" un solde négatif (avertissement rouge de BudgetPanel) en
   // ajoutant le déficit à l'XP gagnée — tout point donné ou approuvé par le
   // MJ s'y cumule, les points de départ restant ceux de la création. Plutôt que de laisser
@@ -352,6 +365,13 @@ export default function CharacterSheet() {
         update={update}
         onSetActivePower={setActivePower}
         referenceData={referenceData}
+      />
+      <ConsumablesPanel
+        character={character}
+        editing={editing}
+        canEdit={canEdit}
+        referenceData={referenceData}
+        onChange={handleConsumableChange}
       />
       <AdvantagesPanel character={character} editing={editing} update={update} referenceData={referenceData} />
       <EquipmentPanel character={character} editing={editing} update={update} referenceData={referenceData} />

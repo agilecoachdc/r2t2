@@ -227,6 +227,23 @@ navigateur intégré, cf. session de build).
       les deux reviennent. Sur le Suivi des constantes, chaque tuile affiche "XP gagnée X · Solde Y"
       (Y en rouge si négatif), cohérent avec la fiche.
 
+### Consommables
+
+- [ ] Admin, `/admin/jeux` → règle ADD40K : onglet "Consommables" entre "Équipement & cyber" et
+      "Pouvoirs psy", avec les munitions (Pistolets 5 Cr, Fusils 5 Cr…) et les 3 grenades ;
+      l'onglet "Équipement & cyber" ne contient plus de rubrique "Munitions".
+- [ ] Fiche (propriétaire, hors édition) : section "Consommables" sous "Pouvoirs psy". Choisir
+      "Pistolets", quantité 3, "Acheter (15 Cr)" → ligne "Pistolets × 3", crédits −15.
+- [ ] "+1" sur cette ligne → × 4, crédits −5 ; "−1" → × 3, crédits inchangés ; descendre à 0 →
+      ligne retirée.
+- [ ] Acheter au-delà du solde → bouton désactivé ; appel direct → 400 "Solde insuffisant".
+- [ ] Consommable à prix non fixé (ex. "Dominion") → ajouté sans débit.
+- [ ] Mode édition : section en lecture seule (pas de boutons), message "hors du mode édition" ;
+      "Enregistrer" ne change pas les consommables.
+- [ ] `PUT /api/characters/<id>` avec `consumables: [{ name: "X", quantity: 99 }]` → ignoré.
+- [ ] Autre joueur du groupe, `POST /api/characters/<perso-B>/consumables` → 403.
+- [ ] Documentation du groupe : section "Consommables" listant le catalogue.
+
 ## §4 — Permissions
 
 - [ ] Connecté en tant que joueur A, `GET /api/characters/<perso-B>` → 200, `canEdit: false`,

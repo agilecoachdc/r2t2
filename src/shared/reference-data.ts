@@ -8,6 +8,8 @@
 //    l'économie du jeu depuis sa mise à jour ;
 //  - le catalogue `equipment` (Équipement & cyber), absent du classeur Excel,
 //    repris intégralement des tableaux du même livre des prix ;
+//  - le catalogue `consumables` (munitions sorties d'`equipment`, grenades
+//    recopiées depuis `weapons`) ;
 //  - la table `races` (attributeBonus/tailleBonus/skillPoints), alignée sur
 //    la dernière table de règles fournie par le MJ (11 peuples : ajout de
 //    Thri-Kreen, Gobelin, Drow ; correctifs INT sur Orc/Gnome ; Rohirim
@@ -1187,69 +1189,6 @@ export const referenceData: ReferenceData = {
       "description": "Micro-organismes doublant le rythme de guérison."
     },
     {
-      "category": "Munitions",
-      "name": "Pistolets",
-      "essence": null,
-      "price": 5.0,
-      "description": "Chargeur standard de pistolet."
-    },
-    {
-      "category": "Munitions",
-      "name": "Fusils",
-      "essence": null,
-      "price": 5.0,
-      "description": "Chargeur standard de fusil."
-    },
-    {
-      "category": "Munitions",
-      "name": "Wild Predator",
-      "essence": null,
-      "price": 6.0,
-      "description": "Munitions Wild Predator."
-    },
-    {
-      "category": "Munitions",
-      "name": "Silverhawk",
-      "essence": null,
-      "price": 10.0,
-      "description": "Munitions Cybertech Silverhawk."
-    },
-    {
-      "category": "Munitions",
-      "name": "Pistolet Gauss / Railgun",
-      "essence": null,
-      "price": 20.0,
-      "description": "Munitions Gauss / Railgun."
-    },
-    {
-      "category": "Munitions",
-      "name": "Dominion",
-      "essence": null,
-      "price": null,
-      "description": "Munitions Dominion (prix non fixé)."
-    },
-    {
-      "category": "Munitions",
-      "name": "Inferno",
-      "essence": null,
-      "price": null,
-      "description": "Recharge Inferno (prix non fixé)."
-    },
-    {
-      "category": "Munitions",
-      "name": "RPG",
-      "essence": null,
-      "price": null,
-      "description": "Roquette Wild RPG (prix non fixé)."
-    },
-    {
-      "category": "Munitions",
-      "name": "Munition spéciale",
-      "essence": null,
-      "price": null,
-      "description": "Anti-personnel, perforant, incendiaire ou poison : prix de la munition de base ×2."
-    },
-    {
       "category": "Exosquelettes & armures mobiles",
       "name": "Diamond",
       "essence": null,
@@ -1765,6 +1704,85 @@ export const referenceData: ReferenceData = {
       "label": "Dans les nuages: -30",
       "value": -30.0,
       "description": "On ne peut prendre cet inconvénient avec l'avantage concentration. Bien que vous n'oubliiez pas certaines choses comme votre adresse ou votre nom, vous en oubliez par contre d'autres telles que noms, adresses des autres et même ce que vous avez mangé récemment. A chaque fois que vous devrez vous rappeler de quelque chose, vous devrez faire un jet d'intelligence -3."
+    }
+  ],
+  // Catalogue "Consommables" (achetés en quantité, épuisés à l'usage) :
+  // munitions sorties du bloc `equipment` (ex-rubrique "Munitions" de
+  // "Équipement & cyber"), grenades recopiées depuis `weapons` (elles y
+  // restent pour le score de l'arme de jet). Même opération appliquée
+  // directement à la règle "add40k" en production.
+  "consumables": [
+    {
+      "category": "Munitions",
+      "name": "Pistolets",
+      "price": 5.0,
+      "description": "Chargeur standard de pistolet."
+    },
+    {
+      "category": "Munitions",
+      "name": "Fusils",
+      "price": 5.0,
+      "description": "Chargeur standard de fusil."
+    },
+    {
+      "category": "Munitions",
+      "name": "Wild Predator",
+      "price": 6.0,
+      "description": "Munitions Wild Predator."
+    },
+    {
+      "category": "Munitions",
+      "name": "Silverhawk",
+      "price": 10.0,
+      "description": "Munitions Cybertech Silverhawk."
+    },
+    {
+      "category": "Munitions",
+      "name": "Pistolet Gauss / Railgun",
+      "price": 20.0,
+      "description": "Munitions Gauss / Railgun."
+    },
+    {
+      "category": "Munitions",
+      "name": "Dominion",
+      "price": null,
+      "description": "Munitions Dominion (prix non fixé)."
+    },
+    {
+      "category": "Munitions",
+      "name": "Inferno",
+      "price": null,
+      "description": "Recharge Inferno (prix non fixé)."
+    },
+    {
+      "category": "Munitions",
+      "name": "RPG",
+      "price": null,
+      "description": "Roquette Wild RPG (prix non fixé)."
+    },
+    {
+      "category": "Munitions",
+      "name": "Munition spéciale",
+      "price": null,
+      "description": "Anti-personnel, perforant, incendiaire ou poison : prix de la munition de base ×2."
+    },
+    {
+      "category": "Grenades & explosifs",
+      "name": "Grenades incapacitantes",
+      "price": 150.0,
+      "description": "Grenade de jet, à usage unique — dégâts 5, RA 2 (cf. Armes)."
+    },
+    {
+      "category": "Grenades & explosifs",
+      "name": "Grenades à plasma",
+      "price": 150.0,
+      "description": "Grenade de jet, à usage unique — dégâts 5, RA 2 (cf. Armes)."
+    },
+    {
+      "category": "Grenades & explosifs",
+      "name": "Grenade à fragmentation",
+      "price": 100.0,
+      "description": "Grenade de jet, à usage unique — dégâts 5, RA 2 (cf. Armes)."
     }
   ]
 };

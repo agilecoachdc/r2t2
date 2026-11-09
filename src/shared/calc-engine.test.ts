@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  applyConsumableChange,
   computeCharacter,
   getActionRank,
   getActivePsyPowerAttributeBoost,
@@ -762,7 +763,7 @@ describe("catalogue — mise à jour livre des prix (ADD40K_prix_completes.docx)
     expect(parseCatalogPrice(armor("Cuir souple (torse, bras)")?.price)).toBeNull();
   });
 
-  it("catalogue Équipement & cyber : 8 rubriques peuplées", () => {
+  it("catalogue Équipement & cyber : 7 rubriques peuplées (munitions passées aux consommables)", () => {
     const categories = new Set(referenceData.equipment.map((e) => e.category));
     expect(categories).toEqual(
       new Set([
@@ -772,7 +773,6 @@ describe("catalogue — mise à jour livre des prix (ADD40K_prix_completes.docx)
         "Cyberoptique",
         "Améliorations cyber",
         "Améliorations biologiques",
-        "Munitions",
         "Exosquelettes & armures mobiles",
       ]),
     );
@@ -780,5 +780,70 @@ describe("catalogue — mise à jour livre des prix (ADD40K_prix_completes.docx)
     expect(equip("Améliorations cyber", "Booster REF")).toMatchObject({ essence: 4, price: 10000 });
     expect(equip("Améliorations biologiques", "Booster REF")).toMatchObject({ essence: 1, price: 20000 });
     expect(equip("Exosquelettes & armures mobiles", "Silver Warlord")).toMatchObject({ price: 150000 });
+  });
+});
+
+describe("consommables (applyConsumableChange)", () => {
+  const ref = {
+    ...referenceData,
+    consumables: [
+      { category: "Munitions", name: "Pistolets", price: 5 },
+      { category: "Munitions", name: "Dominion", price: null },
+    ],
+  };
+
+  it("catalogue de base : munitions + grenades", () => {
+    const names = (referenceData.consumables ?? []).map((c) => c.name);
+    expect(names).toContain("Pistolets");
+    expect(names).toContain("Grenade à fragmentation");
+    expect(referenceData.equipment.some((e) => e.category === "Munitions")).toBe(false);
+  });
+
+  it("achat : débite prix × quantité et crée la ligne", () => {
+    expect(applyConsumableChange({ credits: 100 }, ref, "Pistolets", 3)).toEqual({
+      consumables: [{ name: "Pistolets", quantity: 3 }],
+      credits: 85,
+      cost: 15,
+    });
+  });
+
+  it("achat : cumule sur une ligne existante", () => {
+    const r = applyConsumableChange({ credits: 100, consumables: [{ name: "Pistolets", quantity: 2 }] }, ref, "Pistolets", 1);
+    expect(r).toEqual({ consumables: [{ name: "Pistolets", quantity: 3 }], credits: 95, cost: 5 });
+  });
+
+  it("achat refusé si solde insuffisant ou hors catalogue", () => {
+    expect(applyConsumableChange({ credits: 4 }, ref, "Pistolets", 1)).toHaveProperty("error");
+    expect(applyConsumableChange({ credits: 100 }, ref, "Inconnu", 1)).toHaveProperty("error");
+  });
+
+  it("prix non chiffré : achat gratuit, non bloquant", () => {
+    expect(applyConsumableChange({ credits: 0 }, ref, "Dominion", 2)).toEqual({
+      consumables: [{ name: "Dominion", quantity: 2 }],
+      credits: 0,
+      cost: 0,
+    });
+  });
+
+  it("utilisation : retire sans rembourser, ligne supprimée à 0", () => {
+    const stock = { credits: 10, consumables: [{ name: "Pistolets", quantity: 2 }] };
+    expect(applyConsumableChange(stock, ref, "Pistolets", -1)).toEqual({
+      consumables: [{ name: "Pistolets", quantity: 1 }],
+      credits: 10,
+      cost: 0,
+    });
+    expect(applyConsumableChange(stock, ref, "Pistolets", -2)).toEqual({ consumables: [], credits: 10, cost: 0 });
+  });
+
+  it("utilisation refusée au-delà du stock ; quantité nulle ou décimale refusée", () => {
+    const stock = { credits: 10, consumables: [{ name: "Pistolets", quantity: 1 }] };
+    expect(applyConsumableChange(stock, ref, "Pistolets", -2)).toHaveProperty("error");
+    expect(applyConsumableChange(stock, ref, "Pistolets", 0)).toHaveProperty("error");
+    expect(applyConsumableChange(stock, ref, "Pistolets", 1.5)).toHaveProperty("error");
+  });
+
+  it("utilisation possible même si la ligne a quitté le catalogue", () => {
+    const stock = { credits: 0, consumables: [{ name: "Ancien", quantity: 1 }] };
+    expect(applyConsumableChange(stock, ref, "Ancien", -1)).toEqual({ consumables: [], credits: 0, cost: 0 });
   });
 });

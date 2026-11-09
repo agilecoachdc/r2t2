@@ -128,10 +128,23 @@ constantes" (icône 💵).
   déduit. Le prix catalogue des armes existait déjà (`WeaponDefinition.price`) ; celui des armures
   est nouveau (`ArmorDefinition.price`, colonne "Prix" ajoutée à l'éditeur de catalogue admin,
   onglet "Armures") — absent (`null`) tant qu'un admin ne l'a pas saisi.
+- **Consommables** (`ReferenceData.consumables`, `ConsumableDefinition` ; stock
+  `Character.consumables: ConsumableEntry[]`, `{ name, quantity }`) : objets achetés en quantité et
+  épuisés à l'usage, isolés de "Équipement & cyber". Rubriques `CONSUMABLE_CATEGORIES` (Munitions,
+  Grenades & explosifs, Soins & drogues, Divers) ; pour ADD40K, les 9 lignes "Munitions" ont été
+  sorties d'`equipment` et les 3 grenades recopiées depuis `weapons` (elles y restent pour le score
+  de l'arme de jet) — même opération appliquée directement à la règle `add40k` en production.
+  Onglet admin "Consommables" (`/admin/jeux`), section Documentation "Consommables", et section
+  "Consommables" de la fiche sous les pouvoirs psy : achat (prix unitaire × quantité débité des
+  crédits, refusé si solde insuffisant ; prix non chiffré = gratuit, non bloquant) et utilisation
+  (−1, sans remboursement) **hors mode édition**, via `POST /api/characters/:id/consumables` qui
+  applique le prix du catalogue côté serveur (`calc-engine.applyConsumableChange`). Le `PUT` de
+  fiche ignore `consumables` : ce champ n'a qu'un seul point d'écriture. Les deux champs sont
+  optionnels (absents des règles/fiches antérieures, traités comme `[]`, pas de migration).
 - **Catalogue "Équipement & cyber"** (`ReferenceData.equipment`, `EquipmentDefinition`) : rubriques
   du livre des prix (`Mon Drive/ADD40K/ADD40K_prix_completes.docx`) — accessoires de mode,
   cyberarmes, cybernétique fonctionnelle, cyberoptique, améliorations cyber et biologiques,
-  munitions, exosquelettes. Chaque ligne porte une `category`, un `name`, une `essence` optionnelle
+  exosquelettes (les munitions sont passées au catalogue "Consommables", ci-dessous). Chaque ligne porte une `category`, un `name`, une `essence` optionnelle
   (coût d'humanité, purement informatif — non câblé dans le moteur) et un `price` de même forme que
   les armes/armures. Éditable via l'éditeur de catalogue admin (onglet "Équipement & cyber"),
   consultable dans la Documentation (section "Équipement & cyber", groupée par rubrique), et proposé

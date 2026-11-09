@@ -99,6 +99,14 @@ export const api = {
       referenceData: ReferenceData;
       transferredTo: string | null;
     }>(`/characters/${id}/spend-credits`, { method: "POST", body: JSON.stringify({ amount, toCharacterId }) }),
+  changeConsumable: (id: string, name: string, delta: number) =>
+    request<{
+      character: Character;
+      computed: CharacterComputed;
+      canEdit: boolean;
+      referenceData: ReferenceData;
+      cost: number;
+    }>(`/characters/${id}/consumables`, { method: "POST", body: JSON.stringify({ name, delta }) }),
   createNpc: (groupId: string, input: { name: string; portraitUrl?: string | null; race?: string; vit: number; vol: number }) =>
     request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData }>(
       `/characters?groupId=${encodeURIComponent(groupId)}`,

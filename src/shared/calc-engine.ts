@@ -33,6 +33,7 @@ import type {
   Attribute,
   AttributeScores,
   Character,
+  ConsumableEntry,
   ReferenceData,
   SkillDefinition,
   SkillEntry,
@@ -770,6 +771,52 @@ export function parseCatalogPrice(price: number | string | null | undefined): nu
   if (trimmed === "") return null;
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Achat (`delta` > 0) ou utilisation (`delta` < 0) d'un consommable — cf.
+ * Character.consumables, ReferenceData.consumables. Logique pure, partagée
+ * par la route POST /api/characters/:id/consumables (seule à l'appliquer,
+ * avec le catalogue du groupe chargé côté serveur — le client ne fixe
+ * jamais le prix) et par les tests.
+ *  - Achat : le consommable doit exister au catalogue ; coût = prix
+ *    unitaire × quantité, refusé si supérieur aux crédits. Un prix non
+ *    chiffré (cf. parseCatalogPrice) n'est pas bloquant : coût 0, même règle
+ *    que tryPurchase pour l'équipement.
+ *  - Utilisation : retire du stock, sans remboursement ; refusé au-delà de
+ *    la quantité détenue. Possible même si la ligne a disparu du catalogue.
+ * Une ligne tombée à 0 est retirée de la liste.
+ */
+export function applyConsumableChange(
+  character: Pick<Character, "consumables" | "credits">,
+  reference: ReferenceData,
+  name: string,
+  delta: number,
+): { consumables: ConsumableEntry[]; credits: number; cost: number } | { error: string } {
+  if (!Number.isInteger(delta) || delta === 0) return { error: "Quantité requise (entier non nul)" };
+  const stock = character.consumables ?? [];
+  const credits = character.credits ?? 0;
+  const held = stock.find((c) => c.name === name)?.quantity ?? 0;
+
+  let cost = 0;
+  if (delta > 0) {
+    const def = (reference.consumables ?? []).find((c) => c.name === name);
+    if (!def) return { error: `Consommable introuvable au catalogue : ${name}` };
+    cost = (parseCatalogPrice(def.price) ?? 0) * delta;
+    if (cost > credits) return { error: `Solde insuffisant (${cost} Cr requis, ${credits} Cr disponible)` };
+  } else if (-delta > held) {
+    return { error: `Quantité insuffisante (${held} en stock)` };
+  }
+
+  const nextQuantity = held + delta;
+  const others = stock.filter((c) => c.name !== name);
+  const consumables =
+    nextQuantity > 0
+      ? held > 0
+        ? stock.map((c) => (c.name === name ? { ...c, quantity: nextQuantity } : c))
+        : [...others, { name, quantity: nextQuantity }]
+      : others;
+  return { consumables, credits: credits - cost, cost };
 }
 
 export function getRaceSkillPoints(character: Pick<Character, "race">, reference: ReferenceData): number {

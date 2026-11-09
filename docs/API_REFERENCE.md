@@ -101,7 +101,7 @@ chaque réponse.
   `owner_username`, un même compte pouvant posséder des personnages dans plusieurs groupes — ou
   rôle `gm` membre du groupe du personnage).
 - Entrée : `Partial<Character>` — fusionné avec les données existantes côté serveur
-  (`id` et `ownerUsername` du client sont ignorés). `xp` ("XP gagnée depuis la création" à
+  (`id`, `ownerUsername` et `consumables` du client sont ignorés — les consommables ne s'écrivent que via `POST /:id/consumables`). `xp` ("XP gagnée depuis la création" à
   l'écran) est clampé à `0` minimum si le patch en envoie un négatif (import Excel ou autre) —
   cf. `POST /:id/xp` ci-dessous pour les retraits du MJ. Une éventuelle clé héritée
   `xpAvailable` est supprimée de la fiche à l'enregistrement (champ retiré, doublon du solde). C'est aussi cette route qui gère, en dehors du mode édition de la fiche,
@@ -161,6 +161,20 @@ chaque réponse.
 - Erreurs : `403` (ni propriétaire ni MJ du groupe), `404` (personnage introuvable), `400` (montant
   manquant/non positif, solde insuffisant, destinataire introuvable/hors groupe/soi-même).
 
+
+### `POST /api/characters/:id/consumables`
+- Auth : session + `canEditCharacter` (propriétaire, MJ du groupe ou admin — même garde que
+  `spend-credits`).
+- Entrée : `{ name: string, delta: number }` — `delta` entier non nul : > 0 = achat de `delta`
+  unités, < 0 = utilisation (retrait du stock).
+- Achat : `name` doit exister dans `referenceData.consumables` de la règle du groupe ; coût =
+  prix unitaire × `delta` (prix lu côté serveur, `parseCatalogPrice` ; non chiffré = 0), débité de
+  `credits`. Utilisation : retire du stock sans remboursement ; ligne supprimée à 0. Logique :
+  `calc-engine.applyConsumableChange`.
+- Sortie : `{ character, computed, canEdit: true, referenceData, cost: number }`.
+- Erreurs : `403` (ni propriétaire ni MJ), `404` (personnage introuvable), `400` (champ manquant,
+  quantité non entière ou nulle, consommable hors catalogue à l'achat, solde insuffisant, stock
+  insuffisant).
 ### `POST /api/characters/group-current-rank?groupId=`
 - Auth : session + rôle `gm` membre du groupe ciblé.
 - Persiste le rang courant du round (boutons Précédent/Suivant, écran "Suivi des constantes") côté

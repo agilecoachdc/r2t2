@@ -49,10 +49,18 @@ export const EQUIPMENT_CATEGORIES = [
   "Cyberoptique",
   "Améliorations cyber",
   "Améliorations biologiques",
-  "Munitions",
   "Exosquelettes & armures mobiles",
 ] as const;
 export type EquipmentCategory = (typeof EQUIPMENT_CATEGORIES)[number];
+
+/**
+ * Rubriques du catalogue "Consommables" (ReferenceData.consumables) — objets
+ * achetés en quantité et épuisés à l'usage (munitions, grenades, soins…),
+ * isolés de "Équipement & cyber" (objets durables, une ligne par objet).
+ * Texte libre toléré pour un catalogue d'une autre règle.
+ */
+export const CONSUMABLE_CATEGORIES = ["Munitions", "Grenades & explosifs", "Soins & drogues", "Divers"] as const;
+export type ConsumableCategory = (typeof CONSUMABLE_CATEGORIES)[number];
 
 /** Score de base saisi par attribut, avant bonus racial/tech. */
 export type AttributeScores = Record<Attribute, number>;
@@ -256,6 +264,19 @@ export interface EquipmentEntry {
   price?: number;
 }
 
+/**
+ * Stock d'un consommable sur la fiche (Character.consumables) — référence
+ * une ligne du catalogue de la règle (ReferenceData.consumables) par son
+ * nom. Modifié uniquement par POST /api/characters/:id/consumables (achat
+ * = prix catalogue débité des crédits, utilisation = quantité retirée),
+ * jamais par l'édition de la fiche.
+ */
+export interface ConsumableEntry {
+  name: string;
+  /** Toujours > 0 — une ligne tombée à 0 est retirée de la liste. */
+  quantity: number;
+}
+
 export interface Character {
   id: string;
   /** username du joueur propriétaire (édition réservée à ce joueur + MJ). */
@@ -322,6 +343,12 @@ export interface Character {
    * nécessaire (colonne `data` JSON libre).
    */
   activePsyPowers?: ActivePsyPower[];
+  /**
+   * Consommables détenus (munitions, grenades, soins…) — cf.
+   * ConsumableEntry. Absent des fiches créées avant l'ajout de ce champ,
+   * traité comme `[]` (pas de migration, colonne `data` JSON libre).
+   */
+  consumables?: ConsumableEntry[];
 
   // Budget de points — voir BudgetPanel (CharacterSheetPanels.tsx) pour le
   // détail affiché à l'écran ("Total dispo" = raceSkillPoints + pointsDepart
@@ -457,6 +484,19 @@ export interface EquipmentDefinition {
   description?: string;
 }
 
+/** Ligne du catalogue "Consommables" d'une règle — cf. CONSUMABLE_CATEGORIES. */
+export interface ConsumableDefinition {
+  category: ConsumableCategory | (string & {});
+  name: string;
+  /**
+   * Prix unitaire (Cr) — même forme que EquipmentDefinition.price. Un prix
+   * non chiffré (null, fourchette texte) n'est jamais bloquant : l'achat
+   * passe sans rien débiter (même règle que tryPurchase pour l'équipement).
+   */
+  price?: number | string | null;
+  description?: string;
+}
+
 export interface ReferenceData {
   races: RaceDefinition[];
   skillCostTable: SkillCostTable;
@@ -467,6 +507,11 @@ export interface ReferenceData {
   advantages: AdvantageDefinition[];
   /** Catalogue "Équipement & cyber" — cf. EquipmentDefinition. Peut être vide (règle sans matériel catalogué). */
   equipment: EquipmentDefinition[];
+  /**
+   * Catalogue "Consommables" — cf. ConsumableDefinition. Optionnel : absent
+   * des règles enregistrées avant l'ajout de ce champ, traité comme `[]`.
+   */
+  consumables?: ConsumableDefinition[];
 }
 
 // ---------------------------------------------------------------------------

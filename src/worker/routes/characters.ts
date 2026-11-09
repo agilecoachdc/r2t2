@@ -21,6 +21,7 @@ import type { PublicUser } from "../../shared/types";
 import type { AttributeScores, Character, CharacterSummary, ReferenceData } from "../../shared/types";
 import { ATTRIBUTES } from "../../shared/types";
 import {
+  applyConsumableChange,
   computeCharacter,
   getBoostedAttributes,
   getBoostedSkillNames,
@@ -311,6 +312,11 @@ characterRoutes.put("/:id", async (c) => {
   const incoming = await c.req.json<Partial<Character>>().catch(() => null);
   if (!incoming) return c.json({ error: "JSON invalide" }, 400);
 
+  // Les consommables ne passent que par POST /:id/consumables (prix du
+  // catalogue appliqué côté serveur) — une sauvegarde de fiche ne peut ni
+  // les créer ni les modifier, la valeur en base est conservée.
+  delete incoming.consumables;
+
   const current: Character = JSON.parse(existing.data);
   // On fusionne plutôt que remplacer intégralement : le client peut n'envoyer
   // que la section modifiée (ex. juste `skills`), le reste de la fiche reste
@@ -334,7 +340,7 @@ characterRoutes.put("/:id", async (c) => {
 
   const referenceData: ReferenceData = existing.player_group_id
     ? await getReferenceDataForGroup(c.env.DB, existing.player_group_id)
-    : { races: [], skillCostTable: {}, skills: [], weapons: [], armor: [], psyPowers: [], advantages: [], equipment: [] };
+    : { races: [], skillCostTable: {}, skills: [], weapons: [], armor: [], psyPowers: [], advantages: [], equipment: [], consumables: [] };
 
   await c.env.DB.prepare(
     "UPDATE characters SET name = ?1, race = ?2, data = ?3, updated_at = ?4 WHERE id = ?5",
@@ -507,6 +513,51 @@ characterRoutes.post("/:id/spend-credits", async (c) => {
   const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
   const computed = computeCharacter(updated, referenceData);
   return c.json({ character: updated, computed, canEdit: true, referenceData, transferredTo: recipientName });
+});
+
+// Consommables (munitions, grenades, soins…) — section "Consommables" de la
+// fiche, utilisable en jeu sans passer en mode édition. `delta` > 0 =
+// achat au prix du catalogue de la règle du groupe (chargé ici, jamais
+// fourni par le client), débité des crédits ; `delta` < 0 = utilisation,
+// retirée du stock sans remboursement. Même garde que spend-credits
+// (propriétaire ou MJ du groupe, ou admin). Règles détaillées :
+// calc-engine.applyConsumableChange.
+characterRoutes.post("/:id/consumables", async (c) => {
+  const id = c.req.param("id");
+  const user = c.get("user");
+
+  const existing = await c.env.DB.prepare(
+    "SELECT id, data, owner_username, player_group_id FROM characters WHERE id = ?1",
+  )
+    .bind(id)
+    .first<CharacterRow>();
+  if (!existing) return c.json({ error: "Personnage introuvable" }, 404);
+  if (!existing.player_group_id || !canEditCharacter(user, existing.owner_username, existing.player_group_id)) {
+    return c.json({ error: "Vous ne pouvez gérer que les consommables de votre propre personnage" }, 403);
+  }
+
+  const body = await c.req.json<{ name?: string; delta?: number }>().catch(() => null);
+  if (!body?.name || typeof body.delta !== "number") {
+    return c.json({ error: "Consommable et quantité requis" }, 400);
+  }
+
+  const current: Character = JSON.parse(existing.data);
+  const referenceData = await getReferenceDataForGroup(c.env.DB, existing.player_group_id);
+  const result = applyConsumableChange(current, referenceData, body.name, body.delta);
+  if ("error" in result) return c.json({ error: result.error }, 400);
+
+  const updated: Character = {
+    ...current,
+    consumables: result.consumables,
+    credits: result.credits,
+    updatedAt: new Date().toISOString(),
+  };
+  await c.env.DB.prepare("UPDATE characters SET data = ?1, updated_at = ?2 WHERE id = ?3")
+    .bind(JSON.stringify(updated), updated.updatedAt, id)
+    .run();
+
+  const computed = computeCharacter(updated, referenceData);
+  return c.json({ character: updated, computed, canEdit: true, referenceData, cost: result.cost });
 });
 
 // "Fin de combat" — bouton MJ sur l'écran "Suivi des constantes" : désactive

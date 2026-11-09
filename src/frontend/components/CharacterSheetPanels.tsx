@@ -1508,6 +1508,167 @@ export function PsyPowersPanel({
   );
 }
 
+/**
+ * Consommables (munitions, grenades, soins…) — stock tenu par quantité,
+ * lié au catalogue "Consommables" de la règle (ReferenceData.consumables).
+ * Utilisable en jeu SANS passer en mode édition : chaque achat/utilisation
+ * part immédiatement au serveur (POST /api/characters/:id/consumables, qui
+ * applique le prix du catalogue et débite les crédits). Volontairement
+ * désactivé pendant l'édition : la réponse serveur remplace la fiche
+ * locale, ce qui écraserait les modifications en cours non enregistrées.
+ */
+export function ConsumablesPanel({
+  character,
+  editing,
+  canEdit,
+  referenceData,
+  onChange,
+}: {
+  character: Character;
+  editing: boolean;
+  canEdit: boolean;
+  referenceData: ReferenceData;
+  /** Lève une erreur (ex. solde insuffisant) affichée localement par le panneau. */
+  onChange: (name: string, delta: number) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const catalog = referenceData.consumables ?? [];
+  const stock = character.consumables ?? [];
+  const credits = character.credits ?? 0;
+  const canAct = canEdit && !editing;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pick, setPick] = useState("");
+  const [quantity, setQuantity] = useState(1);
+
+  const catalogByCategory = catalog.reduce<Record<string, typeof catalog>>((acc, item) => {
+    (acc[item.category] ??= []).push(item);
+    return acc;
+  }, {});
+  const unitPrice = (name: string) => parseCatalogPrice(catalog.find((c) => c.name === name)?.price);
+  const pickedPrice = pick ? unitPrice(pick) : null;
+  const qty = Number.isInteger(quantity) && quantity > 0 ? quantity : 0;
+
+  async function run(name: string, delta: number) {
+    setBusy(true);
+    setError(null);
+    try {
+      await onChange(name, delta);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("Échec de la mise à jour des consommables"));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleBuy(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pick || qty === 0) return;
+    if (await run(pick, qty)) {
+      setPick("");
+      setQuantity(1);
+    }
+  }
+
+  return (
+    <Section title={t("Consommables")}>
+      {stock.length === 0 ? (
+        <p className="text-sm text-slate-500">{t("Aucun consommable.")}</p>
+      ) : (
+        <ul className="space-y-1 text-sm text-slate-200">
+          {stock.map((c) => {
+            const def = catalog.find((d) => d.name === c.name);
+            const price = unitPrice(c.name);
+            return (
+              <li key={c.name} className="flex items-center gap-2">
+                <span className="flex-1">
+                  {c.name}
+                  {def && <span className="text-xs text-slate-500"> · {def.category}</span>}
+                  {price != null && <span className="text-xs text-slate-500"> · {price} Cr</span>}
+                </span>
+                {canAct && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => run(c.name, -1)}
+                    title={t("Utiliser (retire 1 du stock)")}
+                    className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+                  >
+                    −1
+                  </button>
+                )}
+                <span className="w-10 text-center font-semibold tabular-nums">× {c.quantity}</span>
+                {canAct && def && (
+                  <button
+                    type="button"
+                    disabled={busy || (price != null && price > credits)}
+                    onClick={() => run(c.name, 1)}
+                    title={t("Acheter 1 (débite le prix du catalogue)")}
+                    className="rounded bg-indigo-600 px-2 py-0.5 text-xs text-white hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    +1
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {error && <p className="mt-2 rounded-lg bg-red-950 px-3 py-2 text-xs text-red-300">⚠️ {error}</p>}
+
+      {canAct && catalog.length > 0 && (
+        <form onSubmit={handleBuy} className="mt-3 flex flex-wrap items-center gap-2">
+          <select
+            value={pick}
+            onChange={(e) => {
+              setPick(e.target.value);
+              setError(null);
+            }}
+            className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm"
+          >
+            <option value="">{t("— acheter depuis le catalogue Consommables —")}</option>
+            {Object.entries(catalogByCategory).map(([category, items]) => (
+              <optgroup key={category} label={category}>
+                {items.map((item) => {
+                  const price = parseCatalogPrice(item.price);
+                  return (
+                    <option key={`${category}-${item.name}`} value={item.name}>
+                      {item.name} — {price != null ? `${price} Cr` : t("prix non fixé")}
+                    </option>
+                  );
+                })}
+              </optgroup>
+            ))}
+          </select>
+          <NumberInput value={quantity} onChange={setQuantity} className="w-16" />
+          <button
+            type="submit"
+            disabled={busy || !pick || qty === 0 || (pickedPrice != null && pickedPrice * qty > credits)}
+            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+          >
+            {t("Acheter")}
+            {pick && pickedPrice != null && qty > 0 ? ` (${pickedPrice * qty} Cr)` : ""}
+          </button>
+        </form>
+      )}
+      {canAct && (
+        <p className="mt-1 text-xs text-slate-500">
+          {t("Crédits disponibles")} : {credits} Cr
+        </p>
+      )}
+      {canEdit && editing && (
+        <p className="mt-2 text-xs text-slate-500">{t("Les consommables s'achètent et s'utilisent hors du mode édition.")}</p>
+      )}
+      {canAct && catalog.length === 0 && (
+        <p className="mt-2 text-xs text-slate-500">{t("Aucun consommable au catalogue de cette règle.")}</p>
+      )}
+    </Section>
+  );
+}
+
 export function AdvantagesPanel({
   character,
   editing,

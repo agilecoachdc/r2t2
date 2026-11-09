@@ -260,6 +260,18 @@ const EN: Record<string, string> = {
   "Catégorie": "Category",
   "Essence": "Essence",
   "— depuis le catalogue Équipement & cyber —": "— from the Equipment & cyber catalogue —",
+  // Consommables
+  "Consommables": "Consumables",
+  "Aucun consommable.": "No consumables.",
+  "Utiliser (retire 1 du stock)": "Use (removes 1 from stock)",
+  "Acheter 1 (débite le prix du catalogue)": "Buy 1 (charges the catalogue price)",
+  "— acheter depuis le catalogue Consommables —": "— buy from the Consumables catalogue —",
+  "prix non fixé": "price not set",
+  "Acheter": "Buy",
+  "Crédits disponibles": "Available credits",
+  "Les consommables s'achètent et s'utilisent hors du mode édition.": "Consumables are bought and used outside edit mode.",
+  "Aucun consommable au catalogue de cette règle.": "No consumables in this ruleset's catalogue.",
+  "Échec de la mise à jour des consommables": "Failed to update consumables",
 };
 
 const DICTIONARIES: Partial<Record<Language, Record<string, string>>> = { en: EN };
