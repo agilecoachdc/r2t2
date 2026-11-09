@@ -965,3 +965,14 @@ describe("décompte des coups (fireShot)", () => {
     expect(r).toMatchObject({ consumables: [{ name: "Pistolets", quantity: 3, shotsLeft: 1 }] });
   });
 });
+
+describe("applyConsumableChange — consommables gratuits", () => {
+  it("ne débite aucun crédit quand free = true, même solde à 0", async () => {
+    const { applyConsumableChange } = await import("./calc-engine");
+    const reference = { consumables: [{ category: "Grenades", name: "Frag", price: "50" }] } as unknown as import("./types").ReferenceData;
+    const result = applyConsumableChange({ consumables: [], credits: 0 }, reference, "Frag", 3, false, true);
+    expect(result).toEqual({ consumables: [{ name: "Frag", quantity: 3 }], credits: 0, cost: 0 });
+    const paid = applyConsumableChange({ consumables: [], credits: 0 }, reference, "Frag", 1);
+    expect(paid).toHaveProperty("error");
+  });
+});

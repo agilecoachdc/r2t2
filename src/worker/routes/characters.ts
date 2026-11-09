@@ -20,6 +20,7 @@ import {
   getGroupCurrentRank,
   getGroupDriveUrl,
   getGroupImageUrl,
+  getGroupFreeConsumables,
   getGroupSheetsLocked,
   getReferenceDataForGroup,
 } from "../lib/reference";
@@ -66,6 +67,7 @@ characterRoutes.get("/", async (c) => {
   const groupDriveUrl = await getGroupDriveUrl(c.env.DB, groupId);
   const currentRank = await getGroupCurrentRank(c.env.DB, groupId);
   const sheetsLocked = await getGroupSheetsLocked(c.env.DB, groupId);
+  const freeConsumables = await getGroupFreeConsumables(c.env.DB, groupId);
   const { results } = await c.env.DB.prepare(
     "SELECT id, name, race, owner_username, data FROM characters WHERE player_group_id = ?1 ORDER BY name",
   )
@@ -101,7 +103,7 @@ characterRoutes.get("/", async (c) => {
     };
   });
 
-  return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl, currentRank, sheetsLocked });
+  return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl, currentRank, sheetsLocked, freeConsumables });
 });
 
 // Rang d'Action courant du round, écran "Suivi des constantes" — persisté
@@ -160,6 +162,32 @@ characterRoutes.post("/group-sheets-lock", async (c) => {
     .bind(body.locked ? 1 : 0, groupId)
     .run();
   return c.json({ ok: true, sheetsLocked: body.locked });
+});
+
+// "Consommables gratuits" — bouton MJ à côté du verrou, sur la ligne de
+// titre du "Suivi des constantes" : tant qu'il est actif, l'achat de
+// consommables (POST /:id/consumables, delta > 0) ne débite aucun crédit,
+// et reste possible même fiches verrouillées (aucun crédit n'est dépensé).
+// Typiquement : préparation dans l'arsenal d'alliés qui offrent l'équipement.
+characterRoutes.post("/group-free-consumables", async (c) => {
+  const user = c.get("user");
+  const groupId = c.req.query("groupId");
+  if (!canAccessGroup(user, groupId)) {
+    return c.json({ error: "Groupe introuvable ou non membre" }, 404);
+  }
+  if (!isGmOfGroup(user, groupId)) {
+    return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  }
+
+  const body = await c.req.json<{ free?: boolean }>().catch(() => null);
+  if (typeof body?.free !== "boolean") {
+    return c.json({ error: "free (booléen) requis" }, 400);
+  }
+
+  await c.env.DB.prepare("UPDATE player_groups SET free_consumables = ?1 WHERE id = ?2")
+    .bind(body.free ? 1 : 0, groupId)
+    .run();
+  return c.json({ ok: true, freeConsumables: body.free });
 });
 
 /** Le verrou de séance s'applique-t-il à cet utilisateur pour ce groupe ? (jamais au MJ/admin) */
@@ -238,6 +266,7 @@ characterRoutes.get("/:id", async (c) => {
     // `locked` : le verrou de séance s'applique à CET utilisateur (faux pour le MJ).
     sheetsLocked,
     locked: sheetsLocked && !isGmOfGroup(user, row.player_group_id),
+    freeConsumables: await getGroupFreeConsumables(c.env.DB, row.player_group_id),
   });
 });
 
@@ -602,9 +631,17 @@ characterRoutes.post("/:id/consumables", async (c) => {
   if (!body?.name || (body.fire !== true && typeof body.delta !== "number")) {
     return c.json({ error: "Consommable et quantité requis" }, 400);
   }
-  // Verrou de séance : l'achat (delta > 0) est bloqué, l'utilisation (−1,
-  // −1 coup) reste possible en jeu.
-  if (body.fire !== true && (body.delta as number) > 0 && (await isLockedFor(c.env.DB, user, existing.player_group_id))) {
+  // "Consommables gratuits" (MJ) : achat sans débit de crédits.
+  const free = await getGroupFreeConsumables(c.env.DB, existing.player_group_id);
+  // Verrou de séance : l'achat (delta > 0) est bloqué — sauf consommables
+  // gratuits, qui ne dépensent aucun crédit — l'utilisation (−1, −1 coup)
+  // reste possible en jeu.
+  if (
+    body.fire !== true &&
+    (body.delta as number) > 0 &&
+    !free &&
+    (await isLockedFor(c.env.DB, user, existing.player_group_id))
+  ) {
     return c.json({ error: LOCKED_MESSAGE }, 403);
   }
 
@@ -616,7 +653,7 @@ characterRoutes.post("/:id/consumables", async (c) => {
   const result =
     body.fire === true
       ? fireShot(current, referenceData, body.name, special)
-      : applyConsumableChange(current, referenceData, body.name, body.delta as number, special);
+      : applyConsumableChange(current, referenceData, body.name, body.delta as number, special, free);
   if ("error" in result) return c.json({ error: result.error }, 400);
 
   const updated: Character = {
@@ -637,6 +674,7 @@ characterRoutes.post("/:id/consumables", async (c) => {
     referenceData,
     cost: "cost" in result ? result.cost : 0,
     reloaded: "reloaded" in result ? result.reloaded : false,
+    freeConsumables: free,
   });
 });
 

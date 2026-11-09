@@ -258,8 +258,8 @@ incident du 2026-09-19 : le rang ne se mettait auparavant à jour que dans l'ong
 
 ### Verrouillage des fiches pendant la séance
 
-En haut de l'écran "Suivi des constantes", le bouton "Verrouiller les fiches" / "Déverrouiller les
-fiches" (`POST /api/characters/group-sheets-lock`, colonne `player_groups.sheets_locked`,
+Sur la ligne de titre de l'écran "Suivi des constantes" (explication au survol), le bouton
+"Verrouiller les fiches" / "Déverrouiller les fiches" (`POST /api/characters/group-sheets-lock`, colonne `player_groups.sheets_locked`,
 `migrations/0011_sheets_locked.sql`) empêche les joueurs du groupe de dépenser XP ou crédits
 pendant la séance. Règle unique dans `src/shared/session-lock.ts` : `PUT /:id` ignore pour un joueur
 les champs de progression (race, attributs, taille, compétences, pouvoirs psy, avantages,
@@ -269,6 +269,16 @@ pouvoirs actifs, arme équipée/armure portée, utilisation des consommables (�
 identité. Le MJ (et l'admin) n'est jamais concerné. Côté fiche, un bandeau ambre s'affiche et les
 sections de progression restent en lecture seule, même en mode édition. L'état est partagé entre
 tous les MJ via le poll de 2s.
+
+### Consommables gratuits
+
+À côté du verrou, le bouton "🎁 Consommables gratuits" (`POST /api/characters/group-free-consumables`,
+`player_groups.free_consumables`, `migrations/0012_free_consumables.sql`) rend l'achat de
+consommables gratuit pour les joueurs tant qu'il est actif — typiquement quand ils se préparent
+dans l'arsenal d'alliés qui leur offrent l'équipement. Le serveur décide à chaque achat
+(`applyConsumableChange(..., free)` : coût 0, pas de contrôle de solde) ; l'achat reste possible
+fiches verrouillées puisqu'aucun crédit n'est dépensé. Sur la fiche, les prix s'affichent "gratuit"
+et un message vert le signale.
 
 ## Activation des pouvoirs psy et coût en PSP
 

@@ -468,6 +468,10 @@ export default function GmTracker() {
   // poll, comme currentRank : tous les MJ du groupe voient le même état.
   const [sheetsLocked, setSheetsLocked] = useState(false);
   const [lockBusy, setLockBusy] = useState(false);
+  // "Consommables gratuits" (bouton à côté du verrou) — même persistance et
+  // même propagation par le poll que sheetsLocked.
+  const [freeConsumables, setFreeConsumables] = useState(false);
+  const [freeBusy, setFreeBusy] = useState(false);
   const [endCombatBusy, setEndCombatBusy] = useState(false);
 
   const [groupXpOpen, setGroupXpOpen] = useState(false);
@@ -503,12 +507,13 @@ export default function GmTracker() {
     if (!groupId) return Promise.resolve();
     return api
       .listCharacters(groupId)
-      .then(({ characters, referenceData, groupImageUrl, currentRank, sheetsLocked }) => {
+      .then(({ characters, referenceData, groupImageUrl, currentRank, sheetsLocked, freeConsumables }) => {
         setRows(characters);
         if (referenceData) setReferenceData(referenceData);
         setGroupImageUrl(groupImageUrl);
         setCurrentRank(currentRank);
         setSheetsLocked(sheetsLocked);
+        setFreeConsumables(freeConsumables);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
   }
@@ -544,6 +549,21 @@ export default function GmTracker() {
       setError(err instanceof Error ? err.message : "Échec du verrouillage des fiches");
     } finally {
       setLockBusy(false);
+    }
+  }
+
+  async function toggleFreeConsumables() {
+    if (!groupId) return;
+    const next = !freeConsumables;
+    setFreeConsumables(next);
+    setFreeBusy(true);
+    try {
+      await api.setFreeConsumables(groupId, next);
+    } catch (err) {
+      setFreeConsumables(!next);
+      setError(err instanceof Error ? err.message : "Échec de la mise à jour des consommables gratuits");
+    } finally {
+      setFreeBusy(false);
     }
   }
 
@@ -728,41 +748,54 @@ export default function GmTracker() {
       }}
     >
       <div className="mx-auto max-w-5xl px-4 py-6">
-        <header className="mb-6 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold">{t("Suivi des constantes")}</h1>
-            <p className="text-sm text-slate-400">{t("Personnages en jeu — PV / PSP en direct")}</p>
+        {/*
+          Ligne de titre : à côté du titre, deux bascules MJ de séance, leur
+          explication au survol (title) —
+          - Verrouiller les fiches : les joueurs ne peuvent plus dépenser
+            d'XP ni de crédits (attributs, compétences, inventaire,
+            accessoires, achat de consommables) ; PV/PSP, pouvoirs actifs,
+            arme/armure portée et utilisation des consommables restent
+            libres. Le MJ n'est pas concerné. Cf. shared/session-lock.ts.
+          - Consommables gratuits : l'achat de consommables ne débite aucun
+            crédit (ex. arsenal d'alliés), possible même fiches verrouillées.
+        */}
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div>
+              <h1 className="text-lg font-semibold">{t("Suivi des constantes")}</h1>
+              <p className="text-sm text-slate-400">{t("Personnages en jeu — PV / PSP en direct")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleSheetsLock}
+              disabled={lockBusy}
+              title={
+                sheetsLocked
+                  ? t("🔒 Fiches verrouillées : les joueurs ne peuvent plus dépenser d'XP ni de crédits pendant la séance.")
+                  : t("🔓 Fiches modifiables : les joueurs peuvent dépenser leur XP et leurs crédits.")
+              }
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${sheetsLocked ? "bg-amber-600 text-white ring-2 ring-amber-300 hover:bg-amber-500" : "bg-slate-800 text-slate-200 hover:bg-slate-700"}`}
+            >
+              {sheetsLocked ? t("🔒 Déverrouiller les fiches") : t("🔓 Verrouiller les fiches")}
+            </button>
+            <button
+              type="button"
+              onClick={toggleFreeConsumables}
+              disabled={freeBusy}
+              title={
+                freeConsumables
+                  ? t("🎁 Consommables gratuits : les joueurs se servent sans dépenser de crédits (ex. arsenal d'alliés). Cliquer pour revenir aux prix du catalogue.")
+                  : t("Activer pour que tous les consommables soient gratuits pour les joueurs (ex. préparation dans l'arsenal d'alliés), même fiches verrouillées.")
+              }
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${freeConsumables ? "bg-emerald-600 text-white ring-2 ring-emerald-300 hover:bg-emerald-500" : "bg-slate-800 text-slate-200 hover:bg-slate-700"}`}
+            >
+              {freeConsumables ? t("🎁 Consommables gratuits : activé") : t("🎁 Consommables gratuits")}
+            </button>
           </div>
           <Link to={`/groupe/${groupId}`} className="text-sm text-indigo-400 hover:underline">
             {t("← Personnages")}
           </Link>
         </header>
-
-        {/*
-          Verrouillage des fiches pendant la séance — tant qu'il est posé,
-          les joueurs ne peuvent plus dépenser d'XP ni de crédits pour faire
-          évoluer leur personnage (attributs, compétences, inventaire,
-          accessoires, consommables) ; PV/PSP, pouvoirs actifs, arme
-          équipée/armure portée et utilisation des consommables restent
-          libres. Le MJ n'est pas concerné. Cf. shared/session-lock.ts.
-        */}
-        <div
-          className={`mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 shadow ${sheetsLocked ? "bg-amber-950/80 ring-1 ring-amber-600" : "bg-slate-900"}`}
-        >
-          <p className={`text-sm ${sheetsLocked ? "text-amber-200" : "text-slate-400"}`}>
-            {sheetsLocked
-              ? t("🔒 Fiches verrouillées : les joueurs ne peuvent plus dépenser d'XP ni de crédits pendant la séance.")
-              : t("🔓 Fiches modifiables : les joueurs peuvent dépenser leur XP et leurs crédits.")}
-          </p>
-          <button
-            type="button"
-            onClick={toggleSheetsLock}
-            disabled={lockBusy}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${sheetsLocked ? "bg-slate-800 text-slate-200 hover:bg-slate-700" : "bg-amber-600 text-white hover:bg-amber-500"}`}
-          >
-            {sheetsLocked ? t("Déverrouiller les fiches") : t("Verrouiller les fiches")}
-          </button>
-        </div>
 
         {/*
           Rang d'Action du round en cours — le MJ avance ("Suivant", RA plus

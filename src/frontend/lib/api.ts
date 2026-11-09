@@ -52,6 +52,7 @@ export const api = {
       groupDriveUrl: string | null;
       currentRank: number;
       sheetsLocked: boolean;
+      freeConsumables: boolean;
     }>(`/characters?groupId=${encodeURIComponent(groupId)}`),
   // Verrouillage des fiches pendant la séance (bouton MJ, écran "Suivi des
   // constantes") — cf. characters.ts POST /group-sheets-lock.
@@ -67,6 +68,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ rank }),
     }),
+  // "Consommables gratuits" (bouton MJ) — cf. characters.ts POST /group-free-consumables.
+  setFreeConsumables: (groupId: string, free: boolean) =>
+    request<{ ok: true; freeConsumables: boolean }>(`/characters/group-free-consumables?groupId=${encodeURIComponent(groupId)}`, {
+      method: "POST",
+      body: JSON.stringify({ free }),
+    }),
   getCharacter: (id: string) =>
     request<{
       character: Character;
@@ -78,6 +85,8 @@ export const api = {
       sheetsLocked: boolean;
       /** Verrou de séance applicable à l'utilisateur courant (faux pour le MJ). */
       locked: boolean;
+      /** "Consommables gratuits" activé par le MJ : achat sans débit. */
+      freeConsumables: boolean;
     }>(`/characters/${id}`),
   updateCharacter: (id: string, patch: Partial<Character>) =>
     request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData; locked: boolean }>(
@@ -117,6 +126,7 @@ export const api = {
       canEdit: boolean;
       referenceData: ReferenceData;
       cost: number;
+      freeConsumables: boolean;
     }>(`/characters/${id}/consumables`, { method: "POST", body: JSON.stringify({ name, delta, special }) }),
   fireShot: (id: string, name: string, special = false) =>
     request<{

@@ -135,7 +135,8 @@ const FR: GuideContent = {
       paragraphs: [
         "Cet écran (accessible depuis « Personnages ») affiche en direct les PV/PSP de tous les personnages en jeu (case « En jeu » cochée), leur Rang d'Action, et une icône « ⚡ » si un pouvoir actif les booste. Les boutons Précédent/Suivant font défiler le rang d'action courant du round — « Suivant » reboucle à 0 une fois le rang le plus élevé dépassé.",
         "Le bouton « ⚡ Fin de combat » désactive d'un coup tous les pouvoirs psy actifs des personnages en jeu et leur rembourse leur PSP — pratique pour clore un combat sans repasser sur chaque fiche individuellement.",
-        "En haut de l'écran, le bouton « Verrouiller les fiches » fige les fiches des joueurs pendant la séance : plus aucune dépense d'XP ou de crédits (attributs, compétences, inventaire, accessoires, consommables), seuls PV/PSP, pouvoirs actifs, arme/armure portée et utilisation des consommables restent libres. Le MJ n'est pas concerné. « Déverrouiller les fiches » rouvre la progression en fin de séance ; l'état est partagé entre tous les MJ du groupe.",
+        "Sur la ligne du titre, le bouton « 🔓 Verrouiller les fiches » (explication au survol) fige les fiches des joueurs pendant la séance : plus aucune dépense d'XP ou de crédits (attributs, compétences, inventaire, accessoires, consommables), seuls PV/PSP, pouvoirs actifs, arme/armure portée et utilisation des consommables restent libres. Le MJ n'est pas concerné. « 🔒 Déverrouiller les fiches » rouvre la progression en fin de séance ; l'état est partagé entre tous les MJ du groupe.",
+        "Juste à côté, « 🎁 Consommables gratuits » rend tous les consommables gratuits pour les joueurs tant qu'il est activé (ex. ils s'équipent dans l'arsenal d'alliés) : l'achat ne débite aucun crédit, et reste possible même fiches verrouillées. Recliquer pour revenir aux prix du catalogue.",
       ],
     },
     {
@@ -282,7 +283,8 @@ const EN: GuideContent = {
       paragraphs: [
         "This screen (reachable from \"Characters\") shows live HP/PSP for every character in play (\"In play\" checkbox checked), their Action Rank, and a \"⚡\" icon if an active power is boosting them. The Previous/Next buttons step through the round's current action rank — \"Next\" wraps back to 0 once the highest rank in play is passed.",
         "The \"⚡ End combat\" button deactivates every active psychic power for characters in play at once and refunds their PSP — handy for wrapping up a fight without going through every sheet individually.",
-        "At the top of the screen, the \"Lock sheets\" button freezes players' sheets during the session: no more XP or credit spending (attributes, skills, inventory, accessories, consumables); only HP/PSP, active powers, worn weapon/armor and using consumables stay free. The GM is not affected. \"Unlock sheets\" reopens progression at the end of the session; the state is shared by all of the group's GMs.",
+        "On the title line, the \"🔓 Lock sheets\" button (explanation on hover) freezes players' sheets during the session: no more XP or credit spending (attributes, skills, inventory, accessories, consumables); only HP/PSP, active powers, worn weapon/armor and using consumables stay free. The GM is not affected. \"🔒 Unlock sheets\" reopens progression at the end of the session; the state is shared by all of the group's GMs.",
+        "Right next to it, \"🎁 Free consumables\" makes every consumable free for players while it is on (e.g. gearing up in an allied armory): buying charges no credits, and works even with sheets locked. Click again to go back to catalogue prices.",
       ],
     },
     {

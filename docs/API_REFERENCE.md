@@ -53,7 +53,8 @@ chaque réponse.
   du round (`player_groups.current_rank`, cf. `POST /group-current-rank` plus bas) — partagé entre
   tous les MJ qui suivent ce groupe en même temps, repropagé à chaque poll (2s) plutôt que local à
   chaque onglet (corrigé, incident du 2026-09-19). `sheetsLocked` indique si le MJ a verrouillé
-  les fiches du groupe pour la séance (cf. `POST /group-sheets-lock`), repropagé de la même façon. `boostedAttributes` (cf.
+  les fiches du groupe pour la séance (cf. `POST /group-sheets-lock`), `freeConsumables` si les
+  consommables sont gratuits (cf. `POST /group-free-consumables`), repropagés de la même façon. `boostedAttributes` (cf.
   `calc-engine.getBoostedAttributes`) liste les attributs actuellement boostés par un pouvoir psy
   actif (`Character.activePsyPowers`) — une icône par attribut sur sa tuile (💪 FO, 🧘🏻‍♀️ VIT,
   🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM, 🧠 INT, 🙏 VOL). `boostedSkillNames` (cf.
@@ -80,7 +81,8 @@ chaque réponse.
 - Auth : session ; lecture ouverte à tout membre du groupe du personnage.
 - Sortie : `{ character: Character, computed: CharacterComputed, canEdit: boolean, referenceData: ReferenceData, groupImageUrl: string | null, teammates: { id: string, name: string }[], sheetsLocked: boolean, locked: boolean }`.
   `sheetsLocked` = fiches du groupe verrouillées par le MJ (cf. `POST /group-sheets-lock`) ;
-  `locked` = ce verrou s'applique à l'appelant (toujours `false` pour un MJ du groupe / admin).
+  `locked` = ce verrou s'applique à l'appelant (toujours `false` pour un MJ du groupe / admin) ;
+  `freeConsumables` = consommables gratuits activés par le MJ (achat sans débit).
   `computed` est calculé côté serveur via `src/shared/calc-engine.ts` (mêmes fonctions que le
   frontend, pour rester la source de vérité en cas de divergence de version de code). `teammates`
   liste les autres personnages du même groupe (id/nom seulement) — alimente le sélecteur de
@@ -189,8 +191,10 @@ chaque réponse.
   `credits`. Utilisation : retire du stock sans remboursement ; ligne supprimée à 0. Logique :
   `calc-engine.applyConsumableChange`.
 - Sortie : `{ character, computed, canEdit: true, referenceData, cost: number, reloaded: boolean }`.
-- Fiches verrouillées (appelant non MJ) : l'achat (`delta > 0`) répond `403` ; l'utilisation
-  (`delta < 0`, `fire: true`) reste permise.
+- Fiches verrouillées (appelant non MJ) : l'achat (`delta > 0`) répond `403` — sauf consommables
+  gratuits activés ; l'utilisation (`delta < 0`, `fire: true`) reste permise.
+- Consommables gratuits (`player_groups.free_consumables`) : l'achat ne débite rien (`cost: 0`),
+  pas de contrôle de solde. La réponse inclut `freeConsumables: boolean`.
 - Erreurs : `403` (ni propriétaire ni MJ), `404` (personnage introuvable), `400` (champ manquant,
   quantité non entière ou nulle, consommable hors catalogue à l'achat, solde insuffisant, stock
   insuffisant).
@@ -205,6 +209,15 @@ chaque réponse.
 - Entrée : `{ locked: boolean }`.
 - Sortie : `{ ok: true, sheetsLocked: boolean }`.
 - Erreurs : `403` (pas MJ du groupe), `404` (groupe inaccessible), `400` (`locked` non booléen).
+
+### `POST /api/characters/group-free-consumables?groupId=`
+- Auth : session + MJ du groupe ciblé (ou admin).
+- Active/désactive "Consommables gratuits" (bouton sur la ligne de titre du "Suivi des
+  constantes", `player_groups.free_consumables`, `migrations/0012_free_consumables.sql`) : tant
+  qu'il est actif, `POST /:id/consumables` (`delta > 0`) ne débite aucun crédit
+  (`calc-engine.applyConsumableChange`, paramètre `free`) et reste permis fiches verrouillées.
+- Entrée : `{ free: boolean }`. Sortie : `{ ok: true, freeConsumables: boolean }`.
+- Erreurs : `403` (pas MJ du groupe), `404` (groupe inaccessible), `400` (`free` non booléen).
 
 ### `POST /api/characters/group-current-rank?groupId=`
 - Auth : session + rôle `gm` membre du groupe ciblé.

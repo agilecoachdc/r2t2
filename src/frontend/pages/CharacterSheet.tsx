@@ -64,6 +64,9 @@ export default function CharacterSheet() {
   // consommables et la dépense de crédits sont masqués. Le serveur filtre de
   // toute façon (PUT /characters/:id), ceci n'est que l'affichage.
   const [locked, setLocked] = useState(false);
+  // "Consommables gratuits" activé par le MJ : achat sans débit (le serveur
+  // décide à chaque achat ; rafraîchi par la réponse de chaque achat).
+  const [freeConsumables, setFreeConsumables] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,13 +75,14 @@ export default function CharacterSheet() {
     if (!id) return;
     api
       .getCharacter(id)
-      .then(({ character, canEdit, referenceData, groupImageUrl, teammates, locked }) => {
+      .then(({ character, canEdit, referenceData, groupImageUrl, teammates, locked, freeConsumables }) => {
         setCharacter(character);
         setCanEdit(canEdit);
         setReferenceData(referenceData);
         setGroupImageUrl(groupImageUrl);
         setTeammates(teammates);
         setLocked(locked);
+        setFreeConsumables(freeConsumables);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
   }, [id]);
@@ -244,9 +248,14 @@ export default function CharacterSheet() {
   // le panneau l'affiche au plus près du formulaire.
   async function handleConsumableChange(name: string, delta: number, special: boolean) {
     if (!id) return;
-    const { character: saved, referenceData: savedReferenceData } = await api.changeConsumable(id, name, delta, special);
+    const {
+      character: saved,
+      referenceData: savedReferenceData,
+      freeConsumables: nowFree,
+    } = await api.changeConsumable(id, name, delta, special);
     setCharacter(saved);
     setReferenceData(savedReferenceData);
+    setFreeConsumables(nowFree);
   }
 
   // "−1 coup" sur une ligne de munitions — cf. calc-engine.fireShot (même
@@ -400,7 +409,8 @@ export default function CharacterSheet() {
         referenceData={referenceData}
         onChange={handleConsumableChange}
         onFire={handleFireShot}
-        purchaseLocked={locked}
+        purchaseLocked={locked && !freeConsumables}
+        free={freeConsumables}
       />
       <AdvantagesPanel character={character} editing={editingProgress} update={update} referenceData={referenceData} />
       <EquipmentPanel character={character} editing={editingProgress} update={update} referenceData={referenceData} />

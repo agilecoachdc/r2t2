@@ -830,6 +830,8 @@ export function applyConsumableChange(
   name: string,
   delta: number,
   special = false,
+  /** "Consommables gratuits" activé par le MJ (player_groups.free_consumables) : achat sans débit. */
+  free = false,
 ): { consumables: ConsumableEntry[]; credits: number; cost: number } | { error: string } {
   if (!Number.isInteger(delta) || delta === 0) return { error: "Quantité requise (entier non nul)" };
   const stock = character.consumables ?? [];
@@ -843,7 +845,7 @@ export function applyConsumableChange(
     if (special && !canBeSpecial(def)) {
       return { error: `Seules les munitions peuvent être achetées en version spéciale` };
     }
-    cost = (getConsumableUnitPrice(def, special) ?? 0) * delta;
+    cost = free ? 0 : (getConsumableUnitPrice(def, special) ?? 0) * delta;
     if (cost > credits) return { error: `Solde insuffisant (${cost} Cr requis, ${credits} Cr disponible)` };
   } else if (-delta > held) {
     return { error: `Quantité insuffisante (${held} en stock)` };

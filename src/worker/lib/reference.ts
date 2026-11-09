@@ -64,6 +64,17 @@ export async function getGroupCurrentRank(db: D1Database, groupId: string): Prom
 }
 
 /**
+ * "Consommables gratuits" activé par le MJ (cf.
+ * migrations/0012_free_consumables.sql) — l'achat de consommables ne débite
+ * aucun crédit. false si le groupe n'existe pas.
+ */
+export async function getGroupFreeConsumables(db: D1Database, groupId: string | null): Promise<boolean> {
+  if (!groupId) return false;
+  const row = await db.prepare("SELECT free_consumables FROM player_groups WHERE id = ?1").bind(groupId).first<{ free_consumables: number }>();
+  return row?.free_consumables === 1;
+}
+
+/**
  * Fiches verrouillées par le MJ pendant une séance (cf.
  * migrations/0011_sheets_locked.sql, shared/session-lock.ts). false si le
  * groupe n'existe pas.

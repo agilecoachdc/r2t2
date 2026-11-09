@@ -1529,6 +1529,7 @@ export function ConsumablesPanel({
   onChange,
   onFire,
   purchaseLocked = false,
+  free = false,
 }: {
   character: Character;
   editing: boolean;
@@ -1536,6 +1537,8 @@ export function ConsumablesPanel({
   referenceData: ReferenceData;
   /** Fiches verrouillées par le MJ pendant la séance : achat masqué, utilisation (−1, −1 coup) toujours possible — cf. shared/session-lock.ts. */
   purchaseLocked?: boolean;
+  /** "Consommables gratuits" activé par le MJ : prix affichés à 0, achat sans débit (cf. applyConsumableChange `free`). */
+  free?: boolean;
   /** Lève une erreur (ex. solde insuffisant) affichée localement par le panneau. */
   onChange: (name: string, delta: number, special: boolean) => Promise<void>;
   /** "−1 coup" : décompte dans le chargeur en cours, recharge automatique (cf. calc-engine.fireShot). */
@@ -1564,7 +1567,7 @@ export function ConsumablesPanel({
   const pickedDef = pick ? findDef(pick) : undefined;
   const pickedCanBeSpecial = canBeSpecial(pickedDef);
   const pickedSpecial = special && pickedCanBeSpecial;
-  const pickedPrice = pickedDef ? getConsumableUnitPrice(pickedDef, pickedSpecial) : null;
+  const pickedPrice = pickedDef ? (free ? 0 : getConsumableUnitPrice(pickedDef, pickedSpecial)) : null;
   const qty = Number.isInteger(quantity) && quantity > 0 ? quantity : 0;
 
   async function run(name: string, delta: number, lineSpecial: boolean, fire = false) {
@@ -1601,7 +1604,7 @@ export function ConsumablesPanel({
           {stock.map((c) => {
             const def = findDef(c.name);
             const lineSpecial = !!c.special;
-            const price = def ? getConsumableUnitPrice(def, lineSpecial) : null;
+            const price = def ? (free ? 0 : getConsumableUnitPrice(def, lineSpecial)) : null;
             // Décompte coup par coup si le catalogue fixe la capacité du chargeur.
             const full = getShotsPerMagazine(def);
             const shotsLeft = getShotsLeft(c, def);
@@ -1672,6 +1675,9 @@ export function ConsumablesPanel({
 
       {error && <p className="mt-2 rounded-lg bg-red-950 px-3 py-2 text-xs text-red-300">⚠️ {error}</p>}
 
+      {canAct && free && (
+        <p className="mt-2 text-xs text-emerald-300">{t("🎁 Consommables gratuits offerts par le MJ : aucun crédit n'est débité.")}</p>
+      )}
       {canAct && purchaseLocked && (
         <p className="mt-2 text-xs text-amber-300">{t("🔒 Achats bloqués par le MJ pendant la séance — l'utilisation reste possible.")}</p>
       )}
@@ -1692,7 +1698,7 @@ export function ConsumablesPanel({
                   const price = parseCatalogPrice(item.price);
                   return (
                     <option key={`${category}-${item.name}`} value={item.name}>
-                      {item.name} — {price != null ? `${price} Cr` : t("prix non fixé")}
+                      {item.name} — {free ? t("gratuit") : price != null ? `${price} Cr` : t("prix non fixé")}
                     </option>
                   );
                 })}

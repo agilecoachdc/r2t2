@@ -261,9 +261,10 @@ navigateur intégré, cf. session de build).
 
 ### Verrouillage des fiches pendant la séance
 
-- [ ] MJ, "Suivi des constantes" : bandeau en haut "🔓 Fiches modifiables" + bouton "Verrouiller
-      les fiches" → le bandeau passe en ambre "🔒 Fiches verrouillées", bouton "Déverrouiller les
-      fiches". Un second MJ sur un autre appareil voit le changement en ≤ 2s.
+- [ ] MJ, "Suivi des constantes" : sur la ligne du titre, bouton "🔓 Verrouiller les fiches" ; au
+      survol, l'explication "🔓 Fiches modifiables…". Clic → bouton ambre "🔒 Déverrouiller les
+      fiches", survol "🔒 Fiches verrouillées…". Plus de bandeau séparé sous le titre. Un second MJ
+      sur un autre appareil voit le changement en ≤ 2s.
 - [ ] Joueur, sa fiche (rechargée) : bandeau "🔒 Fiche verrouillée par le MJ…". "Modifier" :
       identité et notes éditables, mais attributs, compétences, pouvoirs, armes/armures, avantages
       et équipement restent en lecture seule.
@@ -277,6 +278,18 @@ navigateur intégré, cf. session de build).
       → 403 ; `POST /group-sheets-lock` → 403.
 - [ ] MJ sur la fiche d'un joueur pendant le verrou : tout reste éditable (pas de bandeau).
 - [ ] "Déverrouiller les fiches" → le joueur retrouve l'édition complète après rechargement.
+
+### Consommables gratuits
+
+- [ ] MJ, ligne de titre du "Suivi des constantes" : bouton "🎁 Consommables gratuits" à côté du
+      verrou, explication au survol. Clic → vert "🎁 Consommables gratuits : activé".
+- [ ] Joueur (fiche rechargée) : message vert "🎁 Consommables gratuits…", prix "0 Cr" sur les
+      lignes et "gratuit" dans le sélecteur. Acheter 3 grenades → stock +3, crédits inchangés,
+      même avec 0 Cr.
+- [ ] Fiches verrouillées ET consommables gratuits : le formulaire d'achat reste visible et
+      fonctionne ; désactiver la gratuité → achat de nouveau bloqué (403).
+- [ ] Désactiver → les achats suivants débitent de nouveau le prix du catalogue.
+- [ ] Joueur, `POST /group-free-consumables` → 403.
 
 ## §4 — Permissions
 
