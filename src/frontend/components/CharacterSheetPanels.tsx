@@ -1528,11 +1528,14 @@ export function ConsumablesPanel({
   referenceData,
   onChange,
   onFire,
+  purchaseLocked = false,
 }: {
   character: Character;
   editing: boolean;
   canEdit: boolean;
   referenceData: ReferenceData;
+  /** Fiches verrouillées par le MJ pendant la séance : achat masqué, utilisation (−1, −1 coup) toujours possible — cf. shared/session-lock.ts. */
+  purchaseLocked?: boolean;
   /** Lève une erreur (ex. solde insuffisant) affichée localement par le panneau. */
   onChange: (name: string, delta: number, special: boolean) => Promise<void>;
   /** "−1 coup" : décompte dans le chargeur en cours, recharge automatique (cf. calc-engine.fireShot). */
@@ -1543,6 +1546,7 @@ export function ConsumablesPanel({
   const stock = character.consumables ?? [];
   const credits = character.credits ?? 0;
   const canAct = canEdit && !editing;
+  const canBuy = canAct && !purchaseLocked;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pick, setPick] = useState("");
@@ -1628,7 +1632,7 @@ export function ConsumablesPanel({
                 >
                   × {c.quantity}
                 </span>
-                {canAct && def && (
+                {canBuy && def && (
                   <button
                     type="button"
                     disabled={busy || (price != null && price > credits)}
@@ -1668,7 +1672,10 @@ export function ConsumablesPanel({
 
       {error && <p className="mt-2 rounded-lg bg-red-950 px-3 py-2 text-xs text-red-300">⚠️ {error}</p>}
 
-      {canAct && catalog.length > 0 && (
+      {canAct && purchaseLocked && (
+        <p className="mt-2 text-xs text-amber-300">{t("🔒 Achats bloqués par le MJ pendant la séance — l'utilisation reste possible.")}</p>
+      )}
+      {canBuy && catalog.length > 0 && (
         <form onSubmit={handleBuy} className="mt-3 flex flex-wrap items-center gap-2">
           <select
             value={pick}

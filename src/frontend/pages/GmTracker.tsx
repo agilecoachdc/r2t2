@@ -463,6 +463,11 @@ export default function GmTracker() {
   // jour locale optimiste au clic (setCurrentRank immédiat), confirmée ou
   // corrigée par le poll suivant.
   const [currentRank, setCurrentRank] = useState(0);
+  // Fiches verrouillées pendant la séance (bouton en haut de l'écran) —
+  // persisté côté serveur (player_groups.sheets_locked) et repropagé par le
+  // poll, comme currentRank : tous les MJ du groupe voient le même état.
+  const [sheetsLocked, setSheetsLocked] = useState(false);
+  const [lockBusy, setLockBusy] = useState(false);
   const [endCombatBusy, setEndCombatBusy] = useState(false);
 
   const [groupXpOpen, setGroupXpOpen] = useState(false);
@@ -498,11 +503,12 @@ export default function GmTracker() {
     if (!groupId) return Promise.resolve();
     return api
       .listCharacters(groupId)
-      .then(({ characters, referenceData, groupImageUrl, currentRank }) => {
+      .then(({ characters, referenceData, groupImageUrl, currentRank, sheetsLocked }) => {
         setRows(characters);
         if (referenceData) setReferenceData(referenceData);
         setGroupImageUrl(groupImageUrl);
         setCurrentRank(currentRank);
+        setSheetsLocked(sheetsLocked);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
   }
@@ -522,6 +528,23 @@ export default function GmTracker() {
     if (!groupId) return;
     setCurrentRank(next);
     api.setCurrentRank(groupId, next).catch((err) => setError(err instanceof Error ? err.message : "Échec de la mise à jour du rang"));
+  }
+
+  // Pose/lève le verrou des fiches (cf. shared/session-lock.ts) — mise à
+  // jour optimiste, annulée si l'appel échoue.
+  async function toggleSheetsLock() {
+    if (!groupId) return;
+    const next = !sheetsLocked;
+    setSheetsLocked(next);
+    setLockBusy(true);
+    try {
+      await api.setSheetsLocked(groupId, next);
+    } catch (err) {
+      setSheetsLocked(!next);
+      setError(err instanceof Error ? err.message : "Échec du verrouillage des fiches");
+    } finally {
+      setLockBusy(false);
+    }
   }
 
   // Vue réservée au MJ membre de ce groupe, ou à l'admin (tous les groupes,
@@ -714,6 +737,32 @@ export default function GmTracker() {
             {t("← Personnages")}
           </Link>
         </header>
+
+        {/*
+          Verrouillage des fiches pendant la séance — tant qu'il est posé,
+          les joueurs ne peuvent plus dépenser d'XP ni de crédits pour faire
+          évoluer leur personnage (attributs, compétences, inventaire,
+          accessoires, consommables) ; PV/PSP, pouvoirs actifs, arme
+          équipée/armure portée et utilisation des consommables restent
+          libres. Le MJ n'est pas concerné. Cf. shared/session-lock.ts.
+        */}
+        <div
+          className={`mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 shadow ${sheetsLocked ? "bg-amber-950/80 ring-1 ring-amber-600" : "bg-slate-900"}`}
+        >
+          <p className={`text-sm ${sheetsLocked ? "text-amber-200" : "text-slate-400"}`}>
+            {sheetsLocked
+              ? t("🔒 Fiches verrouillées : les joueurs ne peuvent plus dépenser d'XP ni de crédits pendant la séance.")
+              : t("🔓 Fiches modifiables : les joueurs peuvent dépenser leur XP et leurs crédits.")}
+          </p>
+          <button
+            type="button"
+            onClick={toggleSheetsLock}
+            disabled={lockBusy}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${sheetsLocked ? "bg-slate-800 text-slate-200 hover:bg-slate-700" : "bg-amber-600 text-white hover:bg-amber-500"}`}
+          >
+            {sheetsLocked ? t("Déverrouiller les fiches") : t("Verrouiller les fiches")}
+          </button>
+        </div>
 
         {/*
           Rang d'Action du round en cours — le MJ avance ("Suivant", RA plus

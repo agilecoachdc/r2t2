@@ -16,7 +16,14 @@ import { Hono } from "hono";
 import type { Env } from "../lib/session";
 import { canEditCharacter } from "../lib/session";
 import { canAccessGroup, isGmOfGroup } from "../../shared/permissions";
-import { getGroupCurrentRank, getGroupDriveUrl, getGroupImageUrl, getReferenceDataForGroup } from "../lib/reference";
+import {
+  getGroupCurrentRank,
+  getGroupDriveUrl,
+  getGroupImageUrl,
+  getGroupSheetsLocked,
+  getReferenceDataForGroup,
+} from "../lib/reference";
+import { applySessionLock } from "../../shared/session-lock";
 import type { PublicUser } from "../../shared/types";
 import type { AttributeScores, Character, CharacterSummary, ReferenceData } from "../../shared/types";
 import { ATTRIBUTES } from "../../shared/types";
@@ -58,6 +65,7 @@ characterRoutes.get("/", async (c) => {
   const groupImageUrl = await getGroupImageUrl(c.env.DB, groupId);
   const groupDriveUrl = await getGroupDriveUrl(c.env.DB, groupId);
   const currentRank = await getGroupCurrentRank(c.env.DB, groupId);
+  const sheetsLocked = await getGroupSheetsLocked(c.env.DB, groupId);
   const { results } = await c.env.DB.prepare(
     "SELECT id, name, race, owner_username, data FROM characters WHERE player_group_id = ?1 ORDER BY name",
   )
@@ -93,7 +101,7 @@ characterRoutes.get("/", async (c) => {
     };
   });
 
-  return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl, currentRank });
+  return c.json({ characters, referenceData, groupImageUrl, groupDriveUrl, currentRank, sheetsLocked });
 });
 
 // Rang d'Action courant du round, écran "Suivi des constantes" — persisté
@@ -126,6 +134,41 @@ characterRoutes.post("/group-current-rank", async (c) => {
   await c.env.DB.prepare("UPDATE player_groups SET current_rank = ?1 WHERE id = ?2").bind(rank, groupId).run();
   return c.json({ ok: true, currentRank: rank });
 });
+
+// Verrouillage des fiches pendant une séance — bouton MJ en haut de l'écran
+// "Suivi des constantes". Tant que le verrou est posé, les joueurs du groupe
+// ne peuvent plus dépenser d'XP ni de crédits pour faire évoluer leur
+// personnage (filtrage dans PUT /:id, refus dans spend-credits et dans
+// l'achat de consommables) — cf. shared/session-lock.ts. Le MJ n'est pas
+// concerné. Même convention que /group-current-rank ci-dessus.
+characterRoutes.post("/group-sheets-lock", async (c) => {
+  const user = c.get("user");
+  const groupId = c.req.query("groupId");
+  if (!canAccessGroup(user, groupId)) {
+    return c.json({ error: "Groupe introuvable ou non membre" }, 404);
+  }
+  if (!isGmOfGroup(user, groupId)) {
+    return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  }
+
+  const body = await c.req.json<{ locked?: boolean }>().catch(() => null);
+  if (typeof body?.locked !== "boolean") {
+    return c.json({ error: "locked (booléen) requis" }, 400);
+  }
+
+  await c.env.DB.prepare("UPDATE player_groups SET sheets_locked = ?1 WHERE id = ?2")
+    .bind(body.locked ? 1 : 0, groupId)
+    .run();
+  return c.json({ ok: true, sheetsLocked: body.locked });
+});
+
+/** Le verrou de séance s'applique-t-il à cet utilisateur pour ce groupe ? (jamais au MJ/admin) */
+async function isLockedFor(db: D1Database, user: PublicUser, groupId: string | null): Promise<boolean> {
+  if (!groupId || isGmOfGroup(user, groupId)) return false;
+  return getGroupSheetsLocked(db, groupId);
+}
+
+const LOCKED_MESSAGE = "Fiches verrouillées par le MJ pendant la séance";
 
 // Sert le portrait d'un personnage en image brute (pas en JSON) — évite de
 // ré-embarquer son data URL base64 dans CHAQUE réponse de GET / (liste),
@@ -184,6 +227,7 @@ characterRoutes.get("/:id", async (c) => {
   )
     .bind(row.player_group_id, row.id)
     .all<{ id: string; name: string }>();
+  const sheetsLocked = await getGroupSheetsLocked(c.env.DB, row.player_group_id);
   return c.json({
     character,
     computed,
@@ -191,6 +235,9 @@ characterRoutes.get("/:id", async (c) => {
     referenceData,
     groupImageUrl,
     teammates: teammateRows ?? [],
+    // `locked` : le verrou de séance s'applique à CET utilisateur (faux pour le MJ).
+    sheetsLocked,
+    locked: sheetsLocked && !isGmOfGroup(user, row.player_group_id),
   });
 });
 
@@ -319,12 +366,19 @@ characterRoutes.put("/:id", async (c) => {
   delete incoming.consumables;
 
   const current: Character = JSON.parse(existing.data);
+  // Fiches verrouillées pendant la séance : les champs de progression
+  // (attributs, compétences, inventaire, XP, crédits…) envoyés par un joueur
+  // sont ignorés, seuls PV/PSP, pouvoirs actifs, arme équipée/armure portée,
+  // notes et identité passent — cf. shared/session-lock.ts.
+  const patch: Partial<Character> = (await isLockedFor(c.env.DB, user, existing.player_group_id))
+    ? applySessionLock(current, incoming)
+    : incoming;
   // On fusionne plutôt que remplacer intégralement : le client peut n'envoyer
   // que la section modifiée (ex. juste `skills`), le reste de la fiche reste
   // intact même si un autre onglet a été édité entre-temps par erreur.
   const updated: Character = {
     ...current,
-    ...incoming,
+    ...patch,
     id: current.id, // non modifiable par le client
     ownerUsername: current.ownerUsername, // idem — changement de propriétaire hors périmètre MVP
     updatedAt: new Date().toISOString(),
@@ -350,7 +404,7 @@ characterRoutes.put("/:id", async (c) => {
     .run();
 
   const computed = computeCharacter(updated, referenceData);
-  return c.json({ character: updated, computed, canEdit: true, referenceData });
+  return c.json({ character: updated, computed, canEdit: true, referenceData, locked: patch !== incoming });
 });
 
 // Distribution d'XP par le MJ — réservé au MJ membre du groupe du
@@ -464,6 +518,9 @@ characterRoutes.post("/:id/spend-credits", async (c) => {
   if (!existing.player_group_id || !canEditCharacter(user, existing.owner_username, existing.player_group_id)) {
     return c.json({ error: "Vous ne pouvez dépenser que les crédits de votre propre personnage" }, 403);
   }
+  if (await isLockedFor(c.env.DB, user, existing.player_group_id)) {
+    return c.json({ error: LOCKED_MESSAGE }, 403);
+  }
 
   const body = await c.req.json<{ amount?: number; toCharacterId?: string }>().catch(() => null);
   const amount = body?.amount;
@@ -544,6 +601,11 @@ characterRoutes.post("/:id/consumables", async (c) => {
     .catch(() => null);
   if (!body?.name || (body.fire !== true && typeof body.delta !== "number")) {
     return c.json({ error: "Consommable et quantité requis" }, 400);
+  }
+  // Verrou de séance : l'achat (delta > 0) est bloqué, l'utilisation (−1,
+  // −1 coup) reste possible en jeu.
+  if (body.fire !== true && (body.delta as number) > 0 && (await isLockedFor(c.env.DB, user, existing.player_group_id))) {
+    return c.json({ error: LOCKED_MESSAGE }, 403);
   }
 
   const current: Character = JSON.parse(existing.data);

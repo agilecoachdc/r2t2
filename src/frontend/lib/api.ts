@@ -51,7 +51,15 @@ export const api = {
       groupImageUrl: string | null;
       groupDriveUrl: string | null;
       currentRank: number;
+      sheetsLocked: boolean;
     }>(`/characters?groupId=${encodeURIComponent(groupId)}`),
+  // Verrouillage des fiches pendant la séance (bouton MJ, écran "Suivi des
+  // constantes") — cf. characters.ts POST /group-sheets-lock.
+  setSheetsLocked: (groupId: string, locked: boolean) =>
+    request<{ ok: true; sheetsLocked: boolean }>(`/characters/group-sheets-lock?groupId=${encodeURIComponent(groupId)}`, {
+      method: "POST",
+      body: JSON.stringify({ locked }),
+    }),
   // Rang d'Action courant du round (écran "Suivi des constantes"), partagé
   // entre tous les MJ du groupe — cf. characters.ts POST /group-current-rank.
   setCurrentRank: (groupId: string, rank: number) =>
@@ -67,9 +75,12 @@ export const api = {
       referenceData: ReferenceData;
       groupImageUrl: string | null;
       teammates: { id: string; name: string }[];
+      sheetsLocked: boolean;
+      /** Verrou de séance applicable à l'utilisateur courant (faux pour le MJ). */
+      locked: boolean;
     }>(`/characters/${id}`),
   updateCharacter: (id: string, patch: Partial<Character>) =>
-    request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData }>(
+    request<{ character: Character; computed: CharacterComputed; canEdit: boolean; referenceData: ReferenceData; locked: boolean }>(
       `/characters/${id}`,
       { method: "PUT", body: JSON.stringify(patch) },
     ),

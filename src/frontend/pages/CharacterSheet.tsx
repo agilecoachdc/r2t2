@@ -57,6 +57,13 @@ export default function CharacterSheet() {
   // Autres personnages du groupe (id/nom) — sélecteur de destinataire de
   // "Dépenser / donner des crédits" (BudgetPanel), cf. GET /characters/:id.
   const [teammates, setTeammates] = useState<{ id: string; name: string }[]>([]);
+  // Fiches verrouillées par le MJ pendant la séance, pour CET utilisateur
+  // (jamais le MJ) — cf. shared/session-lock.ts. Les sections de progression
+  // (attributs, compétences, pouvoirs, armes/armures, avantages,
+  // équipement) restent en lecture seule même en mode édition, l'achat de
+  // consommables et la dépense de crédits sont masqués. Le serveur filtre de
+  // toute façon (PUT /characters/:id), ceci n'est que l'affichage.
+  const [locked, setLocked] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,12 +72,13 @@ export default function CharacterSheet() {
     if (!id) return;
     api
       .getCharacter(id)
-      .then(({ character, canEdit, referenceData, groupImageUrl, teammates }) => {
+      .then(({ character, canEdit, referenceData, groupImageUrl, teammates, locked }) => {
         setCharacter(character);
         setCanEdit(canEdit);
         setReferenceData(referenceData);
         setGroupImageUrl(groupImageUrl);
         setTeammates(teammates);
+        setLocked(locked);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
   }, [id]);
@@ -79,6 +87,8 @@ export default function CharacterSheet() {
   if (!character || !referenceData) return <p className="p-6 text-slate-400">{t("Chargement…")}</p>;
 
   const computed: CharacterComputed = computeCharacter(character, referenceData);
+  // Mode édition des sections de progression — coupé par le verrou de séance.
+  const editingProgress = editing && !locked;
 
   function update(patch: Partial<Character>) {
     setCharacter((c) => (c ? { ...c, ...patch } : c));
@@ -291,9 +301,12 @@ export default function CharacterSheet() {
     setSaving(true);
     setError(null);
     try {
-      const { character: saved, referenceData: savedReferenceData } = await api.updateCharacter(id, character);
+      const { character: saved, referenceData: savedReferenceData, locked: nowLocked } = await api.updateCharacter(id, character);
       setCharacter(saved);
       setReferenceData(savedReferenceData);
+      // Verrou posé par le MJ depuis l'ouverture de la fiche : le serveur a
+      // ignoré les changements de progression, la fiche renvoyée les annule.
+      setLocked(nowLocked);
       setEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de la sauvegarde");
@@ -347,6 +360,11 @@ export default function CharacterSheet() {
           </header>
 
           {error && <p className="text-red-400">{error}</p>}
+          {locked && (
+            <p className="rounded-lg bg-amber-950/80 px-3 py-2 text-sm text-amber-200 ring-1 ring-amber-600">
+              {t("🔒 Fiche verrouillée par le MJ pendant la séance : XP et crédits ne peuvent pas être dépensés (attributs, compétences, inventaire, accessoires, consommables).")}
+            </p>
+          )}
 
           <IdentityHeader character={character} editing={editing} update={update} referenceData={referenceData} />
         </div>
@@ -354,12 +372,12 @@ export default function CharacterSheet() {
 
       <div className="mx-auto max-w-3xl space-y-4 px-4 pb-16 pt-4">
         <HpPspBar character={character} computed={computed} onAdjust={adjustVital} />
-      <AttributesPanel character={character} computed={computed} editing={editing} update={update} referenceData={referenceData} />
-      <SkillsPanel character={character} computed={computed} editing={editing} update={update} referenceData={referenceData} />
+      <AttributesPanel character={character} computed={computed} editing={editingProgress} update={update} referenceData={referenceData} />
+      <SkillsPanel character={character} computed={computed} editing={editingProgress} update={update} referenceData={referenceData} />
       <WeaponsArmorPanel
         character={character}
         computed={computed}
-        editing={editing}
+        editing={editingProgress}
         canEdit={canEdit}
         update={update}
         onToggleArmor={toggleArmor}
@@ -369,7 +387,7 @@ export default function CharacterSheet() {
       <PsyPowersPanel
         character={character}
         computed={computed}
-        editing={editing}
+        editing={editingProgress}
         canEdit={canEdit}
         update={update}
         onSetActivePower={setActivePower}
@@ -382,9 +400,10 @@ export default function CharacterSheet() {
         referenceData={referenceData}
         onChange={handleConsumableChange}
         onFire={handleFireShot}
+        purchaseLocked={locked}
       />
-      <AdvantagesPanel character={character} editing={editing} update={update} referenceData={referenceData} />
-      <EquipmentPanel character={character} editing={editing} update={update} referenceData={referenceData} />
+      <AdvantagesPanel character={character} editing={editingProgress} update={update} referenceData={referenceData} />
+      <EquipmentPanel character={character} editing={editingProgress} update={update} referenceData={referenceData} />
       <NotesPanel character={character} editing={editing} update={update} />
       <BudgetPanel
         character={character}
@@ -394,7 +413,7 @@ export default function CharacterSheet() {
         teammates={teammates}
         onGrantXp={handleGrantXp}
         onGrantCredits={handleGrantCredits}
-        onSpendCredits={handleSpendCredits}
+        onSpendCredits={locked ? undefined : handleSpendCredits}
         onAcceptDeficit={handleAcceptDeficit}
       />
       </div>

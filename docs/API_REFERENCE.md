@@ -52,7 +52,8 @@ chaque réponse.
   exactement (plusieurs personnages peuvent agir au même rang). `currentRank` est CE rang courant
   du round (`player_groups.current_rank`, cf. `POST /group-current-rank` plus bas) — partagé entre
   tous les MJ qui suivent ce groupe en même temps, repropagé à chaque poll (2s) plutôt que local à
-  chaque onglet (corrigé, incident du 2026-09-19). `boostedAttributes` (cf.
+  chaque onglet (corrigé, incident du 2026-09-19). `sheetsLocked` indique si le MJ a verrouillé
+  les fiches du groupe pour la séance (cf. `POST /group-sheets-lock`), repropagé de la même façon. `boostedAttributes` (cf.
   `calc-engine.getBoostedAttributes`) liste les attributs actuellement boostés par un pouvoir psy
   actif (`Character.activePsyPowers`) — une icône par attribut sur sa tuile (💪 FO, 🧘🏻‍♀️ VIT,
   🎯 DEX, ⚡ REF, 👁️ PER, 🗣️ COM, 🧠 INT, 🙏 VOL). `boostedSkillNames` (cf.
@@ -77,7 +78,9 @@ chaque réponse.
 
 ### `GET /api/characters/:id`
 - Auth : session ; lecture ouverte à tout membre du groupe du personnage.
-- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: boolean, referenceData: ReferenceData, groupImageUrl: string | null, teammates: { id: string, name: string }[] }`.
+- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: boolean, referenceData: ReferenceData, groupImageUrl: string | null, teammates: { id: string, name: string }[], sheetsLocked: boolean, locked: boolean }`.
+  `sheetsLocked` = fiches du groupe verrouillées par le MJ (cf. `POST /group-sheets-lock`) ;
+  `locked` = ce verrou s'applique à l'appelant (toujours `false` pour un MJ du groupe / admin).
   `computed` est calculé côté serveur via `src/shared/calc-engine.ts` (mêmes fonctions que le
   frontend, pour rester la source de vérité en cas de divergence de version de code). `teammates`
   liste les autres personnages du même groupe (id/nom seulement) — alimente le sélecteur de
@@ -113,7 +116,12 @@ chaque réponse.
   "Accepter" de BudgetPanel) — le
   blocage de l'enregistrement en cas de solde négatif est une validation côté client uniquement
   (bouton "Enregistrer" désactivé), pas une contrainte appliquée par cette route elle-même.
-- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData }`
+  **Fiches verrouillées** (`player_groups.sheets_locked`, appelant non MJ) : le patch est filtré
+  par `shared/session-lock.applySessionLock` — `race`, attributs, `tailleModifier`, `skills`,
+  `psyPowers`, `advantages`, `equipment`, `pointsDepart`, `xp`, `credits` sont ignorés (valeur en
+  base conservée) ; pour `weapons`/`armor`, seule la bascule `equipped`/`active` d'une ligne
+  existante (même index, même nom) est appliquée. Pas d'erreur : `locked: true` dans la réponse.
+- Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData, locked: boolean }`
   — `computed.actionRank` est dérivé à la volée (Réflexe, arme équipée, avantages/pouvoir
   "Concentration" actifs), jamais stocké tel quel.
 - Erreurs : `403` (pas le propriétaire ni MJ du groupe), `404` (personnage introuvable), `400` (JSON invalide).
@@ -158,6 +166,7 @@ chaque réponse.
 - Sortie : `{ character: Character, computed: CharacterComputed, canEdit: true, referenceData: ReferenceData, transferredTo: string | null }`
   — `character`/`computed` sont ceux du personnage SOURCE (celui de `:id`) ; `transferredTo` est le
   nom du destinataire si un don a eu lieu, sinon `null`.
+- Fiches verrouillées (appelant non MJ) : `403` "Fiches verrouillées par le MJ pendant la séance".
 - Erreurs : `403` (ni propriétaire ni MJ du groupe), `404` (personnage introuvable), `400` (montant
   manquant/non positif, solde insuffisant, destinataire introuvable/hors groupe/soi-même).
 
@@ -180,9 +189,23 @@ chaque réponse.
   `credits`. Utilisation : retire du stock sans remboursement ; ligne supprimée à 0. Logique :
   `calc-engine.applyConsumableChange`.
 - Sortie : `{ character, computed, canEdit: true, referenceData, cost: number, reloaded: boolean }`.
+- Fiches verrouillées (appelant non MJ) : l'achat (`delta > 0`) répond `403` ; l'utilisation
+  (`delta < 0`, `fire: true`) reste permise.
 - Erreurs : `403` (ni propriétaire ni MJ), `404` (personnage introuvable), `400` (champ manquant,
   quantité non entière ou nulle, consommable hors catalogue à l'achat, solde insuffisant, stock
   insuffisant).
+### `POST /api/characters/group-sheets-lock?groupId=`
+- Auth : session + MJ du groupe ciblé (ou admin).
+- Pose/lève le verrou des fiches pendant une séance (bouton en haut de l'écran "Suivi des
+  constantes", `player_groups.sheets_locked`, `migrations/0011_sheets_locked.sql`). Tant qu'il est
+  posé, pour les joueurs du groupe : `PUT /:id` filtre les champs de progression (cf. ci-dessus),
+  `POST /:id/spend-credits` et l'achat de consommables (`POST /:id/consumables` avec `delta > 0`)
+  répondent `403` ; l'utilisation de consommables (`delta < 0`, `fire`) reste permise. Le MJ
+  n'est pas concerné. État repropagé par `GET /?groupId=` (`sheetsLocked`).
+- Entrée : `{ locked: boolean }`.
+- Sortie : `{ ok: true, sheetsLocked: boolean }`.
+- Erreurs : `403` (pas MJ du groupe), `404` (groupe inaccessible), `400` (`locked` non booléen).
+
 ### `POST /api/characters/group-current-rank?groupId=`
 - Auth : session + rôle `gm` membre du groupe ciblé.
 - Persiste le rang courant du round (boutons Précédent/Suivant, écran "Suivi des constantes") côté

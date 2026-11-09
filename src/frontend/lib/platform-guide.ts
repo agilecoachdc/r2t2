@@ -113,6 +113,7 @@ const FR: GuideContent = {
       title: "Votre fiche",
       paragraphs: [
         "Vous pouvez consulter et modifier votre propre fiche de personnage (bouton « Modifier » visible dessus), ainsi qu'activer/désactiver vos pouvoirs psy, équiper vos armes/armures et ajuster vos PV/PSP courants, même hors mode édition.",
+        "Pendant une séance, le MJ peut verrouiller les fiches (bandeau « 🔒 Fiche verrouillée » en haut de la vôtre) : vous ne pouvez alors plus dépenser d'XP ni de crédits — attributs, compétences, pouvoirs, avantages, armes/armures, équipement, achat de consommables et dépense/don de crédits sont figés. PV/PSP, pouvoirs actifs, arme équipée/armure portée, utilisation des consommables (−1, −1 coup), notes et identité restent modifiables.",
       ],
     },
     {
@@ -134,6 +135,7 @@ const FR: GuideContent = {
       paragraphs: [
         "Cet écran (accessible depuis « Personnages ») affiche en direct les PV/PSP de tous les personnages en jeu (case « En jeu » cochée), leur Rang d'Action, et une icône « ⚡ » si un pouvoir actif les booste. Les boutons Précédent/Suivant font défiler le rang d'action courant du round — « Suivant » reboucle à 0 une fois le rang le plus élevé dépassé.",
         "Le bouton « ⚡ Fin de combat » désactive d'un coup tous les pouvoirs psy actifs des personnages en jeu et leur rembourse leur PSP — pratique pour clore un combat sans repasser sur chaque fiche individuellement.",
+        "En haut de l'écran, le bouton « Verrouiller les fiches » fige les fiches des joueurs pendant la séance : plus aucune dépense d'XP ou de crédits (attributs, compétences, inventaire, accessoires, consommables), seuls PV/PSP, pouvoirs actifs, arme/armure portée et utilisation des consommables restent libres. Le MJ n'est pas concerné. « Déverrouiller les fiches » rouvre la progression en fin de séance ; l'état est partagé entre tous les MJ du groupe.",
       ],
     },
     {
@@ -258,6 +260,7 @@ const EN: GuideContent = {
       title: "Your sheet",
       paragraphs: [
         "You can view and edit your own character sheet (\"Edit\" button shown on it), as well as activate/deactivate your psychic powers, equip your weapons/armor, and adjust your current HP/PSP, even outside edit mode.",
+        "During a session, the GM can lock sheets (\"🔒 Sheet locked\" banner at the top of yours): you can then no longer spend XP or credits — attributes, skills, powers, advantages, weapons/armor, equipment, buying consumables and spending/giving credits are frozen. HP/PSP, active powers, equipped weapon/worn armor, using consumables (−1, −1 shot), notes and identity remain editable.",
       ],
     },
     {
@@ -279,6 +282,7 @@ const EN: GuideContent = {
       paragraphs: [
         "This screen (reachable from \"Characters\") shows live HP/PSP for every character in play (\"In play\" checkbox checked), their Action Rank, and a \"⚡\" icon if an active power is boosting them. The Previous/Next buttons step through the round's current action rank — \"Next\" wraps back to 0 once the highest rank in play is passed.",
         "The \"⚡ End combat\" button deactivates every active psychic power for characters in play at once and refunds their PSP — handy for wrapping up a fight without going through every sheet individually.",
+        "At the top of the screen, the \"Lock sheets\" button freezes players' sheets during the session: no more XP or credit spending (attributes, skills, inventory, accessories, consumables); only HP/PSP, active powers, worn weapon/armor and using consumables stay free. The GM is not affected. \"Unlock sheets\" reopens progression at the end of the session; the state is shared by all of the group's GMs.",
       ],
     },
     {

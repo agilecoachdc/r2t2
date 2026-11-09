@@ -259,6 +259,25 @@ navigateur intégré, cf. session de build).
 - [ ] Autre joueur du groupe, `POST /api/characters/<perso-B>/consumables` → 403.
 - [ ] Documentation du groupe : section "Consommables" listant le catalogue.
 
+### Verrouillage des fiches pendant la séance
+
+- [ ] MJ, "Suivi des constantes" : bandeau en haut "🔓 Fiches modifiables" + bouton "Verrouiller
+      les fiches" → le bandeau passe en ambre "🔒 Fiches verrouillées", bouton "Déverrouiller les
+      fiches". Un second MJ sur un autre appareil voit le changement en ≤ 2s.
+- [ ] Joueur, sa fiche (rechargée) : bandeau "🔒 Fiche verrouillée par le MJ…". "Modifier" :
+      identité et notes éditables, mais attributs, compétences, pouvoirs, armes/armures, avantages
+      et équipement restent en lecture seule.
+- [ ] Hors édition : PV/PSP +/−, activation d'un pouvoir, case "équipée" d'une arme et armure
+      portée fonctionnent. Consommables : "−1" et "−1 coup" fonctionnent, "+1" et le formulaire
+      d'achat sont masqués (message "🔒 Achats bloqués…"). "Dépenser / donner des crédits" masqué.
+- [ ] Fiche ouverte AVANT le verrouillage : modifier une compétence puis "Enregistrer" → la
+      compétence revient à sa valeur, le bandeau verrouillé apparaît.
+- [ ] Appels directs (joueur) : `PUT /api/characters/<id>` avec `{ credits: 999999, hpCurrent: 3 }`
+      → crédits inchangés, PV à 3 ; `POST .../spend-credits` et achat `.../consumables` (`delta: 1`)
+      → 403 ; `POST /group-sheets-lock` → 403.
+- [ ] MJ sur la fiche d'un joueur pendant le verrou : tout reste éditable (pas de bandeau).
+- [ ] "Déverrouiller les fiches" → le joueur retrouve l'édition complète après rechargement.
+
 ## §4 — Permissions
 
 - [ ] Connecté en tant que joueur A, `GET /api/characters/<perso-B>` → 200, `canEdit: false`,

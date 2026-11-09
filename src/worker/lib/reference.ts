@@ -62,3 +62,14 @@ export async function getGroupCurrentRank(db: D1Database, groupId: string): Prom
   const row = await db.prepare("SELECT current_rank FROM player_groups WHERE id = ?1").bind(groupId).first<{ current_rank: number }>();
   return row?.current_rank ?? 0;
 }
+
+/**
+ * Fiches verrouillées par le MJ pendant une séance (cf.
+ * migrations/0011_sheets_locked.sql, shared/session-lock.ts). false si le
+ * groupe n'existe pas.
+ */
+export async function getGroupSheetsLocked(db: D1Database, groupId: string | null): Promise<boolean> {
+  if (!groupId) return false;
+  const row = await db.prepare("SELECT sheets_locked FROM player_groups WHERE id = ?1").bind(groupId).first<{ sheets_locked: number }>();
+  return row?.sheets_locked === 1;
+}

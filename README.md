@@ -256,6 +256,20 @@ MJ qui suivent le même groupe en même temps (ex. un sur tablette, un sur lapto
 même rang, y compris quand un autre MJ clique "Suivant" sur son propre appareil (corrigé, cf.
 incident du 2026-09-19 : le rang ne se mettait auparavant à jour que dans l'onglet qui avait cliqué).
 
+### Verrouillage des fiches pendant la séance
+
+En haut de l'écran "Suivi des constantes", le bouton "Verrouiller les fiches" / "Déverrouiller les
+fiches" (`POST /api/characters/group-sheets-lock`, colonne `player_groups.sheets_locked`,
+`migrations/0011_sheets_locked.sql`) empêche les joueurs du groupe de dépenser XP ou crédits
+pendant la séance. Règle unique dans `src/shared/session-lock.ts` : `PUT /:id` ignore pour un joueur
+les champs de progression (race, attributs, taille, compétences, pouvoirs psy, avantages,
+équipement, points de départ, XP, crédits) et n'accepte sur les armes/armures que la bascule
+équipée/portée ; `spend-credits` et l'achat de consommables répondent 403. Restent libres : PV/PSP,
+pouvoirs actifs, arme équipée/armure portée, utilisation des consommables (−1, −1 coup), notes,
+identité. Le MJ (et l'admin) n'est jamais concerné. Côté fiche, un bandeau ambre s'affiche et les
+sections de progression restent en lecture seule, même en mode édition. L'état est partagé entre
+tous les MJ via le poll de 2s.
+
 ## Activation des pouvoirs psy et coût en PSP
 
 Chaque pouvoir possédé (`PsyPowersPanel`) a un bouton "Activer" dédié, réservé au propriétaire du
