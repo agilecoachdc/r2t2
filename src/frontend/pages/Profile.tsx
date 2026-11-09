@@ -213,7 +213,7 @@ export default function Profile() {
             </section>
 
             <section className="rounded-xl bg-slate-900 p-4 shadow">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{t("Mes groupes")}</h2>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{t("Mes parties")}</h2>
               {info.memberships.length > 0 ? (
                 <ul className="space-y-3">
                   {info.memberships.map(({ group, ruleset, game, status }) => (
@@ -221,7 +221,7 @@ export default function Profile() {
                       <GroupThumb url={group.imageUrl} name={group.name} />
                       <dl className="grid flex-1 grid-cols-2 gap-2 text-sm">
                         <div className="col-span-2 flex items-center gap-2">
-                          <dt className="sr-only">{t("Groupes")}</dt>
+                          <dt className="sr-only">{t("Parties")}</dt>
                           <dd className="text-slate-200">{group.name}</dd>
                           {status === "pending" && (
                             <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">

@@ -277,7 +277,7 @@ navigateur intégré, cf. session de build).
 - [ ] Assigner un personnage à un compte qui n'est pas membre du groupe (via un appel direct à
       `PUT /api/admin/characters/:id/owner` avec un `userId` hors groupe) → 400.
 - [ ] Admin (membre d'aucun groupe), accueil : cliquer un groupe → `/groupe/<id>` (pas
-      `/admin/groupes`), bouton "Suivi des constantes" et lien "Jeux & règles" visibles, demandes
+      `/admin/groupes`), bouton "Suivi des constantes" et lien "Règles des jeux" visibles, demandes
       d'adhésion en attente affichées ; ouvrir une fiche → éditable (`canEdit: true`), boutons
       MJ (XP, crédits, accepter un solde négatif) présents ; créer un PNJ → 201.
 - [ ] Admin, `/admin/groupes` → groupe sélectionné : boutons "Personnages" et "Suivi des

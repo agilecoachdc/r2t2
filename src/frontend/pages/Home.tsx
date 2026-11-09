@@ -51,10 +51,10 @@ export default function Home() {
             {isAdmin && (
               <>
                 <Link to="/admin/jeux" className="text-indigo-400 hover:underline">
-                  {t("Jeux & règles")}
+                  {t("Règles des jeux")}
                 </Link>
                 <Link to="/admin/groupes" className="text-indigo-400 hover:underline">
-                  {t("Groupes")}
+                  {t("Admin de parties")}
                 </Link>
                 <Link to="/admin/comptes" className="text-indigo-400 hover:underline">
                   {t("Comptes")}
@@ -71,7 +71,7 @@ export default function Home() {
           </div>
         </header>
 
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{t("Groupes")}</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{t("Parties")}</h2>
 
         {error && <p className="text-red-400">{error}</p>}
         {!groups && !error && <p className="text-slate-400">{t("Chargement…")}</p>}
@@ -80,7 +80,7 @@ export default function Home() {
           <p className="text-sm text-slate-500">
             {isAdmin ? (
               t(
-                "Aucun groupe pour l'instant — créez un jeu et une règle depuis « Jeux & règles », puis un groupe depuis « Groupes ».",
+                "Aucune partie pour l'instant — créez un jeu et une règle depuis « Règles des jeux », puis une partie depuis « Admin de parties ».",
               )
             ) : (
               <>

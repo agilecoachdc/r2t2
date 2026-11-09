@@ -430,8 +430,11 @@ volets :
 
 ## Comptes et plateforme
 
-Trois rôles : `admin` (gère jeux/règles/groupes de joueurs et les comptes, pages `/admin/jeux` et
-`/admin/groupes` — membre d'aucun groupe, mais dispose des **droits MJ sur tous les groupes** :
+Trois rôles : `admin` (gère jeux/règles/groupes de joueurs et les comptes, pages `/admin/jeux`
+— menu "Règles des jeux" / "Game rules" — et `/admin/groupes` — menu "Admin de parties" / "Games
+admin", à ne pas confondre avec la liste "Parties" / "Games" de l'accueil qui mène aux écrans de jeu
+de chaque groupe ; libellés renommés depuis "Jeux & règles" et "Groupes", deux entrées portaient
+le même nom "Groupes" — membre d'aucun groupe, mais dispose des **droits MJ sur tous les groupes** :
 écran "Personnages" `/groupe/:id`, fiches, PNJ, XP/crédits, demandes d'adhésion et "Suivi des
 constantes" `/suivi/:id`, accessibles depuis l'accueil ou `/admin/groupes` → groupe, pour modifier
 une règle puis ajuster les fiches sans changer de compte — contrôle centralisé dans

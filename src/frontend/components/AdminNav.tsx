@@ -1,12 +1,12 @@
-// Barre de navigation partagée entre les pages d'admin (Jeux & règles /
-// Groupes / Comptes) — évite de repasser par l'accueil pour circuler entre
+// Barre de navigation partagée entre les pages d'admin (Règles des jeux /
+// Admin de parties / Comptes) — évite de repasser par l'accueil pour circuler entre
 // elles. `current` masque le lien vers la page affichée.
 
 import { Link } from "react-router-dom";
 
 const ITEMS = [
-  { key: "jeux", to: "/admin/jeux", label: "Jeux & règles" },
-  { key: "groupes", to: "/admin/groupes", label: "Groupes" },
+  { key: "jeux", to: "/admin/jeux", label: "Règles des jeux" },
+  { key: "groupes", to: "/admin/groupes", label: "Admin de parties" },
   { key: "comptes", to: "/admin/comptes", label: "Comptes" },
 ] as const;
 

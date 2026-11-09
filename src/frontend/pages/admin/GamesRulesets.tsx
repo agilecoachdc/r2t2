@@ -1,4 +1,4 @@
-// Page d'admin "Jeux & règles" — CRUD des jeux, et par jeu des règles
+// Page d'admin "Règles des jeux" (anciennement "Jeux & règles") — CRUD des jeux, et par jeu des règles
 // (rulesets). L'édition d'une règle ouvre un éditeur de catalogue à onglets
 // (races/compétences/armes/armures/pouvoirs psy/avantages/table de coût),
 // construit sur CatalogTable (composant générique, ../../components/CatalogTable).
@@ -182,7 +182,7 @@ export default function GamesRulesets() {
     <div className="min-h-dvh bg-slate-950">
       <div className="mx-auto max-w-5xl px-4 py-6">
         <header className="mb-6 flex items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold">Jeux &amp; règles</h1>
+          <h1 className="text-lg font-semibold">Règles des jeux</h1>
           <AdminNav current="jeux" />
         </header>
 

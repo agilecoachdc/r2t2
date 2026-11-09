@@ -1,4 +1,4 @@
-// Page d'admin "Groupes" — CRUD des groupes de joueurs (nom, description,
+// Page d'admin "Admin de parties" (anciennement "Groupes") — CRUD des groupes de joueurs (nom, description,
 // règle assignée, image, dossier Drive) et gestion de leurs membres :
 // assigner un compte existant au groupe, en créer un nouveau directement
 // rattaché, ou en retirer un. Un compte peut être membre de plusieurs
@@ -194,7 +194,7 @@ export default function PlayerGroups() {
     <div className="min-h-dvh bg-slate-950">
       <div className="mx-auto max-w-4xl px-4 py-6">
         <header className="mb-6 flex items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold">Groupes de joueurs</h1>
+          <h1 className="text-lg font-semibold">Admin de parties</h1>
           <AdminNav current="groupes" />
         </header>
 
@@ -208,7 +208,7 @@ export default function PlayerGroups() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <section className="rounded-xl bg-slate-900 p-4 shadow md:col-span-1">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Groupes</h2>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Parties</h2>
             <ul className="mb-3 space-y-1">
               {groups.map((g) => (
                 <li key={g.id}>

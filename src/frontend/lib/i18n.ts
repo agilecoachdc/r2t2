@@ -21,7 +21,7 @@ const EN: Record<string, string> = {
   "Mon profil": "My profile",
   "Retour": "Back",
   "← Retour": "← Back",
-  "← Groupes": "← Groups",
+  "← Parties": "← Games",
   "← Personnages": "← Characters",
   "← Suivi des constantes": "← Vitals tracker",
   "Modifier": "Edit",
@@ -49,15 +49,16 @@ const EN: Record<string, string> = {
   "Identifiants invalides": "Invalid credentials",
 
   // Home.tsx
-  "Aucun groupe pour l'instant — créez un jeu et une règle depuis « Jeux & règles », puis un groupe depuis « Groupes ».":
-    "No groups yet — create a game and a ruleset from “Games & rules”, then a group from “Groups”.",
+  "Aucune partie pour l'instant — créez un jeu et une règle depuis « Règles des jeux », puis une partie depuis « Admin de parties ».":
+    "No games yet — create a game and a ruleset from “Game rules”, then a game from “Games admin”.",
   "Vous n'êtes membre d'aucun groupe.": "You are not a member of any group.",
   "Rejoindre ou créer un groupe": "Join or create a group",
   "Administration": "Administration",
-  "Jeux & règles": "Games & rules",
-  "Groupes": "Groups",
+  "Règles des jeux": "Game rules",
+  "Parties": "Games",
+  "Admin de parties": "Games admin",
   "Comptes": "Accounts",
-  "Mes groupes": "My groups",
+  "Mes parties": "My games",
 
   // Profile.tsx
   "Identité": "Identity",

@@ -3,7 +3,7 @@
 // avantages...). Chaque colonne sait lire/écrire son champ sur la ligne via
 // get/set plutôt qu'une simple clé — permet de gérer un champ imbriqué
 // (ex. attributeBonus.FO pour les races) sans étendre le type de colonne.
-// Utilisé par la page d'admin Jeux & règles (src/frontend/pages/admin/GamesRulesets.tsx).
+// Utilisé par la page d'admin Règles des jeux (src/frontend/pages/admin/GamesRulesets.tsx).
 
 export interface CatalogColumn<T> {
   key: string;

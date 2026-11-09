@@ -45,7 +45,7 @@ export default function CharacterSheet() {
     ? navState.from === "suivi"
       ? t("← Suivi des constantes")
       : t("← Personnages")
-    : t("← Groupes");
+    : t("← Parties");
   const [character, setCharacter] = useState<Character | null>(null);
   // Catalogue du groupe de ce personnage — renvoyé par GET /characters/:id
   // (scopé serveur via sa règle), plus d'import statique ADD40K.

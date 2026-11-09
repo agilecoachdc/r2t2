@@ -1,5 +1,5 @@
 // Écran "Personnages" d'un groupe — deuxième étage de la navigation
-// (Accueil "Groupes" -> ce groupe -> personnages -> Suivi des constantes),
+// (Accueil "Parties" -> ce groupe -> personnages -> Suivi des constantes),
 // cf. Home.tsx. Le groupe vient de l'URL (/groupe/:groupId) — un compte
 // peut être membre de plusieurs groupes en même temps (cf.
 // migrations/0005_memberships.sql), il n'y a plus de "groupe courant"
@@ -224,7 +224,7 @@ export default function CharacterList() {
         <header className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link to="/" className="text-sm text-indigo-400 hover:underline">
-              {t("← Groupes")}
+              {t("← Parties")}
             </Link>
             <h1 className="text-lg font-semibold">{t("Personnages")}</h1>
           </div>
@@ -239,7 +239,7 @@ export default function CharacterList() {
             )}
             {user?.role === "admin" && (
               <Link to="/admin/jeux" className="text-indigo-400 hover:underline">
-                {t("Jeux & règles")}
+                {t("Règles des jeux")}
               </Link>
             )}
             {groupDriveUrl && (

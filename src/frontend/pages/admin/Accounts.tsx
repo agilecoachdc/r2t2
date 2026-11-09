@@ -122,7 +122,7 @@ export default function Accounts() {
                 <th className="px-4 py-2">Nom</th>
                 <th className="px-4 py-2">Identifiant</th>
                 <th className="px-4 py-2">Rôle</th>
-                <th className="px-4 py-2">Groupes</th>
+                <th className="px-4 py-2">Parties</th>
                 <th className="px-4 py-2" />
                 <th className="px-4 py-2">Nouveau mot de passe</th>
               </tr>
