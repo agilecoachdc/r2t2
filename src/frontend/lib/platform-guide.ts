@@ -150,6 +150,12 @@ const FR: GuideContent = {
         "Depuis la gestion du groupe, vous pouvez définir une image de fond propre au groupe (affichée sur tous ses écrans) et un lien vers un dossier partagé (Google Drive ou équivalent), affiché en bouton sur l'écran « Personnages ».",
       ],
     },
+    {
+      title: "Administrateur : les droits MJ sur tous les groupes",
+      paragraphs: [
+        "Le compte administrateur de la plateforme dispose des droits MJ sur tous les groupes, sans avoir à en être membre : depuis l'accueil, chaque groupe ouvre son écran « Personnages » (fiches éditables, PNJ, XP, crédits, demandes d'adhésion) et son « Suivi des constantes ». La page admin « Groupes » propose les mêmes raccourcis pour le groupe sélectionné, et l'écran « Personnages » renvoie vers « Jeux & règles ». Vous pouvez ainsi modifier une règle ou ajouter un équipement au catalogue, puis ajuster les fiches, sans changer de compte.",
+      ],
+    },
   ],
 };
 
@@ -277,6 +283,12 @@ const EN: GuideContent = {
       title: "Customizing the group's image and folder",
       paragraphs: [
         "From the group's management screen, you can set a background image specific to the group (shown on all its screens) and a link to a shared folder (Google Drive or equivalent), shown as a button on the \"Characters\" screen.",
+      ],
+    },
+    {
+      title: "Admin: GM rights on every group",
+      paragraphs: [
+        "The platform admin account has GM rights on every group without having to be a member: from the home screen, each group opens its \"Characters\" screen (editable sheets, NPCs, XP, credits, join requests) and its \"Vitals tracker\". The admin \"Groupes\" (Groups) page offers the same shortcuts for the selected group, and the \"Characters\" screen links back to \"Jeux & règles\" (Games & rules). You can therefore change a rule or add equipment to the catalog, then adjust the sheets, without switching accounts.",
       ],
     },
   ],

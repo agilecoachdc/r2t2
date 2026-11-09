@@ -402,7 +402,11 @@ volets :
 ## Comptes et plateforme
 
 Trois rôles : `admin` (gère jeux/règles/groupes de joueurs et les comptes, pages `/admin/jeux` et
-`/admin/groupes` — membre d'aucun groupe), `gm` (MJ d'un ou plusieurs groupes : édite tous les
+`/admin/groupes` — membre d'aucun groupe, mais dispose des **droits MJ sur tous les groupes** :
+écran "Personnages" `/groupe/:id`, fiches, PNJ, XP/crédits, demandes d'adhésion et "Suivi des
+constantes" `/suivi/:id`, accessibles depuis l'accueil ou `/admin/groupes` → groupe, pour modifier
+une règle puis ajuster les fiches sans changer de compte — contrôle centralisé dans
+`src/shared/permissions.ts`, `canAccessGroup`/`isGmOfGroup`, partagé Worker/frontend), `gm` (MJ d'un ou plusieurs groupes : édite tous les
 personnages de chacun, y crée des PNJ) et `player` (édite uniquement sa fiche). La propriété d'un
 personnage (`characters.owner_username`, la source de vérité pour ces permissions d'édition) se
 réassigne depuis `/admin/groupes` → groupe → section "Personnages" (distincte de "Membres") :

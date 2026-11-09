@@ -13,6 +13,7 @@ import { Link, useParams } from "react-router-dom";
 import type { CharacterSummary, JoinRequest, ReferenceData } from "@shared/types";
 import { useAuth } from "../lib/auth-context";
 import { api } from "../lib/api";
+import { canAccessGroup, isGmOfGroup } from "@shared/permissions";
 import { useTranslation } from "../lib/i18n";
 
 export default function CharacterList() {
@@ -38,8 +39,10 @@ export default function CharacterList() {
   // pas l'admin, qui gère ce flux au quotidien.
   const [joinRequests, setJoinRequests] = useState<JoinRequest[] | null>(null);
   const [requestBusyId, setRequestBusyId] = useState<string | null>(null);
-  const isMember = !!groupId && !!user?.memberships.includes(groupId);
-  const isGm = user?.role === "gm" && isMember;
+  // Un admin a accès à tous les groupes avec les droits MJ, sans en être
+  // membre (cf. shared/permissions.ts).
+  const isMember = !!user && canAccessGroup(user, groupId);
+  const isGm = !!user && isGmOfGroup(user, groupId);
   const backgroundUrl = groupImageUrl ?? "/r2t2-banner.jpg";
 
   function raceLabel(race: string) {
@@ -232,6 +235,11 @@ export default function CharacterList() {
                 className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
               >
                 {t("Suivi des constantes")}
+              </Link>
+            )}
+            {user?.role === "admin" && (
+              <Link to="/admin/jeux" className="text-indigo-400 hover:underline">
+                {t("Jeux & règles")}
               </Link>
             )}
             {groupDriveUrl && (

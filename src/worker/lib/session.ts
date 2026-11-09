@@ -4,6 +4,7 @@
 import type { Context, Next } from "hono";
 import type { Language, PublicUser, UserRole } from "../../shared/types";
 import { generateSessionToken, parseSessionCookie, sessionExpiry } from "./auth";
+import { canAccessGroup, isGmOfGroup } from "../../shared/permissions";
 
 export interface Env {
   DB: D1Database;
@@ -88,7 +89,8 @@ export async function requireAuth(c: Context<HonoEnv>, next: Next) {
 
 /**
  * Un joueur ne peut modifier que sa propre fiche ; le MJ peut modifier tout
- * personnage d'un groupe dont il est membre (un compte peut désormais
+ * personnage d'un groupe dont il est membre, l'admin tout personnage de
+ * tout groupe (cf. shared/permissions.ts) (un compte peut désormais
  * appartenir à plusieurs groupes, cf. migrations/0005_memberships.sql).
  * `ownerUsername`/`characterGroupId` viennent de la ligne `characters`
  * visée — `characterGroupId` null pour une fiche pas encore rattachée à un
@@ -99,8 +101,8 @@ export function canEditCharacter(
   ownerUsername: string,
   characterGroupId: string | null,
 ): boolean {
-  if (characterGroupId === null || !user.memberships.includes(characterGroupId)) return false;
-  if (user.role === "gm") return true;
+  if (!canAccessGroup(user, characterGroupId)) return false;
+  if (isGmOfGroup(user, characterGroupId)) return true;
   return user.username === ownerUsername;
 }
 

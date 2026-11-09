@@ -30,12 +30,15 @@ Un compte (joueur ou MJ) peut désormais être membre de **plusieurs groupes en 
 `users.player_group_id` unique, qui reste en base pour compat historique mais n'est plus la
 source de vérité). Il n'y a donc plus de "groupe courant" implicite : toutes les routes
 personnages exigent un `groupId` explicite (query param ou body), vérifié contre
-`user.memberships`. Le catalogue de référence (`ReferenceData`) est chargé depuis la règle
+`user.memberships`. **Exception admin** : un compte `admin` (membre d'aucun groupe) passe toutes
+les gardes "membre du groupe" et "rôle `gm` membre du groupe" ci-dessous, sur tous les groupes
+(`canAccessGroup`/`isGmOfGroup`, `src/shared/permissions.ts`) — idem pour les routes groupe de
+`catalog.ts` (`/groups/:id/reference`, `/groups/:id/join-requests*`, `PUT /groups/:id`). Le catalogue de référence (`ReferenceData`) est chargé depuis la règle
 assignée à ce groupe (`getReferenceDataForGroup`, `src/worker/lib/reference.ts`) et renvoyé dans
 chaque réponse.
 
 ### `GET /api/characters?groupId=`
-- Auth : session ; `groupId` doit être dans `user.memberships` (403 sinon).
+- Auth : session ; `groupId` doit être dans `user.memberships`, ou appelant admin (404 sinon, y compris groupe inexistant pour l'admin).
 - Sortie : `{ characters: CharacterSummary[], referenceData: ReferenceData, groupImageUrl: string | null, groupDriveUrl: string | null, currentRank: number }`
   — résumé enrichi (portrait, statut `inGame`, `isNpc`, `archived`, PV/PSP courant + max calculé,
   `xp`, `solde` (points restant à répartir, calculé — cf. `calc-engine.getBudgetSummary`), `credits` (solde en Cr, cf. section "Monnaie" du README), `actionRank`)

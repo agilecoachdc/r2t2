@@ -11,6 +11,7 @@
 import { Hono } from "hono";
 import type { Env } from "../lib/session";
 import { uniqueSlugId } from "../lib/ids";
+import { canAccessGroup, isGmOfGroup } from "../../shared/permissions";
 import type { Game, JoinRequest, PlayerGroup, PublicUser, ReferenceData, Ruleset } from "../../shared/types";
 
 type HonoEnv = { Bindings: Env; Variables: { user: PublicUser } };
@@ -162,14 +163,10 @@ catalogRoutes.post("/groups/leave", async (c) => {
 // une approbation immédiate sans passer par ce circuit.
 // ---------------------------------------------------------------------------
 
-function requireGmOfGroup(user: PublicUser, groupId: string): boolean {
-  return user.role === "gm" && user.memberships.includes(groupId);
-}
-
 catalogRoutes.get("/groups/:id/join-requests", async (c) => {
   const user = c.get("user");
   const groupId = c.req.param("id");
-  if (!requireGmOfGroup(user, groupId)) return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  if (!isGmOfGroup(user, groupId)) return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
 
   const { results } = await c.env.DB.prepare(
     `SELECT u.id as user_id, u.username, u.display_name, gm.created_at as requested_at
@@ -191,7 +188,7 @@ catalogRoutes.get("/groups/:id/join-requests", async (c) => {
 catalogRoutes.post("/groups/:id/join-requests/:userId/approve", async (c) => {
   const user = c.get("user");
   const groupId = c.req.param("id");
-  if (!requireGmOfGroup(user, groupId)) return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  if (!isGmOfGroup(user, groupId)) return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
 
   const { meta } = await c.env.DB.prepare(
     "UPDATE group_memberships SET status = 'approved' WHERE group_id = ?1 AND user_id = ?2 AND status = 'pending'",
@@ -205,7 +202,7 @@ catalogRoutes.post("/groups/:id/join-requests/:userId/approve", async (c) => {
 catalogRoutes.delete("/groups/:id/join-requests/:userId", async (c) => {
   const user = c.get("user");
   const groupId = c.req.param("id");
-  if (!requireGmOfGroup(user, groupId)) return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
+  if (!isGmOfGroup(user, groupId)) return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
 
   await c.env.DB.prepare("DELETE FROM group_memberships WHERE group_id = ?1 AND user_id = ?2 AND status = 'pending'")
     .bind(groupId, c.req.param("userId"))
@@ -222,7 +219,7 @@ catalogRoutes.delete("/groups/:id/join-requests/:userId", async (c) => {
 catalogRoutes.get("/groups/:id/reference", async (c) => {
   const user = c.get("user");
   const groupId = c.req.param("id");
-  if (!user.memberships.includes(groupId)) return c.json({ error: "Non membre de ce groupe" }, 403);
+  if (!canAccessGroup(user, groupId)) return c.json({ error: "Non membre de ce groupe" }, 403);
 
   const row = await c.env.DB.prepare(
     `SELECT g.name AS group_name, r.name AS ruleset_name, r.reference_data, ga.name AS game_name
@@ -280,7 +277,7 @@ catalogRoutes.post("/groups", async (c) => {
 catalogRoutes.put("/groups/:id", async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
-  if (user.role !== "gm" || !user.memberships.includes(id)) {
+  if (!isGmOfGroup(user, id)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 

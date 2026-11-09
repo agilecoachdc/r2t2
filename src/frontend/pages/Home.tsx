@@ -3,7 +3,8 @@
 // groupes en même temps (cf. migrations/0005_memberships.sql) — chaque
 // carte mène à /groupe/:groupId (ses personnages, cf. CharacterList.tsx).
 // Un admin (aucun groupe par construction) voit tous les groupes de la
-// plateforme, chacun menant à la gestion admin.
+// plateforme, chacun menant lui aussi à /groupe/:groupId, où il dispose des
+// droits MJ (personnages, suivi des constantes — cf. shared/permissions.ts).
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -97,7 +98,7 @@ export default function Home() {
           {groups?.map((g) => (
             <li key={g.id}>
               <Link
-                to={isAdmin ? "/admin/groupes" : `/groupe/${g.id}`}
+                to={`/groupe/${g.id}`}
                 className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 shadow transition hover:bg-slate-800"
               >
                 <GroupThumb url={g.imageUrl} name={g.name} sizePx={56} />

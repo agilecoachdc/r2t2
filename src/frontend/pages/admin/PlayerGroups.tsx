@@ -8,6 +8,7 @@
 // API /api/admin/*).
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import type { PlayerGroupDetail, PublicUser, Ruleset, UserRole } from "@shared/types";
 import { api } from "../../lib/api";
 import { ImagePicker } from "../../components/ImagePicker";
@@ -281,6 +282,22 @@ export default function PlayerGroups() {
             {!selected && <p className="text-sm text-slate-500">Choisissez un groupe.</p>}
             {selected && (
               <div className="space-y-4">
+                {/* Accès direct aux écrans MJ du groupe — l'admin y a les droits MJ
+                    sans en être membre (cf. shared/permissions.ts). */}
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to={`/groupe/${selected.id}`}
+                    className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
+                  >
+                    {t("Personnages")}
+                  </Link>
+                  <Link
+                    to={`/suivi/${selected.id}`}
+                    className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700"
+                  >
+                    {t("Suivi des constantes")}
+                  </Link>
+                </div>
                 <div className="space-y-2">
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Réglages</h2>
                   <ImagePicker

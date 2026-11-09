@@ -244,6 +244,17 @@ navigateur intégré, cf. session de build).
       false` sur ce même personnage.
 - [ ] Assigner un personnage à un compte qui n'est pas membre du groupe (via un appel direct à
       `PUT /api/admin/characters/:id/owner` avec un `userId` hors groupe) → 400.
+- [ ] Admin (membre d'aucun groupe), accueil : cliquer un groupe → `/groupe/<id>` (pas
+      `/admin/groupes`), bouton "Suivi des constantes" et lien "Jeux & règles" visibles, demandes
+      d'adhésion en attente affichées ; ouvrir une fiche → éditable (`canEdit: true`), boutons
+      MJ (XP, crédits, accepter un solde négatif) présents ; créer un PNJ → 201.
+- [ ] Admin, `/admin/groupes` → groupe sélectionné : boutons "Personnages" et "Suivi des
+      constantes" en tête du panneau, menant à `/groupe/<id>` et `/suivi/<id>`.
+- [ ] Admin : ajouter un équipement au catalogue depuis `/admin/jeux`, puis via "Personnages" →
+      fiche, l'ajouter au personnage — sans se déconnecter.
+- [ ] Admin, `GET /api/characters?groupId=inexistant` → 404 (pas 500).
+- [ ] MJ du groupe A, `/suivi/<groupe-B>` (non membre) → retour à l'accueil ; `GET
+      /api/characters?groupId=<groupe-B>` → 404 (comportement MJ inchangé).
 
 ## Non couvert (hors périmètre MVP)
 

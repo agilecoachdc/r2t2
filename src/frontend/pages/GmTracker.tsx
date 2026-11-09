@@ -26,6 +26,7 @@ import { ATTRIBUTES, type Attribute, type AttributeScores, type CharacterSummary
 import { getHpMax, getPspMax } from "@shared/calc-engine";
 import { useAuth } from "../lib/auth-context";
 import { api } from "../lib/api";
+import { isGmOfGroup } from "@shared/permissions";
 import { useTranslation } from "../lib/i18n";
 import { LocalisationSilhouette, RaceArmorSilhouette } from "../components/RaceArmorSilhouette";
 import { resizePortraitToDataUrl } from "../lib/image";
@@ -523,9 +524,10 @@ export default function GmTracker() {
     api.setCurrentRank(groupId, next).catch((err) => setError(err instanceof Error ? err.message : "Échec de la mise à jour du rang"));
   }
 
-  // Vue réservée au MJ, membre de ce groupe — un joueur, ou un MJ d'un
-  // autre groupe, qui atterrit ici (URL directe) repart à l'accueil.
-  if (user && (user.role !== "gm" || !groupId || !user.memberships.includes(groupId))) {
+  // Vue réservée au MJ membre de ce groupe, ou à l'admin (tous les groupes,
+  // cf. shared/permissions.ts) — un joueur, ou un MJ d'un autre groupe, qui
+  // atterrit ici (URL directe) repart à l'accueil.
+  if (user && !isGmOfGroup(user, groupId)) {
     return <Navigate to="/" replace />;
   }
 

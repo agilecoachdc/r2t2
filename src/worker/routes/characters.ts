@@ -15,6 +15,7 @@
 import { Hono } from "hono";
 import type { Env } from "../lib/session";
 import { canEditCharacter } from "../lib/session";
+import { canAccessGroup, isGmOfGroup } from "../../shared/permissions";
 import { getGroupCurrentRank, getGroupDriveUrl, getGroupImageUrl, getReferenceDataForGroup } from "../lib/reference";
 import type { PublicUser } from "../../shared/types";
 import type { AttributeScores, Character, CharacterSummary, ReferenceData } from "../../shared/types";
@@ -41,8 +42,14 @@ export const characterRoutes = new Hono<HonoEnv>();
 characterRoutes.get("/", async (c) => {
   const user = c.get("user");
   const groupId = c.req.query("groupId");
-  if (!groupId || !user.memberships.includes(groupId)) {
+  if (!canAccessGroup(user, groupId)) {
     return c.json({ error: "Groupe introuvable ou non membre" }, 404);
+  }
+  // Un admin accède à tout groupe sans en être membre (cf. shared/permissions.ts)
+  // — on vérifie donc ici que le groupe existe, sinon getReferenceDataForGroup
+  // lèverait une erreur (500) au lieu d'un 404.
+  if (user.role === "admin" && !(await c.env.DB.prepare("SELECT 1 FROM player_groups WHERE id = ?1").bind(groupId).first())) {
+    return c.json({ error: "Groupe introuvable" }, 404);
   }
 
   const referenceData = await getReferenceDataForGroup(c.env.DB, groupId);
@@ -101,10 +108,10 @@ characterRoutes.get("/", async (c) => {
 characterRoutes.post("/group-current-rank", async (c) => {
   const user = c.get("user");
   const groupId = c.req.query("groupId");
-  if (!groupId || !user.memberships.includes(groupId)) {
+  if (!canAccessGroup(user, groupId)) {
     return c.json({ error: "Groupe introuvable ou non membre" }, 404);
   }
-  if (user.role !== "gm") {
+  if (!isGmOfGroup(user, groupId)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 
@@ -130,7 +137,7 @@ characterRoutes.get("/:id/portrait", async (c) => {
   const row = await c.env.DB.prepare("SELECT data, player_group_id FROM characters WHERE id = ?1")
     .bind(c.req.param("id"))
     .first<{ data: string; player_group_id: string | null }>();
-  if (!row || !row.player_group_id || !user.memberships.includes(row.player_group_id)) {
+  if (!row || !canAccessGroup(user, row.player_group_id)) {
     return c.json({ error: "Personnage introuvable" }, 404);
   }
   const character: Character = JSON.parse(row.data);
@@ -158,7 +165,7 @@ characterRoutes.get("/:id", async (c) => {
   // Une fiche d'un groupe dont on n'est pas membre est traitée comme
   // inexistante — évite de confirmer son existence à un compte qui n'y a
   // pas accès.
-  if (!row || !row.player_group_id || !user.memberships.includes(row.player_group_id)) {
+  if (!row || !canAccessGroup(user, row.player_group_id)) {
     return c.json({ error: "Personnage introuvable" }, 404);
   }
 
@@ -219,7 +226,7 @@ const EMPTY_ATTRIBUTE_SCORES: AttributeScores = Object.fromEntries(ATTRIBUTES.ma
 characterRoutes.post("/", async (c) => {
   const user = c.get("user");
   const groupId = c.req.query("groupId");
-  if (user.role !== "gm" || !groupId || !user.memberships.includes(groupId)) {
+  if (!isGmOfGroup(user, groupId)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 
@@ -358,7 +365,7 @@ characterRoutes.post("/:id/xp", async (c) => {
     .bind(id)
     .first<CharacterRow>();
   if (!existing) return c.json({ error: "Personnage introuvable" }, 404);
-  if (user.role !== "gm" || !existing.player_group_id || !user.memberships.includes(existing.player_group_id)) {
+  if (!isGmOfGroup(user, existing.player_group_id)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 
@@ -401,7 +408,7 @@ characterRoutes.post("/:id/credits", async (c) => {
     .bind(id)
     .first<CharacterRow>();
   if (!existing) return c.json({ error: "Personnage introuvable" }, 404);
-  if (user.role !== "gm" || !existing.player_group_id || !user.memberships.includes(existing.player_group_id)) {
+  if (!isGmOfGroup(user, existing.player_group_id)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 
@@ -513,7 +520,7 @@ characterRoutes.post("/:id/spend-credits", async (c) => {
 characterRoutes.post("/end-combat", async (c) => {
   const user = c.get("user");
   const groupId = c.req.query("groupId");
-  if (user.role !== "gm" || !groupId || !user.memberships.includes(groupId)) {
+  if (!isGmOfGroup(user, groupId)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 
@@ -558,7 +565,7 @@ characterRoutes.post("/end-combat", async (c) => {
 characterRoutes.post("/group-xp", async (c) => {
   const user = c.get("user");
   const groupId = c.req.query("groupId");
-  if (user.role !== "gm" || !groupId || !user.memberships.includes(groupId)) {
+  if (!isGmOfGroup(user, groupId)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 
@@ -604,7 +611,7 @@ characterRoutes.post("/group-xp", async (c) => {
 characterRoutes.post("/group-income", async (c) => {
   const user = c.get("user");
   const groupId = c.req.query("groupId");
-  if (user.role !== "gm" || !groupId || !user.memberships.includes(groupId)) {
+  if (!isGmOfGroup(user, groupId)) {
     return c.json({ error: "Réservé au MJ de ce groupe" }, 403);
   }
 

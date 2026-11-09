@@ -173,7 +173,9 @@ export default function Documentation() {
   }, [groupId]);
 
   const guide = getPlatformGuide(user?.language ?? "fr");
-  const roleSections = user?.role === "gm" ? guide.gm : user?.role === "player" ? guide.player : [];
+  // L'admin a les droits MJ sur tous les groupes (cf. shared/permissions.ts).
+  const actsAsGm = user?.role === "gm" || user?.role === "admin";
+  const roleSections = actsAsGm ? guide.gm : user?.role === "player" ? guide.player : [];
 
   return (
     <div className="min-h-dvh bg-slate-950">
@@ -197,7 +199,7 @@ export default function Documentation() {
             </div>
           </DocSection>
           {roleSections.length > 0 && (
-            <DocSection title={user?.role === "gm" ? t("Pour le MJ") : t("Pour le joueur")}>
+            <DocSection title={actsAsGm ? t("Pour le MJ") : t("Pour le joueur")}>
               <div className="space-y-4">
                 {roleSections.map((s, i) => (
                   <GuideSectionBlock key={i} section={s} />

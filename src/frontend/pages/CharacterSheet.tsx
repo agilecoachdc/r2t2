@@ -24,7 +24,9 @@ export default function CharacterSheet() {
   const { t } = useTranslation();
   // Distribution d'XP réservée au MJ (jamais au joueur propriétaire, même
   // avec canEdit) — cf. BudgetPanel/routes/characters.ts.
-  const isGm = user?.role === "gm";
+  // L'admin dispose des mêmes droits MJ sur tous les groupes (cf.
+  // shared/permissions.ts) ; le serveur reste seul juge du groupe visé.
+  const isGm = user?.role === "gm" || user?.role === "admin";
   // Retour contextuel : la liste et le suivi des constantes passent chacun
   // leur origine + le groupe via l'état de navigation (state.from/groupId)
   // au clic sur une fiche (un compte peut être membre de plusieurs
